@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@theme {
+  --color-brand-50: #fdf8f4;
+  --color-brand-100: #f8eade;
+  --color-brand-200: #f0d3b8;
+  --color-brand-300: #e6b58c;
+  --color-brand-400: #da9160;
+  --color-brand-500: #cf753d;
+  --color-brand-600: #b85c29;
+  --color-brand-700: #97461f;
+  --color-brand-800: #7c3a1f;
+  --color-brand-900: #68311d;
+  --color-brand-950: #3a1709;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-neutral-200);
+  }
+
+  body {
+    background-color: #fafaf9;
+    color: var(--color-neutral-900);
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "ajooba-footwear",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ajooba Footwear — mobile-first Indian footwear e-commerce platform",
+  "packageManager": "pnpm@10.26.2",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --stream --filter \"./apps/*\" dev",
+    "dev:storefront": "pnpm --filter @ajooba/storefront dev",
+    "dev:admin": "pnpm --filter @ajooba/admin dev",
+    "dev:api": "pnpm --filter @ajooba/api dev",
+    "build": "pnpm -r --filter \"./apps/*\" build",
+    "build:contracts": "pnpm --filter @ajooba/contracts build",
+    "start": "pnpm -r --filter \"./apps/*\" start",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "format": "pnpm -r format",
+    "format:check": "pnpm -r format:check",
+    "typecheck": "pnpm --filter @ajooba/contracts build && pnpm -r typecheck",
+    "test": "pnpm --filter @ajooba/contracts build && pnpm -r test",
+    "test:coverage": "pnpm --filter @ajooba/contracts build && pnpm -r test:coverage",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "clean": "pnpm -r exec rm -rf node_modules .next dist .turbo coverage",
+    "catalog:audit": "python scripts/catalog_audit.py"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.4.0",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.5"
+  }
+}

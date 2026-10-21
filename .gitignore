@@ -1,0 +1,89 @@
+# ---------------------------------------------------------------------------
+# Ajooba Footwear — monorepo .gitignore
+#
+# NOTE: Source catalogue assets (public/products/**, public/banner/**,
+# public/images/**) are intentionally NOT ignored. They are versioned via
+# Git LFS (see .gitattributes) so that the original product images and the
+# catalogue spreadsheets are never lost, renamed or regenerated.
+# ---------------------------------------------------------------------------
+
+# Dependencies
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# Build output
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Test / coverage output
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# Environment — never commit secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+# The API test env is committed deliberately: it contains only loopback
+# addresses and a throwaway session secret, and tests must not depend on a
+# developer's local machine. See apps/api/.env.test.
+!apps/api/.env.test
+.vercel
+*.pem
+*.key
+secrets/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+Thumbs.db:encryptable
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.swp
+
+# Local data / scratch
+.tmp/
+tmp/
+scratch/
+*.local
+!.env.local.example
+
+# Build/tool caches
+.cache/
+.eslintcache
+.stylelintcache
+.parcel-cache/
+.turbo-cache/
+
+# Runtime pids & sockets
+*.pid
+*.pid.lock
+*.sock
+
+# Editors' generated service files
+service-worker.js
+workbox-*.js
+sw.js
