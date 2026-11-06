@@ -9,3 +9,8 @@ export * from './common/index.js';
 export * from './catalog/index.js';
 export * from './health/index.js';
 export * from './env/index.js';
+export * from './auth/index.js';
+export * from './commerce/index.js';
+export * from './admin/index.js';
+export * from './analytics/index.js';
+export * from './homepage/index.js';

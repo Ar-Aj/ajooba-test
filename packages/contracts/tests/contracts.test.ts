@@ -14,6 +14,7 @@ const validApiEnv = {
   STOREFRONT_PUBLIC_URL: 'http://localhost:3000',
   ADMIN_PUBLIC_URL: 'http://localhost:3001',
   SESSION_SECRET: '0123456789abcdef0123456789abcdef0123456789abcdef',
+  JWT_SECRET: 'fedcba9876543210fedcba9876543210fedcba9876543210',
 };
 
 describe('apiEnvSchema', () => {
@@ -24,6 +25,11 @@ describe('apiEnvSchema', () => {
   it('rejects a missing secret', () => {
     const { SESSION_SECRET: _omitted, ...withoutSecret } = validApiEnv;
     expect(apiEnvSchema.safeParse(withoutSecret).success).toBe(false);
+  });
+
+  it('rejects a missing token secret', () => {
+    const { JWT_SECRET: _omitted, ...withoutTokenSecret } = validApiEnv;
+    expect(apiEnvSchema.safeParse(withoutTokenSecret).success).toBe(false);
   });
 
   it('rejects a short secret', () => {

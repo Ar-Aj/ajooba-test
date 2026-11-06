@@ -3,14 +3,15 @@ import { storefrontEnvSchema, type StorefrontEnv } from '@ajooba/contracts';
 /**
  * Central, validated environment configuration for the storefront.
  *
- * The schema is imported from `@ajooba/contracts` so that the storefront and
- * the API agree on the exact variable names and validation rules.
+ * SERVER-ONLY. Importing this module from a Client Component will, at the
+ * very least, leak server config into the bundle; at worst it will throw at
+ * module load because the browser is missing server-only variables. Client
+ * Components should use:
  *
- * IMPORTANT — browser bundle safety:
- *   Only `NEXT_PUBLIC_*` variables are inlined into the client bundle by
- *   Next.js. Every other variable is read in this module, which is imported
- *   exclusively by server components, route handlers and server actions.
- *   Never add a secret to a `NEXT_PUBLIC_` variable.
+ *   - `mediaUrl` from `@/lib/media`  (depends on `NEXT_PUBLIC_MEDIA_BASE_URL`)
+ *
+ * This module is imported only by server components, route handlers and
+ * server actions.
  */
 
 function readServerEnv(): Record<string, string | undefined> {
@@ -44,22 +45,14 @@ function parseEnv(): StorefrontEnv {
 /**
  * Validated environment for the storefront.
  *
- * This module is server-only. Importing it from a Client Component would be
- * a mistake — use `NEXT_PUBLIC_*` values directly in client code instead.
+ * Server-only. See file docstring.
  */
 export const storefrontEnv: Readonly<StorefrontEnv> = Object.freeze(parseEnv());
 
-/** Build an absolute URL to an API endpoint. */
+/** Build an absolute URL to an API endpoint. Server-only. */
 export function apiUrl(path: string): string {
   return new URL(path, storefrontEnv.API_INTERNAL_URL).toString();
 }
 
-/** Build an absolute URL to a public asset served from `public/`. */
-export function mediaUrl(path: string): string {
-  const base = storefrontEnv.NEXT_PUBLIC_MEDIA_BASE_URL.replace(/\/$/, '');
-  const suffix = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${suffix}`;
-}
-
-/** ISR revalidation window for catalogue pages, in seconds. */
+/** ISR revalidation window for catalogue pages, in seconds. Server-only. */
 export const revalidateSeconds = storefrontEnv.CATALOG_REVALIDATE_SECONDS;

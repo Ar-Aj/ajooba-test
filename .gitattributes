@@ -1,4 +1,19 @@
 # ---------------------------------------------------------------------------
+# Line endings.
+#
+# The repository's Prettier configuration (`endOfLine: "lf"`) and the CI
+# format check both require LF. Without this rule, a checkout on Windows
+# produces CRLF working-tree files that Prettier then flags as unformatted,
+# which makes `pnpm format:check` fail on a clean clone and hides genuine
+# formatting regressions.
+#
+# `* text=auto eol=lf` normalises everything in the repository to LF in the
+# working tree while still letting Git detect text/binary content itself.
+# The LFS rules below already carry `-text`, so they are unaffected.
+# ---------------------------------------------------------------------------
+* text=auto eol=lf
+
+# ---------------------------------------------------------------------------
 # Git LFS configuration for Ajooba Footwear source assets.
 #
 # The original product photography and catalogue workbooks are authoritative

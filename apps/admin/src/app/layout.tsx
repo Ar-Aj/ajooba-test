@@ -20,12 +20,25 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  /*
+   * Navy, because the top bar and the sign-in band are navy. Letting the browser
+   * draw its own status bar in the same tone keeps a phone from looking like a
+   * website with an app inside it.
+   */
+  themeColor: '#0a121f',
+  colorScheme: 'light',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-IN">
-      <body className="min-h-dvh antialiased">{children}</body>
+      {/*
+        The shell is the whole viewport. `bg-background` is the warm paper the
+        white sheets sit on, and `text-foreground` the warm ink. Nothing sets a
+        page colour below this, so a new screen cannot accidentally land on a
+        cool grey.
+      */}
+      <body className="min-h-dvh bg-background text-foreground antialiased">{children}</body>
     </html>
   );
 }

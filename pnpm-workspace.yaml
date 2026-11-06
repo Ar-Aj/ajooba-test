@@ -1,3 +1,37 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# Security overrides for transitive advisories found by `pnpm audit`.
+#
+# Both of these are *transitive* dependencies, so they cannot be fixed by
+# changing a direct dependency's version range — they need an override.
+# Neither override is a major-version upgrade of a package the project
+# depends on directly.
+overrides:
+  # GHSA-27r3-jxmh-p828 / CVE-2026-111181 (high)
+  #
+  # `body-parser` <= 2.3.0 crashes the process when a request body carries
+  # a `Content-Encoding` (e.g. gzip) with trailing bytes after the compressed
+  # frame: the decompression stream is left piped with no error listener, the
+  # late error is re-thrown as an uncaught exception and the process dies.
+  #
+  #   * No authentication is required — body parsing happens before routing.
+  #   * It reaches the API through `express` 5.3.0, which depends on
+  #     `body-parser` 2.3.0.
+  #
+  # Fixed in 2.4.0. The override is a patch bump inside the same major
+  # version, so `express`'s own semver range is still satisfied.
+  'body-parser@>=2.0.0 <2.4.0': '2.4.0'
+
+  # GHSA-c475-qrg2-pj4r / CVE-2026-102990 (high)
+  #
+  # `basic-ftp` <= 6.2.0 has a quadratic-time CPU denial of service in the
+  # Unix directory-listing parser: a malicious FTP server can pin the Node
+  # event loop indefinitely with a single crafted listing line.
+  #
+  # This reaches the repository only through the root **dev** dependency
+  # `mongodb-mcp-server` (a local development tool). It is never part of a
+  # deployed application bundle, but the override keeps the whole workspace
+  # clean so `pnpm audit` is actionable rather than permanently red.
+  'basic-ftp@<=6.2.0': '6.2.3'

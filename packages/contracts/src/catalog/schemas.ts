@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import {
   CATALOG_SORTS,
+  CATEGORY_SLUG_MAX_LENGTH,
+  CATEGORY_SLUG_PATTERN,
   COLOUR_RAW_VALUES,
   COLOUR_TOKENS,
+  MEDIA_STORAGES,
   SIZE_VALUES,
   SUBCATEGORY_RAW_VALUES,
-  SUBCATEGORY_SLUGS,
 } from './types.js';
 
 /**
@@ -14,7 +16,24 @@ import {
  * for type inference in both Next.js applications.
  */
 
-export const subcategorySlugSchema = z.enum(SUBCATEGORY_SLUGS);
+/**
+ * A category slug.
+ *
+ * Structural, not enumerated. The taxonomy is the `categories` collection and
+ * an administrator can create a slug that is not in `SUBCATEGORY_SLUGS`; an
+ * enum here would reject it at the API boundary and make the admin panel a
+ * lie. Existence is checked against the database at write time
+ * (`assertAssignableCategory`), which is the only place that answer is known.
+ */
+export const categorySlugSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(CATEGORY_SLUG_MAX_LENGTH)
+  .regex(CATEGORY_SLUG_PATTERN, 'Category slug must be lowercase kebab-case');
+
+/** @deprecated Use `categorySlugSchema`. Kept for callers that read the old name. */
+export const subcategorySlugSchema = categorySlugSchema;
 export const colourRawSchema = z.enum(COLOUR_RAW_VALUES);
 export const colourTokenSchema = z.enum(COLOUR_TOKENS);
 export const sizeValueSchema = z.union(SIZE_VALUES.map((value) => z.literal(value)));
@@ -101,11 +120,26 @@ export const designCodeSchema = z
   .trim()
   .regex(/^A\d{2}$/);
 
+export const mediaStorageSchema = z.enum(MEDIA_STORAGES);
+
 export const productImageSchema = z.object({
   url: z.string().min(1),
   alt: z.string(),
   position: z.number().int().nonnegative(),
   sourceFile: z.string().min(1),
+  /**
+   * Set only when the image's filename colour token was verified against a
+   * colour this design sells. Absent = quarantined, not displayed.
+   */
+  colour: colourRawSchema.optional(),
+  colourToken: colourTokenSchema.optional(),
+  storage: mediaStorageSchema.optional(),
+  publicId: z.string().optional(),
+  cloudinaryUrl: z.string().optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  bytes: z.number().int().nonnegative().optional(),
+  checksum: z.string().optional(),
 });
 
 export const productVariantSchema = z.object({
@@ -119,6 +153,11 @@ export const productVariantSchema = z.object({
   discountPercent: z.number().min(0).max(100),
   stock: z.number().int().nonnegative(),
   inStock: z.boolean(),
+  /**
+   * Absent (pre-migration) or `verified` = sellable on stock alone.
+   * `pending-review` = colour has no verified photography; withheld from sale.
+   */
+  photographyStatus: z.enum(['verified', 'pending-review']).optional(),
   ukIndiaSize: z.number().int().optional(),
   euroSize: z.number().int().optional(),
   ean: z.string().optional(),
@@ -135,6 +174,12 @@ export const productSchema = z.object({
   brand: z.string().min(1),
   colours: z.array(colourRawSchema),
   images: z.array(productImageSchema),
+  /**
+   * Source filenames that could not be verified against a sold colour. They are
+   * retained in the review queue and deliberately excluded from the storefront.
+   * Optional so pre-migration payloads still validate.
+   */
+  quarantinedImages: z.array(z.string()).optional(),
   variants: z.array(productVariantSchema),
   mrp: z.number().int().nonnegative(),
   sellingPrice: z.number().int().nonnegative(),
@@ -148,7 +193,38 @@ export const facetCountSchema = z.object({
   count: z.number().int().nonnegative(),
 });
 
+/**
+ * The wire schema for a category, as the facet endpoint reports it.
+ *
+ * `children` is `z.array(z.unknown())` rather than a recursive reference so
+ * this file stays a leaf of the import graph. The storefront reads a flat list
+ * and builds its own grouping from `parentSlug`, so the nesting never crosses
+ * the boundary in a shape it depends on.
+ */
+export const categoryViewSchema = z.object({
+  slug: categorySlugSchema,
+  displayName: z.string().min(1),
+  description: z.string().default(''),
+  position: z.number().int(),
+  parentSlug: z.string().nullable().default(null),
+  isVisible: z.boolean(),
+  status: z.enum(['active', 'retired']),
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
+  sourceSubcategory: z.string().default(''),
+  productCount: z.number().int().nonnegative().default(0),
+  children: z.array(z.unknown()).default([]),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
 export const catalogFacetsSchema = z.object({
+  /**
+   * The live taxonomy. `.default([])` keeps a cached pre-upgrade payload
+   * valid — the field is additive and the storefront falls back to deriving
+   * labels from the slug counts when it is absent.
+   */
+  categories: z.array(categoryViewSchema).default([]),
   subcategories: z.array(facetCountSchema),
   colours: z.array(facetCountSchema),
   sizes: z.array(facetCountSchema),

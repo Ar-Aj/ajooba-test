@@ -1,19 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@theme {
-  --color-brand-50: #fdf8f4;
-  --color-brand-100: #f8eade;
-  --color-brand-200: #f0d3b8;
-  --color-brand-300: #e6b58c;
-  --color-brand-400: #da9160;
-  --color-brand-500: #cf753d;
-  --color-brand-600: #b85c29;
-  --color-brand-700: #97461f;
-  --color-brand-800: #7c3a1f;
-  --color-brand-900: #68311d;
-  --color-brand-950: #3a1709;
+/*
+ * Ajooba Footwear — design system
+ *
+ * Direction: the specimen catalogue. A hand-finished shoe photographed on a
+ * plain field becomes a specimen in a field guide: one object, alone, at a
+ * consistent scale, named plainly, with one fact beside it.
+ *
+ * House rules enforced here, not per component:
+ *   - cream is the ground; white is never a card colour.
+ *   - ink-900 for text and for the one dark surface per screen.
+ *   - gold-500 is an accent, never a large fill. It never carries body text.
+ *   - claret is destructive / out-of-stock only. It is not decorative.
+ *   - resting surfaces have no shadow and no border. Separation is space and
+ *     a change of ground. A 1px rule is allowed only inside a table, a form or
+ *     a data strip.
+ *   - five type steps, no sixth.
+ */
 
+@theme {
+  /* ---- Brand palette: warm charcoal-espresso ink, champagne cream & gold -- */
+  --color-ink-50: #f8f5ef;
+  --color-ink-100: #ebe5da;
+  --color-ink-200: #cfc6b6;
+  --color-ink-300: #a89d8c;
+  --color-ink-400: #7d7264;
+  --color-ink-500: #5c5247;
+  --color-ink-600: #433b33;
+  --color-ink-700: #2f2923;
+  --color-ink-800: #211d18;
+  --color-ink-900: #181512;
+  --color-ink-950: #100e0c;
+
+  --color-gold-50: #fbf6e9;
+  --color-gold-100: #f4e8c2;
+  --color-gold-200: #ead196;
+  --color-gold-300: #dcb867;
+  --color-gold-400: #cd9f45;
+  --color-gold-500: #c9a24a;
+  --color-gold-600: #b38938;
+  --color-gold-700: #8f6a2c;
+  --color-gold-800: #6f5221;
+  --color-gold-900: #4a3817;
+
+  --color-cream-50: #fdfaf2;
+  --color-cream-100: #faf4e3;
+  --color-cream-200: #f3e9cb;
+
+  --color-claret-600: #9c1b3a;
+  --color-claret-700: #7e1530;
+
+  /* ---- Neutrals --------------------------------------------------------- */
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f5f5f5;
   --color-neutral-200: #e5e5e5;
@@ -26,53 +65,418 @@
   --color-neutral-900: #171717;
   --color-neutral-950: #0a0a0a;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
+  /* ---- Semantic aliases ------------------------------------------------- */
+  --color-background: #fdfaf2;
+  --color-foreground: var(--color-ink-900);
+  --color-muted: var(--color-ink-100);
+  --color-muted-foreground: var(--color-ink-500);
+  --color-border: #e8e1ce;
+  --color-input: #ded5bd;
+  --color-ring: var(--color-gold-600);
+  --color-card: #fdfaf2;
+  --color-card-foreground: var(--color-ink-900);
+  --color-accent: var(--color-gold-500);
+  --color-accent-foreground: var(--color-ink-900);
+  --color-destructive: var(--color-claret-600);
+  --color-destructive-foreground: #ffffff;
+  --color-success: #1f7a47;
+  --color-warning: #b8770c;
+
+  /*
+   * The specimen fields.
+   *
+   * Five flat tints a photograph can sit on, rotated in a fixed order so a grid
+   * of tiles reads as a considered set rather than a random palette.
+   *
+   * All five are steps of the house ground — champagne, cream, and one cool
+   * stone that leans navy. That is deliberate and it is a correction: earlier
+   * values included a mauve (`#ece3e1`) and a lavender-grey (`#e6e7ee`) that
+   * read as pink and lilac on a warm page and put a colour on screen the brand
+   * does not own. The shoe is the only saturated thing here; the fields are
+   * paper it sits on.
+   */
+  --color-field-a: #f3ebd9;
+  --color-field-b: #eee4ce;
+  --color-field-c: #f6f0e2;
+  --color-field-d: #e9dfd0;
+  --color-field-e: #faf5e9;
+
+  /* ---- Geometry: one radius per element class ---------------------------- */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.125rem;
+  --radius-lg: 0.125rem;
+  --radius-xl: 0.125rem;
+  --radius-2xl: 0.125rem;
+  --radius-3xl: 0.125rem;
+
+  /* ---- The two shadows that exist, both for floating layers only -------- */
+  --shadow-card: 0 1px 2px rgba(11, 20, 36, 0.04);
+  --shadow-elevated: 0 1px 2px rgba(11, 20, 36, 0.05), 0 18px 48px rgba(11, 20, 36, 0.1);
+  --shadow-ring: 0 0 0 2px var(--color-cream-50), 0 0 0 4px var(--color-gold-600);
+
+  /* ---- Typography: five steps, no sixth ---------------------------------- */
+  --font-display: 'Cormorant Garamond', 'Iowan Old Style', Georgia, ui-serif, serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* ---- Motion ------------------------------------------------------------ */
+  --ease-out-quiet: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-quiet: cubic-bezier(0.4, 0, 1, 1);
+  --animate-marquee: marquee 44s linear infinite;
 }
 
 @layer base {
-  * {
-    border-color: var(--color-neutral-200);
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+
+  /*
+   * The announcement marquee. Translating the duplicated track by exactly half
+   * its width means the second copy lands precisely where the first began, so
+   * there is no visible jump at the loop point.
+   */
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* The one entrance used by every section. Fired once, by IntersectionObserver. */
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 12px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes crossfade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes drawer-in {
+    from {
+      transform: translate3d(100%, 0, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
   }
 
   html {
     -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'kern', 'liga', 'clig', 'calt';
+    scroll-behavior: smooth;
   }
 
   body {
-    background-color: #ffffff;
-    color: var(--color-neutral-900);
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: 'rlig' 1, 'calt' 1, 'kern' 1;
+    font-size: 16px;
+    line-height: 1.55;
   }
 
-  /* Mobile-first: keep tap targets comfortable on phones. */
+  /* Display type is the editorial serif, at the two large steps only. */
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.012em;
+    font-weight: 500;
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  /* Any number a reader might compare sits on a shared baseline. */
+  .tnum,
+  table,
+  output,
+  time,
+  .price {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* Keep tap targets comfortable on phones. */
   @media (max-width: 767px) {
     html {
       font-size: 16px;
     }
   }
+
+  /* Visible focus ring, mobile-friendly, identical in every app. */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-ring);
+    border-radius: var(--radius-sm);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  ::selection {
+    background-color: var(--color-gold-200);
+    color: var(--color-ink-900);
+  }
+
+  /*
+   * "Reduce motion" — set by the accessibility control in the footer and
+   * honoured regardless of the OS setting, because the shopper has made an
+   * explicit choice. Tailwind's `motion-reduce:` variants and every transition
+   * on the site are switched off here.
+   */
+  .motion-reduce *,
+  .motion-reduce *::before,
+  .motion-reduce *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    html {
+      scroll-behavior: auto;
+    }
+  }
 }
 
 @layer utilities {
+  /* ---- Layout ------------------------------------------------------------ */
   .container-page {
     margin-inline: auto;
     width: 100%;
-    max-width: 80rem;
-    padding-inline: 1rem;
+    max-width: 82rem;
+    padding-inline: 1.25rem;
   }
 
   @media (min-width: 768px) {
     .container-page {
-      padding-inline: 1.5rem;
+      padding-inline: 2rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container-page {
-      padding-inline: 2rem;
+      padding-inline: 2.5rem;
     }
+  }
+
+  .container-narrow {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 64rem;
+    padding-inline: 1.25rem;
+  }
+
+  /* ---- Type steps -------------------------------------------------------- */
+  .step-xs {
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .step-sm {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .step-md {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .step-lg {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.4vw, 1.625rem);
+    line-height: 1.2;
+    letter-spacing: -0.012em;
+  }
+
+  .step-xl {
+    font-family: var(--font-display);
+    font-size: clamp(1.875rem, 4.4vw, 3.25rem);
+    line-height: 1.06;
+    letter-spacing: -0.018em;
+  }
+
+  /* The small caps label. One definition, used for every eyebrow in the app. */
+  .label-cap {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* ---- Surfaces ---------------------------------------------------------- */
+  .surface-flat {
+    background-color: var(--color-cream-50);
+  }
+
+  .surface-dark {
+    background-color: var(--color-ink-900);
+    color: var(--color-cream-50);
+  }
+
+  /*
+   * The 1px rules. Only ever inside a table, a form or a data strip — never as
+   * a decorative divider between two blocks of marketing copy.
+   */
+  .rule-b {
+    box-shadow: inset 0 -1px 0 0 var(--color-border);
+  }
+
+  .rule-t {
+    box-shadow: inset 0 1px 0 0 var(--color-border);
+  }
+
+  /* ---- The specimen tile ------------------------------------------------- */
+  /*
+   * A flat field holding one photograph of one object, centred, at a consistent
+   * apparent size. No border, no shadow, no hover lift. The photograph's own
+   * studio background is removed with `multiply` on the light fields so the
+   * object appears to sit on the field rather than in a box inside it.
+   */
+  .specimen {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background-color: var(--color-field-e);
+  }
+
+  .specimen img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 8%;
+    mix-blend-mode: multiply;
+    transition: transform 400ms var(--ease-out-quiet);
+  }
+
+  .specimen:hover img {
+    transform: scale(1.02);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .specimen:hover img {
+      transform: none;
+    }
+  }
+
+  /* ---- Entrance ---------------------------------------------------------- */
+  .rise {
+    animation: rise 380ms var(--ease-out-quiet) both;
+  }
+
+  /*
+   * A section that has not scrolled into view yet. Set by the client observer;
+   * the element is fully visible when JavaScript is absent, because the class
+   * that hides it is only ever added by that observer.
+   */
+  .rise-ready {
+    opacity: 0;
+  }
+
+  .rise-ready.is-in {
+    animation: rise 380ms var(--ease-out-quiet) both;
+  }
+
+  /* ---- Interactions ------------------------------------------------------ */
+  .btn-press {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      transform 120ms ease;
+  }
+
+  .btn-press:active {
+    transform: translateY(1px);
+  }
+
+  /* An underline that arrives from the left rather than appearing. */
+  .link-underline {
+    position: relative;
+  }
+
+  .link-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    height: 1px;
+    width: 0;
+    background-color: currentColor;
+    transition: width 180ms var(--ease-out-quiet);
+  }
+
+  .link-underline:hover::after,
+  .link-underline[aria-current='page']::after,
+  .link-underline:focus-visible::after {
+    width: 100%;
+  }
+
+  /* Native scrollbars in a more refined tone (where supported). */
+  .scrollbar-soft {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-200) transparent;
+  }
+
+  .scrollbar-soft::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .scrollbar-soft::-webkit-scrollbar-thumb {
+    background: var(--color-ink-200);
+    border-radius: 999px;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }

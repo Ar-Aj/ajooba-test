@@ -58,6 +58,21 @@ export function validated<TSource extends 'query' | 'params', TData>(
 }
 
 /**
+ * Read the parsed request body.
+ *
+ * `validateBody` replaces `req.body` with the parsed, coerced value, but
+ * Express types `req.body` as `any`, so the parsed type has to be restored
+ * at the point of use. This helper does that in one place, and keeps the
+ * `any` from leaking into the route handlers.
+ *
+ * @example
+ * const body = validatedBody<CheckoutRequest>(req);
+ */
+export function validatedBody<TData>(req: Request): TData {
+  return req.body as TData;
+}
+
+/**
  * Assign a request id when one was not provided by an upstream service.
  */
 export function ensureRequestId(req: Request): string {

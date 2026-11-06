@@ -17,6 +17,10 @@ dist/
 build/
 out/
 .next/
+# The E2E suite builds the Next.js apps into a separate directory so a test
+# run never invalidates the developer's own `.next` build, and never leaves
+# a bundle whose inlined NEXT_PUBLIC_* values point at a throwaway port.
+.next-e2e/
 .turbo/
 *.tsbuildinfo
 tsconfig.tsbuildinfo
@@ -68,6 +72,10 @@ desktop.ini
 .tmp/
 tmp/
 scratch/
+artifacts/
+backups/
+.taste-skill/
+PROMPT5.txt
 *.local
 !.env.local.example
 
@@ -87,3 +95,4 @@ scratch/
 service-worker.js
 workbox-*.js
 sw.js
+!apps/storefront/public/sw.js

@@ -1,27 +1,980 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/*
+ * Ajooba Admin — design system
+ *
+ * ## The palette, in five words
+ *
+ * **Rose gold. Navy. White. Black.** Nothing else carries meaning.
+ *
+ * The storefront sells a hand-finished shoe on cream with a gold hairline. The
+ * panel is the same house seen from the back: warm paper instead of cool grey,
+ * and rose gold where the shop has gold. A person who moves between the two
+ * should recognise the same shop, not two products that share a name.
+ *
+ *   - **Rose gold is the action and the data.** The primary button, the active
+ *     row, every bar in a chart, every link. One hue, one scale, no second
+ *     accent competing with it.
+ *   - **Navy is the frame, used sparingly.** It appears in the rail's wordmark,
+ *     the sign-in ground, and one deep surface per screen at most. If navy were
+ *     everywhere the panel would read cold and rose gold would stop feeling like
+ *     the house colour.
+ *   - **Black is the ink.** A warm near-black, never `#000`: pure black on warm
+ *     paper reads as a printed page with the lights off.
+ *   - **White is the sheet.** Warm ground, white sheets, a hairline in a warm
+ *     grey. Separation is a tone step, never a shadow.
+ *
+ * ## The type is deliberately large
+ *
+ * An operations panel is read at arm's length, in a stockroom, on a phone held
+ * in one hand while the other holds a shoe box. The base is **17px**, table
+ * cells **16px**, and nothing that carries information is below **13px**.
+ * Headings are set in one warm serif — the panel's single display voice — and
+ * everything else is one grotesk.
+ *
+ * ## Mobile first, then the desk
+ *
+ * Every layout rule below starts as a single column and gains width at `md` and
+ * `lg`. Touch targets are 44px minimum on a coarse pointer, inputs are 16px so
+ * iOS does not zoom the page on focus, and tap highlights are replaced by an
+ * explicit `:active` state. The desk gets more: a wider rail, a wider canvas,
+ * larger figures and room between blocks, because the laptop is where an
+ * operator spends the day and space there is not scarce.
+ */
+
 @theme {
-  --color-brand-50: #fdf8f4;
-  --color-brand-100: #f8eade;
-  --color-brand-200: #f0d3b8;
-  --color-brand-300: #e6b58c;
-  --color-brand-400: #da9160;
-  --color-brand-500: #cf753d;
-  --color-brand-600: #b85c29;
-  --color-brand-700: #97461f;
-  --color-brand-800: #7c3a1f;
-  --color-brand-900: #68311d;
-  --color-brand-950: #3a1709;
+  /*
+   * ---- Rose gold: gold first, with a breath of rose ------------------------
+   *
+   * Not a metallic pink and not a brown. The storefront's accent is a warm gold
+   * (#c9a24a) on cream, and the panel's accent is that same gold with the
+   * faintest rose in the light tints so it reads as rose gold rather than brass.
+   *
+   * `500` is the house gold — the fill a primary button wears. It is deliberately
+   * light, because **it carries ink, not white**: gold with white text is
+   * unreadable, and darkening gold until white passes turns it brown, which is
+   * the mistake this scale exists to avoid. Ink on `500` is 7.2:1.
+   *
+   * `700` is the antique gold used for text on paper and for a pressed state
+   * (5.1:1 on white). `100`–`200` are the champagne wells a panel or a selected
+   * row sits in.
+   */
+  --color-rose-50: #fdf8f1;
+  --color-rose-100: #f9eedd;
+  --color-rose-200: #f2dec0;
+  --color-rose-300: #e7c89a;
+  --color-rose-400: #d9ae74;
+  --color-rose-500: #c79a55;
+  --color-rose-600: #b0813f;
+  --color-rose-700: #8c672f;
+  --color-rose-800: #6b4e24;
+  --color-rose-900: #4a3618;
+  --color-rose-950: #2a1e0d;
+
+  /*
+   * ---- Navy: the frame, used sparingly -----------------------------------
+   *
+   * The rail's colour. Slightly bluer and a touch lighter than the ink, so a navy
+   * band reads as navy against warm cream rather than as a black one — and so the
+   * rail is visibly the *frame* while the text stays the house black.
+   */
+  --color-navy-50: #f3f5f9;
+  --color-navy-100: #e2e7f0;
+  --color-navy-200: #c3cddf;
+  --color-navy-300: #96a8c4;
+  --color-navy-400: #6480a5;
+  --color-navy-500: #46628a;
+  --color-navy-600: #354d70;
+  --color-navy-700: #2a3e5c;
+  --color-navy-800: #1e2d45;
+  --color-navy-900: #16233a;
+  --color-navy-950: #101c2f;
+
+  /*
+   * ---- Brass: only where somebody is needed ------------------------------
+   *
+   * An order waiting to be packed, a draft, a low stock line. It has to be
+   * distinguishable from the rose-gold accent beside it, so it is the storefront
+   * gold itself — a cleaner, yellower metal — and it is only ever a tint or a
+   * text colour, never a button.
+   */
+  --color-brass-50: #fbf6e9;
+  --color-brass-100: #f4e8c2;
+  --color-brass-200: #ead196;
+  --color-brass-300: #dcb867;
+  --color-brass-400: #cd9f45;
+  --color-brass-500: #c9a24a;
+  --color-brass-600: #a3822f;
+  --color-brass-700: #856a26;
+  --color-brass-800: #65501c;
+
+  /*
+   * ---- Ink: the text and the frame ---------------------------------------
+   *
+   * The storefront's ink, which is a very dark navy-black rather than a neutral
+   * grey. Using the same value here means a screenshot of the panel and a
+   * screenshot of the shop read as the same house. `900` is body ink, `500` the
+   * secondary grey that still holds 4.5:1 on cream, `300` a hairline and never a
+   * word.
+   */
+  --color-ink-50: #f7f8fb;
+  --color-ink-100: #e6eaf2;
+  --color-ink-200: #c4ccdb;
+  --color-ink-300: #9aa5bd;
+  --color-ink-400: #6c7993;
+  --color-ink-500: #475571;
+  --color-ink-600: #2e3953;
+  --color-ink-700: #1f2940;
+  --color-ink-800: #121a2e;
+  --color-ink-900: #0b1424;
+  --color-ink-950: #060b16;
+
+  /* ---- Ground and paper --------------------------------------------------- */
+  /*
+   * Cream, exactly as the storefront uses it, so the panel's ground and the
+   * shop's ground are the same paper. White is the sheet that sits on it.
+   */
+  --color-cream-50: #fdfaf2;
+  --color-cream-100: #faf4e3;
+  --color-cream-200: #f3e9cb;
+
+  --color-panel-50: #ffffff;
+  --color-panel-100: #fbf8ee;
+  --color-panel-200: #f4efe1;
+  --color-panel-300: #e8e1ce;
+
+  /*
+   * Fault.
+   *
+   * The brief is four colours and an error is not one of them. But an operator
+   * who cannot tell a failed payment from a paid one in greyscale is being
+   * underserved, so a single oxblood exists and is used for nothing else. It is
+   * the storefront's own claret, so "something went wrong" is the same red in both
+   * apps.
+   */
+  --color-claret-50: #fdf3f5;
+  --color-claret-100: #fbe4ea;
+  --color-claret-600: #9c1b3a;
+  --color-claret-700: #7e1530;
+  --color-claret-800: #5f1024;
+
+  /*
+   * Confirmed.
+   *
+   * A sale that completed. Deep enough to carry text; used only on a success
+   * mark, never on a chart or a surface.
+   */
+  --color-sage-50: #f1f7f3;
+  --color-sage-100: #dcece1;
+  --color-sage-200: #bcdcc7;
+  --color-sage-600: #1f7a47;
+  --color-sage-700: #186039;
+
+  /*
+   * ---- Brand aliases ------------------------------------------------------
+   *
+   * Three thousand lines of interface were written against `brand-*`, `blue-*`
+   * and Tailwind's default greys before the panel had a design system. Rather
+   * than restyle every class and miss a state, the scales themselves are
+   * re-pointed here: `brand-*` and `blue-*` become rose gold, `neutral-*` the
+   * warm grey, `amber-*` the brass, `red-*` the oxblood, `green-*` the sage.
+   * Every screen gains the new palette in one edit, and a screen added tomorrow
+   * gains it for free.
+   */
+  --color-brand-50: var(--color-rose-50);
+  --color-brand-100: var(--color-rose-100);
+  --color-brand-200: var(--color-rose-200);
+  --color-brand-300: var(--color-rose-300);
+  --color-brand-400: var(--color-rose-400);
+  --color-brand-500: var(--color-rose-500);
+  --color-brand-600: var(--color-rose-600);
+  --color-brand-700: var(--color-rose-700);
+  --color-brand-800: var(--color-rose-800);
+  --color-brand-900: var(--color-rose-900);
+  --color-brand-950: var(--color-rose-950);
+
+  --color-blue-50: var(--color-rose-50);
+  --color-blue-100: var(--color-rose-100);
+  --color-blue-200: var(--color-rose-200);
+  --color-blue-300: var(--color-rose-300);
+  --color-blue-400: var(--color-rose-400);
+  --color-blue-500: var(--color-rose-500);
+  --color-blue-600: var(--color-rose-600);
+  --color-blue-700: var(--color-rose-700);
+  --color-blue-800: var(--color-rose-800);
+  --color-blue-900: var(--color-rose-900);
+  --color-blue-950: var(--color-rose-950);
+
+  --color-neutral-50: #f7f8fb;
+  --color-neutral-100: #e6eaf2;
+  --color-neutral-200: #c4ccdb;
+  --color-neutral-300: #9aa5bd;
+  --color-neutral-400: #6c7993;
+  --color-neutral-500: #475571;
+  --color-neutral-600: #2e3953;
+  --color-neutral-700: #1f2940;
+  --color-neutral-800: #121a2e;
+  --color-neutral-900: #0b1424;
+  --color-neutral-950: #060b16;
+
+  --color-gold-50: var(--color-brass-50);
+  --color-gold-100: var(--color-brass-100);
+  --color-gold-200: var(--color-brass-200);
+  --color-gold-300: var(--color-brass-300);
+  --color-gold-400: var(--color-brass-400);
+  --color-gold-500: var(--color-brass-500);
+  --color-gold-600: var(--color-brass-600);
+  --color-gold-700: var(--color-brass-700);
+  --color-gold-800: var(--color-brass-800);
+
+  --color-amber-50: var(--color-brass-50);
+  --color-amber-100: var(--color-brass-100);
+  --color-amber-200: var(--color-brass-200);
+  --color-amber-300: var(--color-brass-300);
+  --color-amber-400: var(--color-brass-400);
+  --color-amber-500: var(--color-brass-500);
+  --color-amber-600: var(--color-brass-600);
+  --color-amber-700: var(--color-brass-700);
+  --color-amber-800: var(--color-brass-800);
+  --color-amber-900: #3d2e11;
+
+  --color-red-50: var(--color-claret-50);
+  --color-red-100: var(--color-claret-100);
+  --color-red-200: #f6c9d0;
+  --color-red-300: #eda3ae;
+  --color-red-700: var(--color-claret-700);
+  --color-red-800: var(--color-claret-800);
+  --color-red-900: #4a131a;
+
+  --color-green-50: var(--color-sage-50);
+  --color-green-100: var(--color-sage-100);
+  --color-green-200: var(--color-sage-200);
+  --color-green-300: var(--color-sage-200);
+  --color-green-600: var(--color-sage-600);
+  --color-green-700: var(--color-sage-700);
+  --color-green-800: var(--color-sage-700);
+  --color-green-900: #1c4031;
+
+  /* ---- Semantic ---------------------------------------------------------- */
+  --color-background: var(--color-cream-50);
+  --color-foreground: var(--color-ink-900);
+  --color-border: #e8e1ce;
+  --color-border-strong: #ded5bd;
+  --color-muted-foreground: var(--color-ink-500);
+  --color-ring: var(--color-rose-600);
+
+  --color-success: var(--color-sage-600);
+  --color-warning: var(--color-brass-600);
+  --color-destructive: var(--color-claret-600);
+
+  /*
+   * ---- Geometry ----------------------------------------------------------
+   *
+   * Soft, not tight. A boutique ledger, not a spreadsheet: 14px on a sheet, a
+   * pill for a status. One radius per element class, so a rounded button inside
+   * a square sheet never happens by accident.
+   */
+  --radius: 0.5rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  /*
+   * Two shadows, both for what floats and nothing at rest. On warm paper a
+   * resting shadow reads as a floating card, and this is a ledger where nothing
+   * floats.
+   */
+  --shadow-card: 0 1px 2px rgba(26, 21, 18, 0.04);
+  --shadow-elevated: 0 2px 6px rgba(26, 21, 18, 0.06), 0 20px 48px rgba(26, 21, 18, 0.16);
+  --shadow-ring: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-rose-600);
+
+  /* ---- Type -------------------------------------------------------------- */
+  /*
+   * One grotesk for the interface, one serif for the panel's single display
+   * voice — the wordmark and a page title. The serif stack is the storefront's
+   * own, so the two apps' display voice is the same typeface even where no web
+   * font is served.
+   */
+  --font-display: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia,
+    ui-serif, serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  /*
+   * The type scale, raised.
+   *
+   * `text-sm` was 14px and read badly at arm's length on a 15" laptop, so the
+   * scale itself moves: `text-sm` is 16px, `text-base` 17px, `text-xs` 13px, and
+   * the floor moves with it. Every screen inherits the change because the scale
+   * is global, which is the only way to enlarge three thousand existing classes
+   * without missing one.
+   */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.55;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.45;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.35;
+  --text-2xl: 1.625rem;
+  --text-2xl--line-height: 1.25;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 1.15;
+
+  --ease-out-quiet: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --container-page: 104rem;
 }
 
 @layer base {
-  * {
-    border-color: var(--color-neutral-200);
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* The page never scrolls sideways; a wide table scrolls inside its sheet. */
+    overflow-x: hidden;
   }
 
   body {
-    background-color: #fafaf9;
-    color: var(--color-neutral-900);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    /*
+     * A tap is not a selection. Without this, long-pressing a nav row on a phone
+     * highlights the label and pops the OS selection handles over an interface
+     * that has nothing to select.
+     */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Every number an operator might compare sits on a shared baseline. This is
+     the single most important typographic decision in an operations panel. */
+  .tnum,
+  table,
+  output,
+  time,
+  .price {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  /* The display voice. The wordmark and a page title, nowhere else. */
+  .font-serif {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+    font-weight: 500;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-ring);
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background-color: var(--color-rose-200);
+    color: var(--color-ink-900);
+  }
+
+  /*
+   * iOS zooms the whole page when a field smaller than 16px is focused, and it
+   * never zooms back out. That one behaviour makes a web app feel broken on a
+   * phone, and it is fixed only here — a `text-sm` on a single input elsewhere
+   * would reintroduce it.
+   */
+  @media (pointer: coarse) {
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
+
+@layer utilities {
+  /* ---- Layout ------------------------------------------------------------ */
+  .container-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--container-page);
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container-page {
+      padding-inline: 2.25rem;
+    }
+  }
+
+  /* ---- Type steps -------------------------------------------------------- */
+  /*
+   * Six steps, and the floor is 13px. `step-xs` is the smallest thing allowed to
+   * carry information — measured meta, never a label that matters.
+   */
+  .step-xs {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .step-sm {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .step-md {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+
+  /*
+   * The page title.
+   *
+   * Larger than the app-screen study's median (24px) on purpose: the
+   * administrator reads this panel across a counter. It stays under a
+   * landing-page title, so it is still a title and not a billboard.
+   */
+  .step-lg {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2.125rem);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    font-weight: 500;
+  }
+
+  .step-xl {
+    font-family: var(--font-serif);
+    font-size: clamp(1.875rem, 1.35rem + 2.2vw, 3rem);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+
+  /* The small label. Sentence case, warm grey. Tracked uppercase everywhere is
+     the tell of a generated dashboard, so it is not used. */
+  .label-cap {
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: 0;
+    color: var(--color-ink-500);
+  }
+
+  /* ---- Surfaces ---------------------------------------------------------- */
+  .surface-panel {
+    background-color: var(--color-panel-50);
+  }
+
+  .surface-dark {
+    background-color: var(--color-navy-950);
+    color: #ffffff;
+  }
+
+  .rule-b {
+    box-shadow: inset 0 -1px 0 0 var(--color-border);
+  }
+
+  .rule-t {
+    box-shadow: inset 0 1px 0 0 var(--color-border);
+  }
+
+  /* ---- The data table ---------------------------------------------------- */
+  /*
+   * One definition for every table in the panel. A row is 56px tall because the
+   * cell text is 16px and a 48px row with 16px text is a squeeze; the header is
+   * sticky on the panel ground so a long table keeps its column names.
+   *
+   * On a phone a table cannot fit, and the answer is NOT to shrink the type. The
+   * `.table-scroll` wrapper scrolls horizontally, which keeps the numbers at a
+   * size a person can read.
+   */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--color-panel-100);
+    border-bottom: 1px solid var(--color-border-strong);
+    padding: 0.8125rem 1rem;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--color-ink-500);
+    white-space: nowrap;
+  }
+
+  .data-table tbody td {
+    height: 3.5rem;
+    padding: 0.8125rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 1rem;
+    color: var(--color-ink-800);
+    vertical-align: middle;
+  }
+
+  .data-table tbody tr:hover {
+    background-color: var(--color-rose-50);
+  }
+
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* The scroll container every table sits in. `-webkit-overflow-scrolling` keeps
+     momentum scrolling inside the box on iOS rather than scrolling the page. */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ---- Status marks ------------------------------------------------------ */
+  /*
+   * A status is a small square plus a word. The word carries the meaning; the
+   * square is reinforcement for the scanning eye. Colour is never the only
+   * signal, so a greyscale printout still reads correctly.
+   */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .status::before {
+    content: '';
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 999px;
+    background-color: currentColor;
+    flex-shrink: 0;
+  }
+
+  /* ---- Interactions ------------------------------------------------------ */
+  /*
+   * `touch-action: manipulation` removes the 300ms double-tap delay. Without it
+   * every button in the panel feels a third of a second slow on a phone, which
+   * reads as a slow backend.
+   */
+  .btn-press {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      transform 120ms ease;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .btn-press:active {
+    transform: scale(0.985);
+  }
+
+  .link-underline {
+    position: relative;
+  }
+
+  .link-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    height: 2px;
+    width: 0;
+    background-color: currentColor;
+    transition: width 160ms var(--ease-out-quiet);
+  }
+
+  .link-underline:hover::after,
+  .link-underline[aria-current='page']::after {
+    width: 100%;
+  }
+
+  .scrollbar-soft {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-panel-300) transparent;
+  }
+
+  .scrollbar-soft::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .scrollbar-soft::-webkit-scrollbar-thumb {
+    background: var(--color-panel-300);
+    border-radius: 4px;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ---- Forms ------------------------------------------------------------ */
+  /*
+   * One field, one look. 48px on a phone so a thumb can land on it, 46px from
+   * `md`. The text is 16px because a smaller one makes iOS zoom the page.
+   */
+  .field {
+    height: 3rem;
+    width: 100%;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background-color: #ffffff;
+    padding-inline: 0.875rem;
+    font-size: 1rem;
+    color: var(--color-ink-900);
+    transition:
+      border-color 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  @media (min-width: 768px) {
+    .field {
+      height: 2.875rem;
+    }
+  }
+
+  .field::placeholder {
+    color: var(--color-ink-400);
+  }
+
+  .field:hover {
+    border-color: var(--color-ink-400);
+  }
+
+  .field:focus {
+    border-color: var(--color-rose-600);
+    box-shadow: 0 0 0 3px var(--color-rose-100);
+    outline: none;
+  }
+
+  .field:disabled {
+    background-color: var(--color-panel-100);
+    color: var(--color-ink-400);
+  }
+
+  textarea.field {
+    height: auto;
+    padding-block: 0.75rem;
+    line-height: 1.55;
+  }
+
+  select.field {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--color-ink-500) 50%),
+      linear-gradient(135deg, var(--color-ink-500) 50%, transparent 50%);
+    background-position:
+      calc(100% - 1.125rem) 1.3rem,
+      calc(100% - 0.75rem) 1.3rem;
+    background-size:
+      0.375rem 0.375rem,
+      0.375rem 0.375rem;
+    background-repeat: no-repeat;
+    padding-right: 2.25rem;
+  }
+
+  .checkbox {
+    height: 1.125rem;
+    width: 1.125rem;
+    flex-shrink: 0;
+    accent-color: var(--color-rose-600);
+    border-radius: 3px;
+  }
+
+  /* ---- Buttons ---------------------------------------------------------- */
+  /*
+   * Three weights, and no more. A panel with eleven button styles has no primary
+   * action, because everything looks equally important.
+   */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 3rem;
+    padding-inline: 1.125rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      transform 120ms ease;
+  }
+
+  @media (min-width: 768px) {
+    .btn {
+      height: 2.875rem;
+    }
+  }
+
+  .btn:active:not(:disabled) {
+    transform: scale(0.985);
+  }
+
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  /*
+   * Rose gold. The one thing a screen is asking to be pressed.
+   *
+   * Gold carries **ink**, not white. A gold that is dark enough for white text is
+   * a brown, and a panel full of brown buttons does not look like the shop. A
+   * hairline of a deeper gold holds the edge so the button is not a flat lozenge
+   * on white.
+   */
+  .btn-primary {
+    background-color: var(--color-rose-500);
+    color: var(--color-ink-900);
+    box-shadow: inset 0 0 0 1px var(--color-rose-600);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--color-rose-400);
+    box-shadow: inset 0 0 0 1px var(--color-rose-600);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    background-color: var(--color-rose-600);
+  }
+
+  .btn-secondary {
+    border-color: var(--color-border-strong);
+    background-color: #ffffff;
+    color: var(--color-ink-800);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--color-rose-400);
+    background-color: var(--color-rose-50);
+    color: var(--color-rose-800);
+  }
+
+  .btn-quiet {
+    color: var(--color-ink-600);
+  }
+
+  .btn-quiet:hover:not(:disabled) {
+    background-color: var(--color-panel-100);
+    color: var(--color-ink-900);
+  }
+
+  .btn-danger {
+    border-color: var(--color-claret-600);
+    color: var(--color-claret-600);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: var(--color-claret-600);
+    color: #ffffff;
+  }
+
+  .btn-sm {
+    height: 2.625rem;
+    padding-inline: 0.875rem;
+    font-size: 0.9375rem;
+  }
+
+  @media (min-width: 768px) {
+    .btn-sm {
+      height: 2.375rem;
+    }
+  }
+
+  .btn-icon {
+    width: 3rem;
+    padding-inline: 0;
+  }
+
+  @media (min-width: 768px) {
+    .btn-icon {
+      width: 2.875rem;
+    }
+  }
+
+  /* ---- Panels ----------------------------------------------------------- */
+  /*
+   * A white sheet on the warm ground with one hairline and a soft radius. No
+   * heavy shadow: on a light ground a shadow reads as a floating card, and this
+   * is a ledger, where nothing floats.
+   */
+  .sheet {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: #ffffff;
+    overflow: hidden;
+  }
+
+  .sheet-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.125rem;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-panel-100);
+  }
+
+  @media (min-width: 768px) {
+    .sheet-head {
+      padding: 1.125rem 1.5rem;
+    }
+  }
+
+  /* ---- Page shell -------------------------------------------------------- */
+  /*
+   * The screen body. One definition so every screen has the same measure and the
+   * same breathing room; the laptop gets materially more of both, because that is
+   * where an operator spends the day and the space exists there.
+   */
+  .page-body {
+    width: 100%;
+    max-width: 104rem;
+    margin-inline: auto;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  @media (min-width: 768px) {
+    .page-body {
+      padding: 2rem 1.5rem 4rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .page-body {
+      padding: 2.5rem 2.5rem 5rem;
+    }
+  }
+
+  /* ---- Charts ------------------------------------------------------------ */
+  /*
+   * The house data colour. Charts reference these two variables rather than a
+   * class so a single change re-tints every figure in the panel.
+   */
+  .chart-ink {
+    background-color: var(--color-rose-600);
+  }
+
+  .chart-soft {
+    background-color: var(--color-rose-300);
+  }
+
+  .chart-quiet {
+    background-color: var(--color-panel-300);
+  }
+
+  /* ---- Product sheet ---------------------------------------------------- */
+  /*
+   * A product's identity block: the plate, the code, the name. Used on the
+   * product spectrum and its drill-down, so a design looks the same in both.
+   */
+  .plate {
+    display: flex;
+    height: 4.5rem;
+    width: 4.5rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-panel-100);
+  }
+
+  .plate img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  /* ---- Metric ----------------------------------------------------------- */
+  /*
+   * The headline figure of a tile. Large on purpose: this is the number the
+   * screen exists for, and a 17px figure among 17px labels is a number nobody
+   * finds. It stops short of the 48px a landing page uses — this is still a
+   * working screen.
+   */
+  .metric-value {
+    font-family: var(--font-display);
+    font-size: clamp(1.875rem, 1.5rem + 1.4vw, 2.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The one figure that answers the screen's question. Bigger than its
+     siblings, so the screen has a lead rather than five equal numbers. */
+  .metric-lead {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 1.7rem + 2.4vw, 3.25rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+}
+

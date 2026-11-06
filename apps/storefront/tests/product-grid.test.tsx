@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Product } from '@ajooba/contracts';
 import { ProductGrid } from '@/features/catalog/components/product-grid';
-import { mediaUrl } from '@/lib/env';
+import { mediaUrl } from '@/lib/media';
 
 /**
  * The storefront's no-fake-data rule is enforced in the component layer, so it
@@ -115,7 +115,7 @@ describe('ProductGrid — populated catalogue', () => {
       />,
     );
 
-    expect(html).toContain('src="/products/AJ-A11/A11-BRN-1.jpg"');
+    expect(html).toContain('src="http://localhost:4000/products/AJ-A11/A11-BRN-1.jpg"');
     expect(html).toContain('alt="AJOOBA Ethnic Mojri in Brown"');
     expect(html).toContain('loading="lazy"');
   });
@@ -123,10 +123,32 @@ describe('ProductGrid — populated catalogue', () => {
 
 describe('mediaUrl', () => {
   it('joins the media base URL with an asset path', () => {
-    expect(mediaUrl('/products/AJ-A11/A11-BRN-1.jpg')).toBe('/products/AJ-A11/A11-BRN-1.jpg');
+    expect(mediaUrl('/products/AJ-A11/A11-BRN-1.jpg')).toBe(
+      'http://localhost:4000/products/AJ-A11/A11-BRN-1.jpg',
+    );
   });
 
   it('normalises a missing leading slash', () => {
-    expect(mediaUrl('products/AJ-A11/A11-BRN-1.jpg')).toBe('/products/AJ-A11/A11-BRN-1.jpg');
+    expect(mediaUrl('products/AJ-A11/A11-BRN-1.jpg')).toBe(
+      'http://localhost:4000/products/AJ-A11/A11-BRN-1.jpg',
+    );
+  });
+
+  it('does not double the separator when the base URL has a trailing slash', () => {
+    // The base URL is normalised by stripping a trailing "/".
+    expect(mediaUrl('/products/AJ-A11/A11-BRN-1.jpg')).not.toContain('//products');
+  });
+
+  it('leaves the storefront’s own static assets same-origin', () => {
+    // The logo, banners and icons live in the Next.js app's own `public/`
+    // directory. Prefixing them with the media origin would 404, because the
+    // media server only mounts the catalogue tree.
+    expect(mediaUrl('/images/logo/logo.jpeg')).toBe('/images/logo/logo.jpeg');
+    expect(mediaUrl('/banner/banner home hero 1.png')).toBe('/banner/banner home hero 1.png');
+    expect(mediaUrl('/icons/icon-192.png')).toBe('/icons/icon-192.png');
+  });
+
+  it('returns the site root for an empty path', () => {
+    expect(mediaUrl('')).toBe('/');
   });
 });

@@ -18,14 +18,29 @@ export class AppError extends Error {
     code: ApiErrorCode,
     message: string,
     statusCode: number,
-    options?: { details?: readonly FieldError[]; cause?: unknown },
+    options?: {
+      details?: readonly FieldError[];
+      cause?: unknown;
+      /**
+       * Override the default "4xx is safe to show, 5xx is not" rule.
+       *
+       * The default exists so an unexpected exception never leaks a stack trace
+       * or a database name to a browser. A **deliberate** 5xx is a different
+       * case: `SERVICE_UNAVAILABLE` with a written message means the shop knows
+       * exactly what is closed — "Google sign-in is not available yet, use your
+       * email" — and replacing that with "An unexpected error occurred." is both
+       * less true and less useful. A computed status can be passed here when the
+       * message is one we authored, never for a caught exception.
+       */
+      expose?: boolean;
+    },
   ) {
     super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
     this.name = 'AppError';
     this.code = code;
     this.statusCode = statusCode;
     this.details = options?.details;
-    this.expose = statusCode < 500;
+    this.expose = options?.expose ?? statusCode < 500;
     Error.captureStackTrace?.(this, AppError);
   }
 

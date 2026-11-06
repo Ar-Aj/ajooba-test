@@ -1,76 +1,90 @@
-import Link from 'next/link';
-import { BRAND_NAME } from '@ajooba/contracts';
-import { mediaUrl } from '@/lib/env';
+import type { Metadata } from 'next';
+import type { ResolvedHomepageSection } from '@ajooba/contracts';
+import { HeroBanner } from '@/features/home/components/hero-banner';
+import { StoryCallout } from '@/features/home/components/story-callout';
+import { TrustBand } from '@/features/home/components/trust-band';
+import { HomepageSectionRenderer } from '@/features/home/components/homepage-section';
+import { Ajooba3DShowcase } from '@/features/home/components/ajooba-3d-showcase';
+import {
+  SavingsAvailabilitySection,
+  SizeAvailabilitySection,
+} from '@/features/home/components/availability-sections';
+import { Marquee } from '@/features/home/components/marquee';
+import { colourwaysOf } from '@/lib/colour-swatch';
+import { fetchCatalogueIndex, fetchHomepage } from '@/lib/api';
+
+export const metadata: Metadata = {
+  title: 'Ajooba Footwear — Hand-finished ethnic footwear, mojris and chappals',
+  description:
+    'Shop hand-embroidered mojris, juttis, sandals and chappals from Ajooba Footwear. Made in Uttar Pradesh. Free shipping across India.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'Ajooba Footwear',
+    description: 'Hand-finished ethnic footwear, mojris, juttis, sandals and chappals.',
+    images: [{ url: '/og.png', width: 1200, height: 630 }],
+  },
+};
 
 /**
- * Storefront home page.
- *
- * Deliberately minimal at this stage. It renders static brand content only —
- * no placeholder products, no fake counts, no invented promotional claims.
- * Product grids are added once the catalogue import pipeline has run and the
- * database contains the real catalogue.
+ * Which live sections contribute their text to the announcement strip.
  */
+function marqueeMessages(sections: ResolvedHomepageSection[]): string[] {
+  const messages: string[] = [];
 
-const HERO_BANNERS = [
-  { file: 'banner home hero 1.png', alt: 'Ajooba Footwear hero banner 1' },
-  { file: 'banner home hero 2.png', alt: 'Ajooba Footwear hero banner 2' },
-  { file: 'banner home hero 3.png', alt: 'Ajooba Footwear hero banner 3' },
-] as const;
+  for (const section of sections) {
+    if (section.type === 'deal' && section.heading) {
+      messages.push(section.heading);
+    } else if (section.type === 'featured' && section.heading) {
+      const normalized = section.heading.trim().toLowerCase();
+      messages.push(
+        normalized === 'the ajooba edit'
+          ? "Ajooba's Mehbooba · Multi-Shade Buying Studio"
+          : section.heading,
+      );
+    }
+  }
 
-export default function HomePage() {
+  return [...new Set(messages)].slice(0, 4);
+}
+
+/**
+ * The storefront homepage.
+ */
+export default async function HomePage() {
+  const [sections, productById] = await Promise.all([fetchHomepage(), fetchCatalogueIndex()]);
+
+  const merchandising = sections.filter((section) => section.type !== 'hero');
+  const hasFeaturedSection = merchandising.some((section) => section.type === 'featured');
+  const allProducts = Object.values(productById);
+  const fallbackShowcaseProducts = allProducts
+    .filter((product) => colourwaysOf(product).length >= 2)
+    .slice(0, 1);
+
   return (
-    <main className="min-h-dvh">
-      <header className="border-b border-neutral-200">
-        <div className="container-page flex h-16 items-center justify-between">
-          <Link href="/" className="text-lg font-semibold tracking-tight">
-            {BRAND_NAME}
-          </Link>
-          <nav aria-label="Primary" className="flex items-center gap-4 text-sm">
-            <Link href="/products" className="hover:text-brand-600">
-              Shop
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <>
+      <HeroBanner />
 
-      <section className="container-page py-8 md:py-12">
-        <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance md:text-4xl">
-          Ethnic footwear, crafted for weddings, festivities and everyday wear.
-        </h1>
-        <p className="mt-4 max-w-xl text-neutral-600">
-          Mojris, juttis, sandals and chappals from {BRAND_NAME}. Browse the full catalogue by
-          category, colour and size.
-        </p>
-        <Link
-          href="/products"
-          className="mt-8 inline-flex h-11 items-center rounded-md bg-brand-600 px-6 text-sm font-medium text-white transition-colors hover:bg-brand-700"
-        >
-          Browse the catalogue
-        </Link>
-      </section>
+      {marqueeMessages(merchandising).length > 0 ? (
+        <Marquee items={marqueeMessages(merchandising)} />
+      ) : null}
 
-      <section className="container-page pb-12" aria-label="Featured banners">
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {HERO_BANNERS.map((banner) => (
-            <li key={banner.file}>
-              <img
-                src={mediaUrl(`/banner/${banner.file}`)}
-                alt={banner.alt}
-                width={1200}
-                height={800}
-                loading="lazy"
-                className="h-auto w-full rounded-lg border border-neutral-200 object-cover"
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
+      {merchandising.map((section) => (
+        <HomepageSectionRenderer key={section.id} section={section} productById={productById} />
+      ))}
 
-      <footer className="border-t border-neutral-200 py-8">
-        <div className="container-page text-sm text-neutral-600">
-          <p>{BRAND_NAME}</p>
-        </div>
-      </footer>
-    </main>
+      {!hasFeaturedSection && fallbackShowcaseProducts.length > 0 ? (
+        <Ajooba3DShowcase products={fallbackShowcaseProducts} />
+      ) : null}
+
+      {allProducts.length > 0 ? (
+        <>
+          <SizeAvailabilitySection products={allProducts} />
+          <SavingsAvailabilitySection products={allProducts} />
+        </>
+      ) : null}
+
+      <TrustBand />
+      <StoryCallout />
+    </>
   );
 }

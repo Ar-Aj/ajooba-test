@@ -1,5 +1,6 @@
 node_modules
 .next
+.next-e2e
 dist
 coverage
 pnpm-lock.yaml
@@ -11,3 +12,9 @@ yarn.lock
 # Next.js generated type declarations. These are rewritten by `next build`
 # and `next dev`, so formatting them is both pointless and destructive.
 next-env.d.ts
+
+# The Playwright E2E suite builds the Next.js apps into `.next-e2e` so a test
+# run never invalidates the developer's own `.next` build. Those are build
+# artefacts, not source: formatting them is meaningless and would rewrite
+# files Next.js owns.
+.next-e2e/

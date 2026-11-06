@@ -13,26 +13,112 @@
 
 ## 1. Executive summary
 
-| Item | Finding |
-| --- | --- |
-| Catalogue workbook | `products data.xlsx`, 1 sheet (`Sheet1`), 8 columns, 674 populated data rows, 325 empty trailing rows |
-| Distinct product designs | **55** (`A01`–`A51`, `A54`–`A57`) |
-| Distinct seller SKUs | **674** — all unique, zero duplicates |
-| SKU format | `AJ-A<NN>-<COLOUR_TOKEN>-<SS>` — 669 rows conform exactly; **5** use a mixed-case token (§5.2) |
-| Image folders | **54** under `public/products/` (named `AJ-A<n>`, **not** zero-padded — §8.1) |
-| Product images | **692** files (268 `.jpg`, 312 `.jpeg`, 112 `.png`) |
-| Legacy listing templates | **77** `.xls` files (Flipkart catalogue export format) |
-| Total `public/` payload | **501.2 MB** (products 494.4 MB, banner 6.6 MB, images 0.1 MB) |
-| Designs in catalogue but with **no** image folder | **1** — `A17` |
-| Designs with **no** listing template | **1** — `A01` |
-| Colour variants with **zero** images | **16** (listed in §6.3) |
-| Price conflicts between workbook and templates | **288** SKUs (§7.2) |
-| Size conflicts between workbook and templates | **6** SKUs (§7.3) |
+| Item                                              | Finding                                                                                               |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Catalogue workbook                                | `products data.xlsx`, 1 sheet (`Sheet1`), 8 columns, 674 populated data rows, 325 empty trailing rows |
+| Distinct product designs                          | **55** (`A01`–`A51`, `A54`–`A57`)                                                                     |
+| Distinct seller SKUs                              | **674** — all unique, zero duplicates                                                                 |
+| SKU format                                        | `AJ-A<NN>-<COLOUR_TOKEN>-<SS>` — 669 rows conform exactly; **5** use a mixed-case token (§5.2)        |
+| Image folders                                     | **54** under `public/products/` (named `AJ-A<n>`, **not** zero-padded — §8.1)                         |
+| Product images                                    | **692** files (268 `.jpg`, 312 `.jpeg`, 112 `.png`)                                                   |
+| Legacy listing templates                          | **77** `.xls` files (Flipkart catalogue export format)                                                |
+| Total `public/` payload                           | **501.2 MB** (products 494.4 MB, banner 6.6 MB, images 0.1 MB)                                        |
+| Designs in catalogue but with **no** image folder | **1** — `A17`                                                                                         |
+| Designs with **no** listing template              | **1** — `A01`                                                                                         |
+| Colour variants with **zero** images              | **16** (listed in §6.3)                                                                               |
+| Price conflicts between workbook and templates    | **288** SKUs (§7.2)                                                                                   |
+| Size conflicts between workbook and templates     | **6** SKUs (§7.3)                                                                                     |
 
 **Headline conclusion:** the catalogue is usable and internally consistent at the
-*design* level. Its **data-entry inconsistencies are real but bounded and
+_design_ level. Its **data-entry inconsistencies are real but bounded and
 mechanically correctable**, and every one of them is enumerated below so that
 nothing is silently "fixed" during import.
+
+### 1.1 Post-import state — as it stands in `ajooba_development` (23 Oct 2026)
+
+The numbers above describe the _source_. This table describes what is actually
+in the database now, re-verified by aggregation on 23 October 2026.
+
+| Item                                                         | Count                                                        |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `products` documents                                         | **55**                                                       |
+| `variants` documents                                         | **674**                                                      |
+| Duplicate SKUs                                               | **0**                                                        |
+| Orphan variants (no parent)                                  | **0**                                                        |
+| `productCode` drift vs parent `products.code`                | **0**                                                        |
+| Variants with `stock > 0`                                    | **0** — the workbook has no stock column (§C-3)              |
+| Variants `photographyStatus: 'verified'`                     | **15**                                                       |
+| Variants `photographyStatus: 'pending-review'`               | **35**                                                       |
+| Variants with no `photographyStatus` (single-colour designs) | **624**                                                      |
+| Images recorded on products                                  | **685**                                                      |
+| Images with a **verified** `colour`                          | **85** (Brown 20, Black 19, White 7, Tan 7, Olive 7, Grey 6) |
+| Images explicitly **quarantined** (`colour: ''`)             | **19** across 3 designs                                      |
+| Images with **no** colour recorded                           | **600**                                                      |
+| Images carrying a **SHA-256 checksum**                       | **685** — backfilled 23 Oct (§1.2)                           |
+| `categories` documents                                       | **0** — seeded on demand (§1.3)                              |
+| `image_reviews` documents                                    | **0** — no human review has been performed yet               |
+| `import-plans` documents                                     | **0** — no import has been run through the G-6 API           |
+| `stock_movements` documents                                  | **0** — no stock has ever been set                           |
+| `homepage_sections`                                          | **5**                                                        |
+| `banners`                                                    | **1** (16:9, created for the hero)                           |
+
+**The most important line above is "Variants with `stock > 0`: 0".** The
+catalogue is imported and internally consistent, but **nothing is purchasable**
+because there is no stock data. The storefront therefore renders every product
+"Sold out" and reports `isPurchasable: false`. This is honest behaviour, not a
+bug — see `docs/DEPLOYMENT_RUNBOOK.md` §0.1.
+
+**The 600 images without a colour** are the direct consequence of the
+conservative quarantine policy: an image is only attributed to a colourway when
+its filename token provably matches a colour that is actually sold for that
+design. Untokened filenames are quarantined rather than guessed, so most
+photography remains unattributed. These are not lost — they are still on disk and
+still listed in `products.images` with `colour: null`. Resolving them is gap
+**G-5**, now built and reachable at `/catalog/images`.
+
+### 1.2 Checksum backfill — executed 23 October 2026
+
+`assignImage` refuses to place a photograph in a colour gallery when its bytes
+are already on display elsewhere. That guard reads `products.images[].checksum`,
+but **every one of the 685 images had a null checksum**: they were coloured by
+`image-colour-migration.job.ts`, which never hashed the file, and the G-5 guard
+originally searched only `image_reviews`, which was empty. The duplicate-
+photograph guard was therefore **inert across the entire catalogue**.
+
+| Step        | Command                                                 | Result                                   |
+| ----------- | ------------------------------------------------------- | ---------------------------------------- |
+| Dry run     | `tsx src/jobs/image-checksum-backfill.job.ts --dry-run` | 685 hashed, 0 missing, 1 duplicate group |
+| Apply       | `tsx src/jobs/image-checksum-backfill.job.ts --apply`   | 685 stamped                              |
+| Idempotency | re-run dry run                                          | `already stamped: 685`, 0 hashed         |
+
+The single duplicate group found is **exactly** the pair §6.4 predicted from the
+MD5 audit, confirming the hash is measuring what it claims to:
+
+```
+b1d88a091d14…  A10:A10-7(1).jpg  A10:A10-7.jpg
+```
+
+The write was **additive only** — one new field on existing image subdocuments.
+Colour assignments, slugs, URLs, variants and orders were re-aggregated
+afterwards and are byte-identical (85 coloured, 19 quarantined, 600 unset, 55
+products, 674 variants, 0 archived).
+
+Two defects were found and fixed while doing this, both now covered by tests:
+
+| Defect                                                                                                                                          | Fix                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| The guard searched only `image_reviews`, so an image coloured by the **migration** never blocked anything                                       | The guard now also queries `products.images`, the canonical record  |
+| The conflict message named the colour being **requested** rather than the one already on display, so it could read as though nothing conflicted | One derivation for all three sources, naming the conflicting colour |
+
+### 1.3 The remaining manual work
+
+Both of these need a human decision and neither can be automated:
+
+| Task                          | Where                                                              | Blocker                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Seed the category tree        | `POST /v1/admin/catalog/categories/seed`, or `/catalog/categories` | `categories` is empty; products carry `subcategorySlug` strings waiting to become real records |
+| Resolve 600 unassigned images | `/catalog/images`                                                  | Requires someone who knows which shoe each photograph shows                                    |
+| Enter real stock counts       | `/catalog/products` → absolute stock                               | **The workbook has no stock column.** Nobody has counted.                                      |
 
 ---
 
@@ -88,13 +174,13 @@ product/content entry beyond the agreed implementation support**.
 
 ### 3.1 Structure
 
-| Property | Value |
-| --- | --- |
-| File size | 61,153 bytes |
-| Sheet count | **1** — `Sheet1` |
-| Used range | `A1:H1000` |
-| Header row | Row 1 |
-| Populated data rows | **674** (rows 2–675) |
+| Property            | Value                                            |
+| ------------------- | ------------------------------------------------ |
+| File size           | 61,153 bytes                                     |
+| Sheet count         | **1** — `Sheet1`                                 |
+| Used range          | `A1:H1000`                                       |
+| Header row          | Row 1                                            |
+| Populated data rows | **674** (rows 2–675)                             |
 | Empty trailing rows | 325 (rows 676–1000) — formatting only, no values |
 
 There are no hidden sheets, no formulas, no merged cells and no secondary
@@ -102,28 +188,28 @@ tables. The trailing empty rows are a formatting artefact and contain no data.
 
 ### 3.2 Columns (exact, verbatim headers)
 
-| # | Header (verbatim) | Type observed | Notes |
-| --- | --- | --- | --- |
-| A | `Product Title` | string | 82 distinct values across 674 rows |
-| B | `Seller SKU Id` | string | 674 distinct values, zero duplicates |
-| C | `Description` | string | 98–1,518 chars, sometimes multi-paragraph (`\n`) |
-| D | `Size` | integer | UK/India size, values 5–13 |
-| E | `Colour` | string | 12 distinct values |
-| F | `Sub-category` | string | 4 distinct values, **inconsistent capitalisation** |
-| G | `MRP` | integer | INR whole rupees |
-| H | `Your Selling Price` | integer | INR whole rupees |
+| #   | Header (verbatim)    | Type observed | Notes                                              |
+| --- | -------------------- | ------------- | -------------------------------------------------- |
+| A   | `Product Title`      | string        | 82 distinct values across 674 rows                 |
+| B   | `Seller SKU Id`      | string        | 674 distinct values, zero duplicates               |
+| C   | `Description`        | string        | 98–1,518 chars, sometimes multi-paragraph (`\n`)   |
+| D   | `Size`               | integer       | UK/India size, values 5–13                         |
+| E   | `Colour`             | string        | 12 distinct values                                 |
+| F   | `Sub-category`       | string        | 4 distinct values, **inconsistent capitalisation** |
+| G   | `MRP`                | integer       | INR whole rupees                                   |
+| H   | `Your Selling Price` | integer       | INR whole rupees                                   |
 
 There is **no** image column, **no** stock column, **no** SKU-index column and
 **no** barcode column in the workbook. Those live only in the `.xls` templates.
 
 ### 3.3 `Sub-category` — 4 distinct values, verbatim
 
-| Value | Rows |
-| --- | --- |
-| `shoe` | 325 |
-| `Mojri / Jutti` | 267 |
-| `sandal` | 58 |
-| `Chappal` | 24 |
+| Value           | Rows |
+| --------------- | ---- |
+| `shoe`          | 325  |
+| `Mojri / Jutti` | 267  |
+| `sandal`        | 58   |
+| `Chappal`       | 24   |
 
 Capitalisation is inconsistent (`shoe`/`sandal` lowercase, `Mojri / Jutti`
 title-case, `Chappal` capitalised). The values are **preserved verbatim** in
@@ -164,63 +250,63 @@ All 55 designs, with their colour tokens, size ranges, pricing and asset counts.
 `imgs` = images in folder · `xls` = listing templates in folder ·
 `rows` = catalogue rows
 
-| Code | rows | colours | sizes | MRP | Selling | imgs | xls | Folder |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| A01 | 7 | Ivory | 6–12 | 1997/1999 | 1399 | 6 | **0** | AJ-A1 |
-| A02 | 7 | Ivory | 6–12 | 1999 | 1399 | 5 | 2 | AJ-A2 |
-| A03 | 7 | Ivory | 6–12 | 1999 | 1399 | 5 | 1 | AJ-A3 |
-| A04 | 7 | Golden | 6–12 | 1999 | 1399 | 6 | 1 | AJ-A4 |
-| A05 | 7 | Ivory | 6–12 | 1999 | 1399 | 7 | 1 | AJ-A5 |
-| A06 | 14 | Black, Blue, Ivory | 6–10 | 2499 | 1499 | 21 | 2 | AJ-A6 |
-| A07 | 9 | Ivory | 5–13 | 1999 | 1399 | 7 | 1 | AJ-A7 |
-| A08 | 9 | Ivory | 5–13 | 1999 | 1399 | 6 | 1 | AJ-A8 |
-| A09 | 9 | Ivory | 5–13 | 1999 | 1399 | 6 | 1 | AJ-A9 |
-| A10 | 9 | Ivory | 5–13 | 1999 | 1399 | 8 | 1 | AJ-A10 |
-| A11 | 18 | Black, Brown, Tan | 5–12 | 1999 | 1398/1399 | 18 | 3 | AJ-A11 |
-| A12 | 7 | Ivory | 6–12 | 1999 | 1399 | 7 | 1 | AJ-A12 |
-| A13 | 18 | Black, Ivory | 5–13 | 1999 | 1399 | 14 | 1 | AJ-A13 |
-| A14 | 36 | Black, Brown, Tan, White | 5–13 | 1999 | 1399 | 14 | 2 | AJ-A14 |
-| A15 | 15 | Black, Chickoo, Ivory | 6–10 | 3999 | 2399 | 20 | 1 | AJ-A15 |
-| A16 | 27 | Black, Brown, Tan | 5–13 | 1999 | 1399 | 24 | 3 | AJ-A16 |
-| **A17** | **9** | **White** | **5–13** | **1999** | **1399** | **0** | **0** | **— none —** |
-| A18 | 18 | Brown, Tan | 5–13 | 1999 | 1399 | 12 | 1 | AJ-A18 |
-| A19 | 5 | Black | 6–10 | 1999 | 1398 | 6 | 1 | AJ-A19 |
-| A20 | 14 | Black, Brown | 6–12 | 1999 | 1398 | 12 | 1 | AJ-A20 |
-| A21 | 14 | Black, Brown | 6–12 | 1999 | 1398 | 12 | 1 | AJ-A21 |
-| A22 | 10 | Black, Brown | 6–10 | 1999 | 1398 | 12 | 1 | AJ-A22 |
-| A23 | 10 | Black, Brown | 6–10 | 1999 | 1399 | 12 | 1 | AJ-A23 |
-| A24 | 10 | Black, Brown | 6–10 | 1999 | 1398 | 12 | 1 | AJ-A24 |
-| A25 | 10 | Black, Brown | 6–10 | 1999 | 1398 | 12 | 1 | AJ-A25 |
-| A26 | 10 | Black, Brown | 6–10 | 1999 | 1398 | 12 | 1 | AJ-A26 |
-| A27 | 10 | Black, Brown | 6–10 | 1999 | 1398 | 13 | 2 | AJ-A27 |
-| A28 | 24 | Black, Brown, Tan | 6–13 | 1499 | 998 | 18 | 1 | AJ-A28 |
-| A29 | 10 | Black, Tan | 6–10 | 1499 | 1099 | 10 | 1 | AJ-A29 |
-| A30 | 10 | Black, Brown | 6–10 | 1699 | 1099 | 12 | 1 | AJ-A30 |
-| A31 | 10 | Black, Brown | 6–10 | 2499 | 1599 | 12 | 1 | AJ-A31 |
-| A32 | 10 | Black, Tan | 6–10 | 2499 | 1599 | 12 | 1 | AJ-A32 |
-| A33 | 10 | Black, Tan | 6–10 | 2499 | 1599 | 12 | 1 | AJ-A33 |
-| A34 | 15 | Black, Cherry, Tan | 6–10 | 2499 | 2050 | 18 | 1 | AJ-A34 |
-| A35 | 28 | Black, Brown, Tan, White | 5–12 | 1499 | 998 | 24 | 4 | AJ-A35 |
-| A36 | 9 | Ivory | 5–13 | 1999 | 1399 | 6 | 1 | AJ-A36 |
-| A37 | 10 | Black, Brown | 6–10 | 2499 | 1599 | 12 | 1 | AJ-A37 |
-| A38 | 10 | Black, Brown | 6–10 | 2499 | 1599 | 12 | 1 | AJ-A38 |
-| A39 | 10 | Black, Brown | 6–10 | 2499 | 1599 | 14 | 1 | AJ-A39 |
-| A40 | 10 | Black, Brown | 6–10 | 2499 | 1599 | 12 | 1 | AJ-A40 |
-| A41 | 10 | Black, Tan | 6–10 | 2499 | 1500 | 14 | 2 | AJ-A41 |
-| A42 | 10 | Black, Brown | 6–10 | 2499 | 1500 | 12 | 2 | AJ-A42 |
-| A43 | 10 | Black, Brown | 6–10 | 2499 | 1500 | 12 | 2 | AJ-A43 |
-| A44 | 10 | Black, Brown | 5–9 | 1999 | 1199 | 12 | 2 | AJ-A44 |
-| A45 | 10 | Black, Brown | 6–10 | 1999 | 1398 | 14 | 2 | AJ-A45 |
-| A46 | 15 | Black, Brown, Tan | 6–10 | 2499 | 1599 | 19 | 3 | AJ-A46 |
-| A47 | 10 | Black, Brown | 6–10 | 1999 | 1398 | 12 | 2 | AJ-A47 |
-| A48 | 14 | Beige, Grey | 6–12 | 1999 | 1599 | 12 | 2 | Aj-A48 |
-| A49 | 15 | Black, Cherry, Tan | 6–10 | 3999 | 1898 | 18 | 3 | AJ-A49 |
-| A50 | 15 | Black, Brown, Tan | 6–10 | 1999 | 1398 | 20 | 3 | AJ-A50 |
-| A51 | 8 | White | 5–12 | 1999 | 1398 | 7 | 1 | AJ-A51 |
-| A54 | 10 | Black, Brown | 6–10 | 1999 | 1881 | 14 | 1 | AJ-A54 |
-| A55 | 10 | Black, Tan | 6–10 | 3999 | 2500 | 14 | 1 | AJ-A55 |
-| A56 | 15 | Black, Olive, Tan | 6–10 | 2499 | 1699 | 21 | 1 | AJ-A56 |
-| A57 | 20 | Black, Brown, Chickoo, Olive | 6–10 | 1999 | 1499/1500 | 28 | 1 | AJ-A57 |
+| Code    | rows  | colours                      | sizes    | MRP       | Selling   | imgs  | xls   | Folder       |
+| ------- | ----- | ---------------------------- | -------- | --------- | --------- | ----- | ----- | ------------ |
+| A01     | 7     | Ivory                        | 6–12     | 1997/1999 | 1399      | 6     | **0** | AJ-A1        |
+| A02     | 7     | Ivory                        | 6–12     | 1999      | 1399      | 5     | 2     | AJ-A2        |
+| A03     | 7     | Ivory                        | 6–12     | 1999      | 1399      | 5     | 1     | AJ-A3        |
+| A04     | 7     | Golden                       | 6–12     | 1999      | 1399      | 6     | 1     | AJ-A4        |
+| A05     | 7     | Ivory                        | 6–12     | 1999      | 1399      | 7     | 1     | AJ-A5        |
+| A06     | 14    | Black, Blue, Ivory           | 6–10     | 2499      | 1499      | 21    | 2     | AJ-A6        |
+| A07     | 9     | Ivory                        | 5–13     | 1999      | 1399      | 7     | 1     | AJ-A7        |
+| A08     | 9     | Ivory                        | 5–13     | 1999      | 1399      | 6     | 1     | AJ-A8        |
+| A09     | 9     | Ivory                        | 5–13     | 1999      | 1399      | 6     | 1     | AJ-A9        |
+| A10     | 9     | Ivory                        | 5–13     | 1999      | 1399      | 8     | 1     | AJ-A10       |
+| A11     | 18    | Black, Brown, Tan            | 5–12     | 1999      | 1398/1399 | 18    | 3     | AJ-A11       |
+| A12     | 7     | Ivory                        | 6–12     | 1999      | 1399      | 7     | 1     | AJ-A12       |
+| A13     | 18    | Black, Ivory                 | 5–13     | 1999      | 1399      | 14    | 1     | AJ-A13       |
+| A14     | 36    | Black, Brown, Tan, White     | 5–13     | 1999      | 1399      | 14    | 2     | AJ-A14       |
+| A15     | 15    | Black, Chickoo, Ivory        | 6–10     | 3999      | 2399      | 20    | 1     | AJ-A15       |
+| A16     | 27    | Black, Brown, Tan            | 5–13     | 1999      | 1399      | 24    | 3     | AJ-A16       |
+| **A17** | **9** | **White**                    | **5–13** | **1999**  | **1399**  | **0** | **0** | **— none —** |
+| A18     | 18    | Brown, Tan                   | 5–13     | 1999      | 1399      | 12    | 1     | AJ-A18       |
+| A19     | 5     | Black                        | 6–10     | 1999      | 1398      | 6     | 1     | AJ-A19       |
+| A20     | 14    | Black, Brown                 | 6–12     | 1999      | 1398      | 12    | 1     | AJ-A20       |
+| A21     | 14    | Black, Brown                 | 6–12     | 1999      | 1398      | 12    | 1     | AJ-A21       |
+| A22     | 10    | Black, Brown                 | 6–10     | 1999      | 1398      | 12    | 1     | AJ-A22       |
+| A23     | 10    | Black, Brown                 | 6–10     | 1999      | 1399      | 12    | 1     | AJ-A23       |
+| A24     | 10    | Black, Brown                 | 6–10     | 1999      | 1398      | 12    | 1     | AJ-A24       |
+| A25     | 10    | Black, Brown                 | 6–10     | 1999      | 1398      | 12    | 1     | AJ-A25       |
+| A26     | 10    | Black, Brown                 | 6–10     | 1999      | 1398      | 12    | 1     | AJ-A26       |
+| A27     | 10    | Black, Brown                 | 6–10     | 1999      | 1398      | 13    | 2     | AJ-A27       |
+| A28     | 24    | Black, Brown, Tan            | 6–13     | 1499      | 998       | 18    | 1     | AJ-A28       |
+| A29     | 10    | Black, Tan                   | 6–10     | 1499      | 1099      | 10    | 1     | AJ-A29       |
+| A30     | 10    | Black, Brown                 | 6–10     | 1699      | 1099      | 12    | 1     | AJ-A30       |
+| A31     | 10    | Black, Brown                 | 6–10     | 2499      | 1599      | 12    | 1     | AJ-A31       |
+| A32     | 10    | Black, Tan                   | 6–10     | 2499      | 1599      | 12    | 1     | AJ-A32       |
+| A33     | 10    | Black, Tan                   | 6–10     | 2499      | 1599      | 12    | 1     | AJ-A33       |
+| A34     | 15    | Black, Cherry, Tan           | 6–10     | 2499      | 2050      | 18    | 1     | AJ-A34       |
+| A35     | 28    | Black, Brown, Tan, White     | 5–12     | 1499      | 998       | 24    | 4     | AJ-A35       |
+| A36     | 9     | Ivory                        | 5–13     | 1999      | 1399      | 6     | 1     | AJ-A36       |
+| A37     | 10    | Black, Brown                 | 6–10     | 2499      | 1599      | 12    | 1     | AJ-A37       |
+| A38     | 10    | Black, Brown                 | 6–10     | 2499      | 1599      | 12    | 1     | AJ-A38       |
+| A39     | 10    | Black, Brown                 | 6–10     | 2499      | 1599      | 14    | 1     | AJ-A39       |
+| A40     | 10    | Black, Brown                 | 6–10     | 2499      | 1599      | 12    | 1     | AJ-A40       |
+| A41     | 10    | Black, Tan                   | 6–10     | 2499      | 1500      | 14    | 2     | AJ-A41       |
+| A42     | 10    | Black, Brown                 | 6–10     | 2499      | 1500      | 12    | 2     | AJ-A42       |
+| A43     | 10    | Black, Brown                 | 6–10     | 2499      | 1500      | 12    | 2     | AJ-A43       |
+| A44     | 10    | Black, Brown                 | 5–9      | 1999      | 1199      | 12    | 2     | AJ-A44       |
+| A45     | 10    | Black, Brown                 | 6–10     | 1999      | 1398      | 14    | 2     | AJ-A45       |
+| A46     | 15    | Black, Brown, Tan            | 6–10     | 2499      | 1599      | 19    | 3     | AJ-A46       |
+| A47     | 10    | Black, Brown                 | 6–10     | 1999      | 1398      | 12    | 2     | AJ-A47       |
+| A48     | 14    | Beige, Grey                  | 6–12     | 1999      | 1599      | 12    | 2     | Aj-A48       |
+| A49     | 15    | Black, Cherry, Tan           | 6–10     | 3999      | 1898      | 18    | 3     | AJ-A49       |
+| A50     | 15    | Black, Brown, Tan            | 6–10     | 1999      | 1398      | 20    | 3     | AJ-A50       |
+| A51     | 8     | White                        | 5–12     | 1999      | 1398      | 7     | 1     | AJ-A51       |
+| A54     | 10    | Black, Brown                 | 6–10     | 1999      | 1881      | 14    | 1     | AJ-A54       |
+| A55     | 10    | Black, Tan                   | 6–10     | 3999      | 2500      | 14    | 1     | AJ-A55       |
+| A56     | 15    | Black, Olive, Tan            | 6–10     | 2499      | 1699      | 21    | 1     | AJ-A56       |
+| A57     | 20    | Black, Brown, Chickoo, Olive | 6–10     | 1999      | 1499/1500 | 28    | 1     | AJ-A57       |
 
 ### 4.1 Code-sequence gaps
 
@@ -236,8 +322,8 @@ or they were discontinued. **This is unresolved — see §9, decision D-1.**
 
 `Product Title` has 82 distinct values across 55 designs. 27 designs carry
 more than one title. Example: `A01` and `A02` share the title
-*"AJOOBA Men's Ivory Embroidered Ethnic Mojris — Traditional Slip-On Wedding &
-Festive Shoes"* and *"… — Premium Slip-On Wedding & Festive Shoes"*.
+_"AJOOBA Men's Ivory Embroidered Ethnic Mojris — Traditional Slip-On Wedding &
+Festive Shoes"_ and _"… — Premium Slip-On Wedding & Festive Shoes"_.
 
 The titles differ only by an adjective ("Traditional" vs "Premium"). Which
 title is canonical per design is **not determinable from the data** — see
@@ -262,27 +348,27 @@ Zero duplicates. **Five rows do not match the strict pattern** — see §5.2.
 
 ### 5.1 Colour token → workbook `Colour`
 
-| Token | Workbook `Colour` | Rows |
-| --- | --- | --- |
-| `BLK` | Black | 223 |
-| `BRN` | Brown | 166 |
-| `TAN` | Tan | 92 |
-| `Tan` | Tan | 5 |
-| `IVY` | Ivory | 68 |
-| `WHT` | White | 34 |
-| `OW` | **Ivory** | 21 |
-| `CHK` | **Chickoo** | 10 |
-| `CHR` | Cherry | 10 |
-| `OLV` | Olive | 10 |
-| `IVR` | **Ivory** | 9 |
-| `BEG` | Beige | 7 |
-| `GLD` | Golden | 7 |
-| `GRY` | Grey | 7 |
-| `BLUE` | Blue | 5 |
+| Token  | Workbook `Colour` | Rows |
+| ------ | ----------------- | ---- |
+| `BLK`  | Black             | 223  |
+| `BRN`  | Brown             | 166  |
+| `TAN`  | Tan               | 92   |
+| `Tan`  | Tan               | 5    |
+| `IVY`  | Ivory             | 68   |
+| `WHT`  | White             | 34   |
+| `OW`   | **Ivory**         | 21   |
+| `CHK`  | **Chickoo**       | 10   |
+| `CHR`  | Cherry            | 10   |
+| `OLV`  | Olive             | 10   |
+| `IVR`  | **Ivory**         | 9    |
+| `BEG`  | Beige             | 7    |
+| `GLD`  | Golden            | 7    |
+| `GRY`  | Grey              | 7    |
+| `BLUE` | Blue              | 5    |
 
 **Three different tokens map to the same colour, `Ivory`:** `IVY` (68 rows),
 `OW` (21 rows, "off-white"), `IVR` (9 rows). The token is therefore **not** a
-reversible encoding of the colour. The pipeline must store the token *and* the
+reversible encoding of the colour. The pipeline must store the token _and_ the
 colour as separate fields — never derive one from the other. This is exactly
 what the `ProductVariant.colourToken` / `ProductVariant.colour` pair in
 `packages/contracts` does.
@@ -310,14 +396,14 @@ non-matching                        : 5
 
 **Handling rule (implemented):** the Seller SKU Id is stored **verbatim** —
 `AJ-A33-Tan-06` is never rewritten to `AJ-A33-TAN-06`. Only the derived
-*colour token* is upper-cased before indexing, via
+_colour token_ is upper-cased before indexing, via
 `normaliseColourToken()` in `packages/contracts/src/catalog/types.ts`. This
 keeps the merchant's own identifier intact while making the token searchable
 by `TAN`.
 
 > **Correction to an earlier draft of this document.** An earlier revision
 > stated "Zero malformed SKUs" and described the size as "without leading
-> zero". Both were wrong: the sizes *are* zero-padded, and the 5 mixed-case
+> zero". Both were wrong: the sizes _are_ zero-padded, and the 5 mixed-case
 > rows were not detected because the original check collapsed case before
 > matching. The figures above are the corrected ones.
 
@@ -327,16 +413,16 @@ by `TAN`.
 
 ### 6.1 Counts
 
-| Metric | Value |
-| --- | --- |
-| Product folders under `public/products/` | **54** |
-| Total product image files | **692** |
-| `.jpg` | 268 |
-| `.jpeg` | 312 |
-| `.png` | 112 |
-| Banner images | 3 PNG (6.6 MB) |
-| Brand logo | 1 JPEG (123 KB) |
-| **Total `public/`** | **501.2 MB** |
+| Metric                                   | Value           |
+| ---------------------------------------- | --------------- |
+| Product folders under `public/products/` | **54**          |
+| Total product image files                | **692**         |
+| `.jpg`                                   | 268             |
+| `.jpeg`                                  | 312             |
+| `.png`                                   | 112             |
+| Banner images                            | 3 PNG (6.6 MB)  |
+| Brand logo                               | 1 JPEG (123 KB) |
+| **Total `public/`**                      | **501.2 MB**    |
 
 ### 6.2 Filename conventions
 
@@ -350,22 +436,22 @@ Examples: `A11-BLK-1.jpg`, `A35-WHT-6.jpeg`, `A57-OLV-3.jpg`.
 
 Observed normalised patterns across all 692 files:
 
-| Pattern | Count |
-| --- | --- |
-| `AN-BLK-N` | 229 |
-| `AN-BRN-N` | 175 |
-| `AN-TAN-N` | 94 |
-| `AN-N` (no colour token) | 69 |
-| `AN-IVY-N` | 33 |
-| `AN-WHT-N` | 26 |
-| `AN-OLV-N` | 14 |
-| `AN-Tan-N` (mixed case) | 13 |
-| `AN-CHR-N` | 12 |
-| `AN-Blk-N` (mixed case) | 7 |
-| `AN-Blue-N` (mixed case) | 7 |
-| `AN-CHK-N` | 6 |
-| `AN-GRY-N` | 6 |
-| `AN-BLK-N-N` | 1 |
+| Pattern                  | Count |
+| ------------------------ | ----- |
+| `AN-BLK-N`               | 229   |
+| `AN-BRN-N`               | 175   |
+| `AN-TAN-N`               | 94    |
+| `AN-N` (no colour token) | 69    |
+| `AN-IVY-N`               | 33    |
+| `AN-WHT-N`               | 26    |
+| `AN-OLV-N`               | 14    |
+| `AN-Tan-N` (mixed case)  | 13    |
+| `AN-CHR-N`               | 12    |
+| `AN-Blk-N` (mixed case)  | 7     |
+| `AN-Blue-N` (mixed case) | 7     |
+| `AN-CHK-N`               | 6     |
+| `AN-GRY-N`               | 6     |
+| `AN-BLK-N-N`             | 1     |
 
 `N` = design number, `N` = shot index.
 
@@ -374,16 +460,16 @@ unique within the whole tree, so the path (not the filename) is the identifier.
 
 ### 6.3 Anomalous filenames — 14 files
 
-| Folder | File | Anomaly |
-| --- | --- | --- |
-| AJ-A1 | `A1 - 1.jpg` … `A1 - 6.jpg` (6 files) | spaces around the hyphen |
-| AJ-A10 | `A10-7(1).jpg` | browser copy suffix — **byte-identical to `A10-7.jpg`** |
-| AJ-A13 | `A13--BLK-1.jpg` … `A13--BLK-6.jpg` (6 files) | doubled hyphen |
-| AJ-A13 | `A13--BLK-2..jpg` | doubled hyphen **and** doubled extension |
-| AJ-A44 | `A44-BLK-3 (2).png` | spaces **and** browser copy suffix |
+| Folder | File                                          | Anomaly                                                 |
+| ------ | --------------------------------------------- | ------------------------------------------------------- |
+| AJ-A1  | `A1 - 1.jpg` … `A1 - 6.jpg` (6 files)         | spaces around the hyphen                                |
+| AJ-A10 | `A10-7(1).jpg`                                | browser copy suffix — **byte-identical to `A10-7.jpg`** |
+| AJ-A13 | `A13--BLK-1.jpg` … `A13--BLK-6.jpg` (6 files) | doubled hyphen                                          |
+| AJ-A13 | `A13--BLK-2..jpg`                             | doubled hyphen **and** doubled extension                |
+| AJ-A44 | `A44-BLK-3 (2).png`                           | spaces **and** browser copy suffix                      |
 
 All 14 files are **preserved exactly as-is**. The import pipeline normalises
-the *derived* URL key, never the file on disk.
+the _derived_ URL key, never the file on disk.
 
 ### 6.4 Duplicate content
 
@@ -422,30 +508,30 @@ correctness — the pipeline resolves images by extension-agnostic glob.
 
 **16 colour variants that exist in the catalogue have zero images:**
 
-| Design | Missing colour | Evidence |
-| --- | --- | --- |
-| A01 | Ivory (`OW`) | folder has 6 un-tokenised `A1 - N.jpg` files |
-| A02 | Ivory (`OW`) | 5 un-tokenised files |
-| A03 | Ivory (`OW`) | 5 un-tokenised files |
-| A04 | Golden (`GLD`) | 6 un-tokenised files |
-| A05 | Ivory (`IVY`) | 7 un-tokenised files |
-| A07 | Ivory (`IVY`) | 7 un-tokenised files |
-| A08 | Ivory (`IVY`) | 6 un-tokenised files |
-| A09 | Ivory (`IVR`) | 6 un-tokenised files |
-| A10 | Ivory (`IVY`) | 8 un-tokenised files |
-| A12 | Ivory (`IVY`) | 7 un-tokenised files |
-| A19 | Black (`BLK`) | 6 un-tokenised files |
-| **A14** | **Black, Tan** | folder only holds `BRN` (7) + `WHT` (7) |
-| **A30** | **Brown** | folder holds `BLK` (6) + `TAN` (6) |
-| **A48** | **Beige** | folder holds `GRY` (6) + `IVY` (6) |
-| **A57** | **Chickoo** | folder holds `BLK`, `BRN`, `OLV`, `TAN` |
-| **A17** | **White** | **no folder at all** |
+| Design  | Missing colour | Evidence                                     |
+| ------- | -------------- | -------------------------------------------- |
+| A01     | Ivory (`OW`)   | folder has 6 un-tokenised `A1 - N.jpg` files |
+| A02     | Ivory (`OW`)   | 5 un-tokenised files                         |
+| A03     | Ivory (`OW`)   | 5 un-tokenised files                         |
+| A04     | Golden (`GLD`) | 6 un-tokenised files                         |
+| A05     | Ivory (`IVY`)  | 7 un-tokenised files                         |
+| A07     | Ivory (`IVY`)  | 7 un-tokenised files                         |
+| A08     | Ivory (`IVY`)  | 6 un-tokenised files                         |
+| A09     | Ivory (`IVR`)  | 6 un-tokenised files                         |
+| A10     | Ivory (`IVY`)  | 8 un-tokenised files                         |
+| A12     | Ivory (`IVY`)  | 7 un-tokenised files                         |
+| A19     | Black (`BLK`)  | 6 un-tokenised files                         |
+| **A14** | **Black, Tan** | folder only holds `BRN` (7) + `WHT` (7)      |
+| **A30** | **Brown**      | folder holds `BLK` (6) + `TAN` (6)           |
+| **A48** | **Beige**      | folder holds `GRY` (6) + `IVY` (6)           |
+| **A57** | **Chickoo**    | folder holds `BLK`, `BRN`, `OLV`, `TAN`      |
+| **A17** | **White**      | **no folder at all**                         |
 
 Two distinct situations, and they need different handling:
 
 1. **Un-tokenised filenames (A01–A12, A19).** These designs are
    single-colour. Their files are named `A<NN>-<index>` with no colour token
-   at all, so they are *not* "missing" images — the token is simply absent
+   at all, so they are _not_ "missing" images — the token is simply absent
    from the filename. The images belong to the design's only colour. **The
    pipeline must fall back to "all images in the folder belong to this
    design's only colour variant"** in this case.
@@ -500,20 +586,20 @@ Naming: `C_<category>_<hash>_<requestId>.xls`, e.g.
 
 Each file has 12 sheets (names vary by category):
 
-| Sheet | Purpose |
-| --- | --- |
-| `Summary Sheet` | Flipkart QC guidance (186 rows) |
-| `Index` | Allowed values for every controlled field |
-| `shoe` / `sandal` / `chappal` | **The variant data** |
-| `DropDownValuesForColumn26` | Country list (247) |
-| `DropDownValuesForColumn30` | Tax codes (19) |
-| `DropDownValuesForColumn39` | Type-for-sports values (24) |
-| `DropDownValuesForColumn44` | Euro size values (67) |
-| `Listing FAQ Sheet` | Flipkart documentation |
-| `Image GuideLines` | Image requirements |
-| `MatchingAttributes` | Matched-attribute list |
-| `VariantAttributes` | `Brand Color`, `UK/India Size` |
-| `template_version` | Version stamp |
+| Sheet                         | Purpose                                   |
+| ----------------------------- | ----------------------------------------- |
+| `Summary Sheet`               | Flipkart QC guidance (186 rows)           |
+| `Index`                       | Allowed values for every controlled field |
+| `shoe` / `sandal` / `chappal` | **The variant data**                      |
+| `DropDownValuesForColumn26`   | Country list (247)                        |
+| `DropDownValuesForColumn30`   | Tax codes (19)                            |
+| `DropDownValuesForColumn39`   | Type-for-sports values (24)               |
+| `DropDownValuesForColumn44`   | Euro size values (67)                     |
+| `Listing FAQ Sheet`           | Flipkart documentation                    |
+| `Image GuideLines`            | Image requirements                        |
+| `MatchingAttributes`          | Matched-attribute list                    |
+| `VariantAttributes`           | `Brand Color`, `UK/India Size`            |
+| `template_version`            | Version stamp                             |
 
 ### 7.3 The variant sheet — 75 columns
 
@@ -525,36 +611,36 @@ SKUs** (14 SKUs appear in two files each — see §7.4).
 
 ### 7.4 Columns with real data (non-empty counts out of 677)
 
-| Column | Populated | Notes |
-| --- | --- | --- |
-| `Seller SKU ID` | 675 | primary join key |
-| `Group ID` | 675 | = `Article Number` |
-| `Listing Status` | 675 | all `Active` |
-| `MRP (INR)` | 675 | |
-| `Your selling price (INR)` | 675 | |
-| `Stock` | 675 | `1` (474), `2` (70), `1.0` (123), `2` (8) |
-| `HSN` | 675 | `6404`/`6403`/`6402` (+`.0` variants) |
-| `Country Of Origin` | 675 | all `India` |
-| `Manufacturer Details` | 675 | `Ajooba Footwear` |
-| `Packer Details` | 675 | `Ajooba Footwear` |
-| `Tax Code` | 675 | all `GST_5` |
-| `Brand` | 675 | all `Ajooba Footwear` |
-| `Ideal For` | 675 | all `Men` |
-| `Occasion` | 675 | Wedding 274, Formal 173, Casual 132, Party 83, Ethnic 13 |
-| `Outer Material` | 675 | Leather 195, Suede 144, Synthetic 125, Synthetic Leather 121, Artificial Leather 40, Fabric 35, Genuine Leather 10, `Synthetic Leather::Suede` 5 |
-| `UK/India Size` | 675 | join key to workbook `Size` |
-| `Euro Size` | 675 | |
-| `Brand Color` | 675 | |
-| `Color` | 675 | |
-| `Article Number` | 675 | join key to design code |
-| `Style Code` | 675 | |
-| `Brand Size` | 675 | `UK/India` measuring unit |
-| `Main Image URL` + `Other Image URL 1..6` | 675 / 639 / 216 | **Flipkart CDN URLs** |
-| `Description` | 675 | marketplace copy, differs from workbook |
-| `Search Keywords` | 675 | `::`-separated |
-| `Key Features` | 668 | |
-| `Theme` | 429 | |
-| `EAN/UPC` | **0** | completely empty |
+| Column                                    | Populated       | Notes                                                                                                                                            |
+| ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Seller SKU ID`                           | 675             | primary join key                                                                                                                                 |
+| `Group ID`                                | 675             | = `Article Number`                                                                                                                               |
+| `Listing Status`                          | 675             | all `Active`                                                                                                                                     |
+| `MRP (INR)`                               | 675             |                                                                                                                                                  |
+| `Your selling price (INR)`                | 675             |                                                                                                                                                  |
+| `Stock`                                   | 675             | `1` (474), `2` (70), `1.0` (123), `2` (8)                                                                                                        |
+| `HSN`                                     | 675             | `6404`/`6403`/`6402` (+`.0` variants)                                                                                                            |
+| `Country Of Origin`                       | 675             | all `India`                                                                                                                                      |
+| `Manufacturer Details`                    | 675             | `Ajooba Footwear`                                                                                                                                |
+| `Packer Details`                          | 675             | `Ajooba Footwear`                                                                                                                                |
+| `Tax Code`                                | 675             | all `GST_5`                                                                                                                                      |
+| `Brand`                                   | 675             | all `Ajooba Footwear`                                                                                                                            |
+| `Ideal For`                               | 675             | all `Men`                                                                                                                                        |
+| `Occasion`                                | 675             | Wedding 274, Formal 173, Casual 132, Party 83, Ethnic 13                                                                                         |
+| `Outer Material`                          | 675             | Leather 195, Suede 144, Synthetic 125, Synthetic Leather 121, Artificial Leather 40, Fabric 35, Genuine Leather 10, `Synthetic Leather::Suede` 5 |
+| `UK/India Size`                           | 675             | join key to workbook `Size`                                                                                                                      |
+| `Euro Size`                               | 675             |                                                                                                                                                  |
+| `Brand Color`                             | 675             |                                                                                                                                                  |
+| `Color`                                   | 675             |                                                                                                                                                  |
+| `Article Number`                          | 675             | join key to design code                                                                                                                          |
+| `Style Code`                              | 675             |                                                                                                                                                  |
+| `Brand Size`                              | 675             | `UK/India` measuring unit                                                                                                                        |
+| `Main Image URL` + `Other Image URL 1..6` | 675 / 639 / 216 | **Flipkart CDN URLs**                                                                                                                            |
+| `Description`                             | 675             | marketplace copy, differs from workbook                                                                                                          |
+| `Search Keywords`                         | 675             | `::`-separated                                                                                                                                   |
+| `Key Features`                            | 668             |                                                                                                                                                  |
+| `Theme`                                   | 429             |                                                                                                                                                  |
+| `EAN/UPC`                                 | **0**           | completely empty                                                                                                                                 |
 
 Columns present in the template but **empty for every row**: `Flipkart Serial
 Number`, `Flipkart Product Link`, `Product Data Status`, `Disapproval Reason`,
@@ -571,10 +657,10 @@ Number`, `Flipkart Product Link`, `Product Data Status`, `Disapproval Reason`,
 
 `Your Selling Price` disagrees on **288** SKUs. The pattern is systematic:
 
-| Workbook | Template | Affected designs |
-| --- | --- | --- |
-| 1398 | 1399 | A11, A19, A20, A21, A22, A24, A25, A26, A27, A45, A47, A50, A51 |
-| 1499 | 1500 | A41, A42, A43, A57 |
+| Workbook | Template | Affected designs                                                |
+| -------- | -------- | --------------------------------------------------------------- |
+| 1398     | 1399     | A11, A19, A20, A21, A22, A24, A25, A26, A27, A45, A47, A50, A51 |
+| 1499     | 1500     | A41, A42, A43, A57                                              |
 
 A ₹1 difference — clearly a manual price edit that was applied to one source
 but not the other. **The workbook is treated as the authoritative commercial
@@ -584,14 +670,14 @@ confirmation** — see §9, decision D-3.
 
 ### 7.6 Size conflicts — 6 SKUs
 
-| SKU | Workbook `Size` | Template `UK/India Size` |
-| --- | --- | --- |
-| `AJ-A13-IVY-09` | 9 | **10** |
-| `AJ-A13-IVY-10` | 10 | **9** |
-| `AJ-A16-BRN-11` | 11 | **12** |
-| `AJ-A16-BRN-12` | 12 | **11** |
-| `AJ-A47-BRN-07` | 7 | **8** |
-| `AJ-A47-BRN-08` | 8 | **7** |
+| SKU             | Workbook `Size` | Template `UK/India Size` |
+| --------------- | --------------- | ------------------------ |
+| `AJ-A13-IVY-09` | 9               | **10**                   |
+| `AJ-A13-IVY-10` | 10              | **9**                    |
+| `AJ-A16-BRN-11` | 11              | **12**                   |
+| `AJ-A16-BRN-12` | 12              | **11**                   |
+| `AJ-A47-BRN-07` | 7               | **8**                    |
+| `AJ-A47-BRN-08` | 8               | **7**                    |
 
 Every one of these is a **transposition of two adjacent sizes within the same
 colour**. The SKU suffix encodes the size, and in each case the SKU suffix
@@ -601,11 +687,11 @@ treated as authoritative. **This needs confirmation** — §9, decision D-3.
 
 ### 7.7 Colour conflicts — 65 SKUs
 
-| Workbook `Colour` | Template `Brand Color` | Designs |
-| --- | --- | --- |
-| `Chickoo` | `Chiku` | A15 |
-| `Brown` | `Burgundy::Brown` | A22, A23 |
-| `Brown` | `Brown::Burgundy` | A24, A25, A26, A27 |
+| Workbook `Colour` | Template `Brand Color` | Designs            |
+| ----------------- | ---------------------- | ------------------ |
+| `Chickoo`         | `Chiku`                | A15                |
+| `Brown`           | `Burgundy::Brown`      | A22, A23           |
+| `Brown`           | `Brown::Burgundy`      | A24, A25, A26, A27 |
 
 The `::` separator in the templates means **multiple colours for one variant**.
 This is a real conflict: `AJ-A22-BRN-06` has a `BRN` token and a `Brown`
@@ -624,18 +710,18 @@ visible. **This needs confirmation** — §9, decision D-3.
 
 The 82 extras fall into recognisable groups:
 
-| Group | Example | Count |
-| --- | --- | --- |
-| Malformed prefix `AJ-06-` | `AJ-06-BLUE-06` | 5 |
-| Duplicates of existing designs | `AJ-A2-OW-06` | 12 |
-| Extended size ranges | `AJ-A22-BLK-11`, `AJ-A22-BLK-12` | 8 |
-| Others | — | 57 |
+| Group                          | Example                          | Count |
+| ------------------------------ | -------------------------------- | ----- |
+| Malformed prefix `AJ-06-`      | `AJ-06-BLUE-06`                  | 5     |
+| Duplicates of existing designs | `AJ-A2-OW-06`                    | 12    |
+| Extended size ranges           | `AJ-A22-BLK-11`, `AJ-A22-BLK-12` | 8     |
+| Others                         | —                                | 57    |
 
 ### 7.9 Templates that reference designs with no folder
 
 `A11` has 3 templates, `A13` 1, `A14` 2, `A16` 3, `A27` 2, `A35` 4, `A41` 2,
 `A42` 2, `A43` 2, `A44` 2, `A45` 2, `A46` 3, `A47` 2, `A48` 2, `A49` 3, `A50`
-3, `A56` 1, `A2` 2, `A6` 2 — these are additional templates for the *same*
+3, `A56` 1, `A2` 2, `A6` 2 — these are additional templates for the _same_
 design split by colour. `AJ-A10` has 1 template and `A01` has **0**.
 
 ### 7.10 Marketplace image URLs are third-party
@@ -662,20 +748,20 @@ in `public/products/`.
 The mapping is one-to-one, but it is **not a string match**. The two code
 formats differ:
 
-| Source | Format | Example |
-| --- | --- | --- |
-| Seller SKU Id in the workbook | zero-padded, two digits | `A01`, `A33`, `A57` |
-| Image folder name | **not** zero-padded | `AJ-A1`, `AJ-A33`, `AJ-A57` |
+| Source                        | Format                  | Example                     |
+| ----------------------------- | ----------------------- | --------------------------- |
+| Seller SKU Id in the workbook | zero-padded, two digits | `A01`, `A33`, `A57`         |
+| Image folder name             | **not** zero-padded     | `AJ-A1`, `AJ-A33`, `AJ-A57` |
 
 So the match must be made on the **numeric** design number, not on the literal
 string. `AJ-A1` corresponds to design `A01`, `AJ-A11` to `A11`.
 
 Two irregularities exist in the folder names:
 
-| Folder | Issue | Handling |
-| --- | --- | --- |
-| `Aj-A48` | lowercase `j` in the prefix | case-insensitive match |
-| — | design `A17` has **no folder at all** | no images for that design |
+| Folder   | Issue                                 | Handling                  |
+| -------- | ------------------------------------- | ------------------------- |
+| `Aj-A48` | lowercase `j` in the prefix           | case-insensitive match    |
+| —        | design `A17` has **no folder at all** | no images for that design |
 
 Verified programmatically across all 54 folders and all 55 workbook designs:
 
@@ -717,11 +803,11 @@ the title is corrected). **Needs confirmation** — §9, decision D-2.
 
 **Status: partially resolved.**
 
-| Case | Rule |
-| --- | --- |
-| Folder filenames carry a colour token | assign that file to the matching colour variant |
-| Folder filenames carry **no** colour token (69 files, 12 designs) | assign all folder images to the design's **only** colour variant |
-| Design has multiple colours but the folder lacks a token for one of them | **unresolved** — the variant has no images |
+| Case                                                                     | Rule                                                             |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Folder filenames carry a colour token                                    | assign that file to the matching colour variant                  |
+| Folder filenames carry **no** colour token (69 files, 12 designs)        | assign all folder images to the design's **only** colour variant |
+| Design has multiple colours but the folder lacks a token for one of them | **unresolved** — the variant has no images                       |
 
 The last case affects the 5 designs in §6.7 row 2 plus `A17`.
 
@@ -733,6 +819,12 @@ The last case affects the 5 designs in §6.7 row 2 plus `A17`.
 
 **Status: provisionally resolved** (workbook wins) — **needs confirmation.**
 
+> **Measured, not assumed.** The 502 conflicts are enumerated per-SKU in
+> `docs/CATALOG_CONFLICTS.md`, which is generated from
+> `artifacts/catalog-extract.json` by a dry run that writes zero documents.
+> That report shows **357 of 674 variants carry no data conflict at all** and
+> could be imported today; the remaining **317 are blocked on D-3**.
+
 ### 8.6 Design codes `A52`, `A53`
 
 **Status: unresolved.** Absent from every source.
@@ -741,16 +833,16 @@ The last case affects the 5 designs in §6.7 row 2 plus `A17`.
 
 ## 9. Decisions that require business input
 
-| ID | Decision | Impact | Recommendation |
-| --- | --- | --- | --- |
-| **D-1** | Are designs `A52` and `A53` discontinued, never created, or supplied in a missing export? | 2 designs missing from the catalogue | Obtain the missing export or confirm discontinuation. **Do not** create placeholder designs. |
-| **D-2** | Which `Product Title` is canonical for the 27 multi-title designs? And what slug scheme? | Product URLs, SEO metadata | Adopt `A<NN>-<slug>` for URLs (stable, unique); pick one title per design with a documented preference order (most rows → longest → first occurrence). |
-| **D-3** | Which source is authoritative for price, size and colour where the workbook and the templates disagree (288 + 6 + 65 SKUs)? | ~300 SKUs' customer-facing data | Workbook + SKU suffix. Apply as a **reviewed, logged** correction, not a silent overwrite — the import must emit a diff report. |
-| **D-4** | Are the primary images white-background and product-only, as Flipkart requires? | Marketplace readiness | Needs a human pass over the 692 images, or a background-detection script. Not verifiable from filenames. |
-| **D-5** | What is the real stock position? Templates show only 1–2 units per SKU. | Whether the store can sell at all | Templates are a marketplace listing artefact, not a stock ledger. Stock must come from the warehouse. |
-| **D-6** | Should `Chickoo` be corrected to `Chikoo`? | Search & filter UX | Store verbatim + add an alias map so both spellings match a filter. |
-| **D-7** | Missing photography for A17, A14(BLK/TAN), A30(BRN), A48(BEG), A57(CHK). | 6 variant groups unsellable without images | Either commission photography or mark those variants unavailable in the storefront. |
-| **D-8** | Are the `A14` and `A57` image sets correct? `A14` has 4 colours in the catalogue but only BRN+WHT images; `A57` has 4 colours but no CHK images, and has a `TAN` image set with no `TAN` in the catalogue. | Possible swapped folders | Physical verification of `AJ-A14` and `AJ-A57` against the catalogue. |
+| ID      | Decision                                                                                                                                                                                                   | Impact                                     | Recommendation                                                                                                                                                                  |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D-1** | Are designs `A52` and `A53` discontinued, never created, or supplied in a missing export?                                                                                                                  | 2 designs missing from the catalogue       | Obtain the missing export or confirm discontinuation. **Do not** create placeholder designs.                                                                                    |
+| **D-2** | Which `Product Title` is canonical for the 27 multi-title designs? And what slug scheme?                                                                                                                   | Product URLs, SEO metadata                 | Adopt `A<NN>-<slug>` for URLs (stable, unique); pick one title per design with a documented preference order (most rows → longest → first occurrence).                          |
+| **D-3** | Which source is authoritative for price, size and colour where the workbook and the templates disagree (288 + 6 + 65 SKUs)?                                                                                | 317 of 674 variants cannot be imported     | Workbook + SKU suffix. Apply as a **reviewed, logged** correction, not a silent overwrite — the import must emit a diff report. Per-SKU detail: `docs/CATALOG_CONFLICTS.md` §3. |
+| **D-4** | Are the primary images white-background and product-only, as Flipkart requires?                                                                                                                            | Marketplace readiness                      | Needs a human pass over the 692 images, or a background-detection script. Not verifiable from filenames.                                                                        |
+| **D-5** | What is the real stock position? Templates show only 1–2 units per SKU.                                                                                                                                    | Whether the store can sell at all          | Templates are a marketplace listing artefact, not a stock ledger. Stock must come from the warehouse.                                                                           |
+| **D-6** | Should `Chickoo` be corrected to `Chikoo`?                                                                                                                                                                 | Search & filter UX                         | Store verbatim + add an alias map so both spellings match a filter.                                                                                                             |
+| **D-7** | Missing photography for A17, A14(BLK/TAN), A30(BRN), A48(BEG), A57(CHK).                                                                                                                                   | 6 variant groups unsellable without images | Either commission photography or mark those variants unavailable in the storefront.                                                                                             |
+| **D-8** | Are the `A14` and `A57` image sets correct? `A14` has 4 colours in the catalogue but only BRN+WHT images; `A57` has 4 colours but no CHK images, and has a `TAN` image set with no `TAN` in the catalogue. | Possible swapped folders                   | Physical verification of `AJ-A14` and `AJ-A57` against the catalogue.                                                                                                           |
 
 ---
 
@@ -793,10 +885,10 @@ title where there is none.
 #### C-1 Canonical product title
 
 - A **single design may carry multiple `Product Title` rows** in the workbook,
-  but the variants of that title differ **only by colour** (e.g. *“AJOOBA
+  but the variants of that title differ **only by colour** (e.g. _“AJOOBA
   Men's Dark Brown Gold Embroidered Ethnic Mojri – Designer Side-Buckle
-  Wedding & Festive Shoes”* vs. *“AJOOBA Men's Black Gold Embroidered
-  Ethnic Mojri – …”*). 19 of 55 designs are of this kind. The colour is taken
+  Wedding & Festive Shoes”_ vs. _“AJOOBA Men's Black Gold Embroidered
+  Ethnic Mojri – …”_). 19 of 55 designs are of this kind. The colour is taken
   from the workbook `Colour` column.
 - A canonical **design-level** title is **not stored on `Product`**.
   `Product` keeps only the design-level metadata (`code`, `slug`,
@@ -871,16 +963,16 @@ title where there is none.
 
 Every number in this document was produced by parsing the real files:
 
-| Source | Method |
-| --- | --- |
-| `products data.xlsx` | `openpyxl` 3.1.5, `data_only=True`, rows 2–1000 |
-| 77 `.xls` templates | `xlrd` 2.0.2 (OLE2/BIFF), `xlrd.open_workbook`, data sheet = `shoe`/`sandal`/`chappal`, rows 5+ |
-| Binary format check | first 8 bytes `D0 CF 11 E0 A1 B1 1A E1` → OLE2 Compound Document |
-| Image inventory | `os.walk` + extension grouping |
-| Duplicate detection | MD5 over full file bytes, all 692 files |
+| Source                | Method                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `products data.xlsx`  | `openpyxl` 3.1.5, `data_only=True`, rows 2–1000                                                         |
+| 77 `.xls` templates   | `xlrd` 2.0.2 (OLE2/BIFF), `xlrd.open_workbook`, data sheet = `shoe`/`sandal`/`chappal`, rows 5+         |
+| Binary format check   | first 8 bytes `D0 CF 11 E0 A1 B1 1A E1` → OLE2 Compound Document                                        |
+| Image inventory       | `os.walk` + extension grouping                                                                          |
+| Duplicate detection   | MD5 over full file bytes, all 692 files                                                                 |
 | Folder→design mapping | regex `^AJ-?A(\d+)$`, case-insensitive, **then numeric normalisation** to the zero-padded workbook code |
-| SKU parsing | regex `^AJ-A(\d+)-([A-Za-z]+)-(\d+)$` — note the case-insensitive token |
-| Cross-source joins | `Seller SKU Id` = `Seller SKU ID` |
+| SKU parsing           | regex `^AJ-A(\d+)-([A-Za-z]+)-(\d+)$` — note the case-insensitive token                                 |
+| Cross-source joins    | `Seller SKU Id` = `Seller SKU ID`                                                                       |
 
 ### 11.1 Re-runnable verification script
 
@@ -902,3 +994,27 @@ The script is the executable counterpart of this document. If the two ever
 disagree, the script is correct and this document is a bug.
 
 **No source file was modified, moved, renamed or deleted during this audit.**
+
+### 11.2 Re-verification after the G-1 … G-6 work (23 October 2026)
+
+The figures in §1.1 are live-database figures, not source figures, so they are
+verified differently — by aggregation against `ajooba_development` and by the
+backfill job's own idempotency check.
+
+| Claim                                        | How it was checked                                                                     | Result                                                      |
+| -------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 55 products, 674 variants                    | `count` on each collection                                                             | confirmed                                                   |
+| 0 duplicate SKUs                             | unique index + `countDocuments`                                                        | confirmed                                                   |
+| 0 orphan variants                            | join `variants.productId` → `products._id`                                             | confirmed                                                   |
+| 0 stock > 0                                  | `$group` on `stock`                                                                    | confirmed — **still the launch blocker**                    |
+| 85 coloured / 19 quarantined / 600 unset     | `$unwind` + `$group` on `images.colour`                                                | confirmed                                                   |
+| 685 images now hashed                        | `image-checksum-backfill.job.ts --dry-run` reports `already stamped: 685`              | confirmed                                                   |
+| Only the A10 pair is a duplicate             | the job's cross-design checksum index                                                  | confirmed, matches §6.4                                     |
+| Colour assignments unchanged by the backfill | `$unwind` + `$group` on `images.colour`, before and after                              | identical                                                   |
+| Nothing was hard-deleted                     | `categories`, `image_reviews`, `import-plans`, `stock_movements` all exist and are `0` | confirmed — the collections were created, the rows were not |
+
+The last row matters: **the four new collections exist and are empty.** Their
+emptiness is the honest state, not an omission. `categories` is seeded on
+demand, `image_reviews` waits for a human decision, `import-plans` records a
+G-6 dry run that has not happened, and `stock_movements` waits for a count
+nobody has taken.

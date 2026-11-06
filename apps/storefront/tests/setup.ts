@@ -17,6 +17,6 @@ Object.assign(process.env, {
   NEXT_PUBLIC_SITE_URL: 'http://localhost:3000',
   API_INTERNAL_URL: 'http://localhost:4000',
   NEXT_PUBLIC_API_URL: 'http://localhost:4000',
-  NEXT_PUBLIC_MEDIA_BASE_URL: '/',
+  NEXT_PUBLIC_MEDIA_BASE_URL: 'http://localhost:4000',
   CATALOG_REVALIDATE_SECONDS: '300',
 });

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "mongodb": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/node_modules/mongodb-mcp-server/dist/esm/index.js"],
+      "envFile": "${workspaceFolder}/.env.mcp",
+      "env": {
+        "MDB_MCP_READ_ONLY": "true",
+        "MDB_MCP_TELEMETRY": "disabled",
+        "MDB_MCP_DISABLED_TOOLS": "drop-database,drop-collection,rename-collection,delete-one,delete-many,insert-one,insert-many,update-one,update-many,create-index,drop-index,drop-indexes"
+      }
+    }
+  }
+}
