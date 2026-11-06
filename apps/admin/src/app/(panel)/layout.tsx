@@ -3,6 +3,7 @@ import { AdminShell, type ShellAdmin } from '@/components/layout/admin-shell';
 import { OpsApiError, fetchAdmin } from '@/lib/ops';
 import { requireSession } from '@/lib/session';
 import { adminEnv } from '@/lib/env';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * The panel's layout.
@@ -74,7 +75,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   }
 
   if (outcome.kind === 'signed-out') {
-    redirect('/login');
+    redirect(adminPath('/login'));
   }
 
   return (

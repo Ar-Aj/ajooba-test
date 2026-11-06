@@ -294,11 +294,11 @@ This means:
 
 `packages/contracts/src/env/index.ts` owns three Zod schemas:
 
-| Schema                | Consumer          | Required                                                                                                                   |
-| --------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `apiEnvSchema`        | `apps/api`        | `MONGODB_URI`, `API_PUBLIC_URL`, `CORS_ORIGINS`, `STOREFRONT_PUBLIC_URL`, `ADMIN_PUBLIC_URL`, `SESSION_SECRET` (≥32 chars) |
-| `storefrontEnvSchema` | `apps/storefront` | `API_INTERNAL_URL`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`                                                          |
-| `adminEnvSchema`      | `apps/admin`      | `API_INTERNAL_URL`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`                                                          |
+| Schema                | Consumer          | Required                                                                                                                     |
+| --------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `apiEnvSchema`        | `apps/api`        | `MONGODB_URI`, `API_PUBLIC_URL`, `CORS_ORIGINS`, `STOREFRONT_PUBLIC_URL`, `ADMIN_PUBLIC_URL`, `SESSION_SECRET` (≥32 chars)   |
+| `storefrontEnvSchema` | `apps/storefront` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`; `API_INTERNAL_URL` locally or the Vercel `API_SERVICE_URL` binding at runtime |
+| `adminEnvSchema`      | `apps/admin`      | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`; `API_INTERNAL_URL` locally or the Vercel `API_SERVICE_URL` binding at runtime |
 
 Each application has exactly **one** module that reads `process.env`
 (`src/config/env.ts` in the API, `src/lib/env.ts` in the Next apps). No other

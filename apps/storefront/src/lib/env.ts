@@ -17,9 +17,12 @@ import { storefrontEnvSchema, type StorefrontEnv } from '@ajooba/contracts';
 function readServerEnv(): Record<string, string | undefined> {
   return {
     NODE_ENV: process.env.NODE_ENV,
-    API_INTERNAL_URL: process.env.API_INTERNAL_URL,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    API_INTERNAL_URL: process.env.API_SERVICE_URL ?? process.env.API_INTERNAL_URL,
+    NEXT_PUBLIC_API_URL:
+      process.env.NEXT_PUBLIC_API_URL ?? (process.env.VERCEL ? '/api' : undefined),
+    NEXT_PUBLIC_SITE_URL:
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : undefined),
     NEXT_PUBLIC_MEDIA_BASE_URL: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
     CATALOG_REVALIDATE_SECONDS: process.env.CATALOG_REVALIDATE_SECONDS,
   };
@@ -51,7 +54,11 @@ export const storefrontEnv: Readonly<StorefrontEnv> = Object.freeze(parseEnv());
 
 /** Build an absolute URL to an API endpoint. Server-only. */
 export function apiUrl(path: string): string {
-  return new URL(path, storefrontEnv.API_INTERNAL_URL).toString();
+  const baseUrl = storefrontEnv.API_INTERNAL_URL;
+  if (!baseUrl) {
+    throw new Error('API service binding is missing. Configure the storefront-to-api binding.');
+  }
+  return new URL(path, baseUrl).toString();
 }
 
 /** ISR revalidation window for catalogue pages, in seconds. Server-only. */

@@ -31,6 +31,21 @@ export interface RawBodyRequest extends Request {
 export function createApp(): Application {
   const app = express();
 
+  /*
+   * The Vercel public rewrite sends the original /api/... path to this
+   * service. Strip that mount prefix before the existing /v1, /health and
+   * /webhooks routers run. Internal service-binding calls use unprefixed
+   * routes directly.
+   */
+  app.use((req, _res, next) => {
+    if (req.url === '/api') {
+      req.url = '/';
+    } else if (req.url?.startsWith('/api/')) {
+      req.url = req.url.slice('/api'.length);
+    }
+    next();
+  });
+
   // Behind a proxy/load balancer (Vercel, Render, Cloudflare) we need the real
   // client IP for rate limiting.
   app.set('trust proxy', 1);

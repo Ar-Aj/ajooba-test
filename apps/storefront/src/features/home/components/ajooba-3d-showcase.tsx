@@ -10,7 +10,8 @@ import { useHydrated } from '@/lib/use-hydrated';
 import { cartStore } from '@/lib/cart-store';
 import { wishlistStore } from '@/lib/wishlist-store';
 import { mediaUrl } from '@/lib/media';
-import { discountPercent, hasDiscount, rupees } from '@/lib/format';
+import { hasDiscount, rupees } from '@/lib/format';
+import { PriceSavings } from '@/components/ui/price-savings';
 import { colourwaysOf, isLightSwatch, type Colourway } from '@/lib/colour-swatch';
 import { cn } from '@/lib/cn';
 import { trackAddToCart, trackTap, trackWishlist } from '@/lib/track';
@@ -110,8 +111,6 @@ export function Ajooba3DShowcase({
   const displayPrice = selectedVariant?.sellingPrice ?? primaryWay.sellingPrice;
   const displayMrp = selectedVariant?.mrp ?? primaryWay.mrp;
   const discounted = hasDiscount(displayMrp, displayPrice);
-  const percentOff = discounted ? discountPercent(displayMrp, displayPrice) : 0;
-  const savedRupees = discounted ? displayMrp - displayPrice : 0;
 
   const inCartQuantity =
     deviceKnown && selectedVariant
@@ -395,11 +394,6 @@ export function Ajooba3DShowcase({
                     <span className="step-xs bg-cream-50/95 px-3 py-1 font-medium text-ink-900">
                       {primaryWay.colour} · {ANGLE_LABELS[safeAngleIdx] ?? 'Studio View'}
                     </span>
-                    {discounted ? (
-                      <span className="tnum step-xs bg-gold-500 px-3 py-1 font-semibold text-ink-950">
-                        −{percentOff}% · Save {rupees(savedRupees)}
-                      </span>
-                    ) : null}
                   </div>
 
                   {/* Bottom touch/hover guidance pill */}
@@ -669,16 +663,12 @@ export function Ajooba3DShowcase({
               <div className="flex flex-wrap items-baseline gap-3">
                 <span className="tnum step-xl text-ink-900">{rupees(displayPrice)}</span>
                 {discounted ? (
-                  <>
-                    <span className="tnum step-md text-ink-400 line-through">
-                      MRP {rupees(displayMrp)}
-                    </span>
-                    <span className="tnum step-xs bg-gold-500 px-2.5 py-1 font-semibold text-ink-950">
-                      Save {rupees(savedRupees)} ({percentOff}% OFF)
-                    </span>
-                  </>
+                  <span className="tnum step-md text-ink-400 line-through">
+                    MRP {rupees(displayMrp)}
+                  </span>
                 ) : null}
               </div>
+              <PriceSavings mrp={displayMrp} sellingPrice={displayPrice} className="mt-1.5" />
               <p className="step-xs mt-1.5 text-ink-500">
                 Inclusive of all taxes · Free shipping across India over ₹1,499
               </p>

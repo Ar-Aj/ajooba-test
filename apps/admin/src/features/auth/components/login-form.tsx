@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * The sign-in form.
@@ -60,7 +61,7 @@ export function LoginForm() {
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch(adminPath('/api/admin/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

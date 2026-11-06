@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import { mediaUrl } from '@/lib/media';
 import { hasDiscount, rupees } from '@/lib/format';
+import { PriceSavings } from '@/components/ui/price-savings';
 import { fieldForIndex } from '@/lib/specimen';
 import { TapLink } from '@/components/track/tap-link';
 
@@ -168,12 +169,6 @@ export function SpecimenCard({
             Sold out
           </span>
         )}
-
-        {discounted && product.inStock ? (
-          <span className="label-cap absolute right-0 top-0 bg-gold-500 px-2 py-1 text-ink-900">
-            −{Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100)}%
-          </span>
-        ) : null}
       </div>
 
       <div className="mt-3">
@@ -187,6 +182,7 @@ export function SpecimenCard({
             <span className="step-xs ml-2 text-ink-400 line-through">{rupees(product.mrp)}</span>
           ) : null}
         </p>
+        <PriceSavings mrp={product.mrp} sellingPrice={product.sellingPrice} className="mt-1" />
         {product.colours.length > 1 ? (
           <p className="step-xs mt-1 text-ink-500">{product.colours.length} colourways</p>
         ) : null}

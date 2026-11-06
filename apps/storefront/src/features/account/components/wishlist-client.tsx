@@ -10,6 +10,7 @@ import { useCommerce } from '@/lib/commerce-context';
 import { wishlistStore } from '@/lib/wishlist-store';
 import { cartStore } from '@/lib/cart-store';
 import { rupees } from '@/lib/format';
+import { PriceSavings } from '@/components/ui/price-savings';
 
 export function WishlistClient() {
   const { wishlist, account } = useCommerce();
@@ -76,6 +77,7 @@ export function WishlistClient() {
                 <span className="ml-2 text-ink-400 line-through">{rupees(item.unitMrp)}</span>
               ) : null}
             </p>
+            <PriceSavings mrp={item.unitMrp} sellingPrice={item.unitPrice} className="mt-1" />
             <div className="mt-auto flex items-center gap-2 pt-4">
               <Button intent="primary" size="sm" className="flex-1" asChild>
                 <Link href={`/products/${item.productSlug}`}>View design</Link>

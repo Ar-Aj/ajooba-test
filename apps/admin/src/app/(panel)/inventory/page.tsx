@@ -12,6 +12,7 @@ import {
   type Page,
 } from '@/lib/ops';
 import { cn, dateTime } from '@/lib/format';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * Stock.
@@ -107,7 +108,11 @@ export default async function InventoryPage({
           ) : null
         }
         actions={
-          <form action="/inventory" method="get" className="flex flex-wrap items-center gap-2">
+          <form
+            action={adminPath('/inventory')}
+            method="get"
+            className="flex flex-wrap items-center gap-2"
+          >
             <label htmlFor="stock-search" className="sr-only">
               Search by SKU
             </label>

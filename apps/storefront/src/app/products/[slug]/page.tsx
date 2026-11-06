@@ -100,7 +100,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const primary = product.images.find((image) => image.colour);
 
   return (
-    <div className="container-page py-6 md:py-10">
+    <div className="container-page pt-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:py-10">
       {/*
         Counted in the browser, once, on mount. A server render happens for
         crawlers, for prefetches and sometimes twice for one visitor; counting

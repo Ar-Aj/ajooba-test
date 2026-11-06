@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { HomepageSectionInput, ResolvedHomepageSection } from '@ajooba/contracts';
 import { HOMEPAGE_SECTION_TYPES, SECTION_LAYOUTS, PRODUCT_SOURCE_MODES } from '@ajooba/contracts';
 import { ProductPicker } from './product-picker';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * The homepage merchandising editor.
@@ -218,7 +219,7 @@ export function HomepageEditor({
     setBusy(true);
     setMessage(null);
     try {
-      const response = await fetch('/api/admin/proxy', {
+      const response = await fetch(adminPath('/api/admin/proxy'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import type { HomepageProductCard, InteractionSurface, Product } from '@ajooba/contracts';
 import { mediaUrl } from '@/lib/media';
-import { discountPercent, hasDiscount, rupees } from '@/lib/format';
+import { hasDiscount, rupees } from '@/lib/format';
+import { PriceSavings } from '@/components/ui/price-savings';
 import { fieldForIndex } from '@/lib/specimen';
 import { colourwaysOf, dedupeBySize, swatchHex } from '@/lib/colour-swatch';
 import { cn } from '@/lib/cn';
@@ -75,8 +76,6 @@ export function ShopTile({
   const price = activeVariant?.sellingPrice ?? way?.sellingPrice ?? card.sellingPrice;
   const mrp = activeVariant?.mrp ?? way?.mrp ?? card.mrp;
   const discounted = hasDiscount(mrp, price);
-  const percent = discounted ? discountPercent(mrp, price) : 0;
-  const savedAmount = discounted ? mrp - price : 0;
 
   const anyInStock = product.variants.some((variant) => variant.inStock);
 
@@ -147,12 +146,6 @@ export function ShopTile({
               Sold out
             </span>
           )}
-
-          {discounted ? (
-            <span className="tnum absolute right-2 top-2 bg-gold-400 px-2.5 py-1 text-sm font-medium text-ink-950">
-              −{percent}% · Save {rupees(savedAmount)}
-            </span>
-          ) : null}
         </div>
 
         <div className="mt-3">
@@ -175,12 +168,10 @@ export function ShopTile({
             {discounted ? (
               <>
                 <span className="tnum text-sm text-ink-500 line-through">MRP {rupees(mrp)}</span>
-                <span className="tnum bg-gold-100 px-2 py-0.5 text-sm font-medium text-gold-900">
-                  Save {rupees(savedAmount)} ({percent}% off)
-                </span>
               </>
             ) : null}
           </div>
+          <PriceSavings mrp={mrp} sellingPrice={price} className="mt-1.5" />
         </div>
       </TapLink>
 

@@ -32,9 +32,10 @@ import { cn } from '@/lib/cn';
  */
 const buttonVariants = cva(
   [
-    'inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium',
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[3px] font-medium',
     'btn-press transition-colors duration-150',
-    'focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-600 focus-visible:ring-offset-2 focus-visible:ring-offset-cream-50',
+    'disabled:pointer-events-none disabled:opacity-45',
   ],
   {
     variants: {

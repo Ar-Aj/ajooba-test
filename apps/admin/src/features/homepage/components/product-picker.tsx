@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import type { ProductPickerRow } from '@ajooba/contracts';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * The admin product picker.
@@ -44,7 +45,7 @@ export function ProductPicker({
           if (search) params.set('search', search);
 
           const response = await fetch(
-            `/api/admin/proxy?path=/homepage/products&params=${params.toString()}`,
+            adminPath('/api/admin/proxy?path=/homepage/products&params=' + params.toString()),
             { signal: controller.signal },
           );
           const body = (await response.json()) as {

@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+const adminBasePath = process.env.VERCEL ? '/admin' : '';
+
 /**
  * Next.js configuration for the admin panel.
  *
@@ -33,6 +35,10 @@ function resolveDistDir(): string {
 }
 
 const nextConfig: NextConfig = {
+  basePath: adminBasePath,
+  env: {
+    NEXT_PUBLIC_ADMIN_BASE_PATH: adminBasePath,
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   distDir: resolveDistDir(),

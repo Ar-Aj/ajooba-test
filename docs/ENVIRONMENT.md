@@ -102,12 +102,12 @@ pair is a boot failure rather than a button that lands on a 503: the
 storefront renders only the doors the API reports as configured, so an absent
 pair means no button, and a partial pair must never look like a working one.
 
-| Variable                    | Secret  | Default | prod | Notes                                                                                                                                    |
-| --------------------------- | ------- | ------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `GOOGLE_OAUTH_CLIENT_ID`    | no      | —       | no   | OAuth 2.0 Web application client. Read at call time, so it can be enabled by setting the pair and restarting. Must pair with the secret. |
-| `GOOGLE_OAUTH_CLIENT_SECRET`| **yes** | —       | no   | Server only. Never reaches the browser. Must pair with the client id.                                                                    |
-| `FACEBOOK_OAUTH_APP_ID`     | no      | —       | no   | Facebook Login app id. Must pair with the app secret.                                                                                    |
-| `FACEBOOK_OAUTH_APP_SECRET` | **yes** | —       | no   | Server only. Also used to app-secret-proof the token exchange. Must pair with the app id.                                                 |
+| Variable                     | Secret  | Default | prod | Notes                                                                                                                                    |
+| ---------------------------- | ------- | ------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `GOOGLE_OAUTH_CLIENT_ID`     | no      | —       | no   | OAuth 2.0 Web application client. Read at call time, so it can be enabled by setting the pair and restarting. Must pair with the secret. |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | **yes** | —       | no   | Server only. Never reaches the browser. Must pair with the client id.                                                                    |
+| `FACEBOOK_OAUTH_APP_ID`      | no      | —       | no   | Facebook Login app id. Must pair with the app secret.                                                                                    |
+| `FACEBOOK_OAUTH_APP_SECRET`  | **yes** | —       | no   | Server only. Also used to app-secret-proof the token exchange. Must pair with the app id.                                                |
 
 The redirect URI is derived from `API_PUBLIC_URL`, never configured
 separately, so it cannot drift from the origin the API actually serves:
@@ -255,14 +255,26 @@ starting a store that silently accepts duplicates.
 Both are Next.js applications. Only `NEXT_PUBLIC_*` values reach the browser
 bundle.
 
-| Variable                     | Storefront | Admin    | Notes                                                                                                                              |
-| ---------------------------- | ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`                   | yes        | yes      |                                                                                                                                    |
-| `API_INTERNAL_URL`           | **yes**    | **yes**  | Server-side base URL of the API.                                                                                                   |
-| `NEXT_PUBLIC_API_URL`        | **yes**    | **yes**  | Browser-facing base URL.                                                                                                           |
-| `NEXT_PUBLIC_SITE_URL`       | **yes**    | **yes**  | Canonical origin, used for SEO/metadata.                                                                                           |
-| `NEXT_PUBLIC_MEDIA_BASE_URL` | no (`/`)   | no (`/`) | Prefix for root-relative catalogue image paths. In production point at the CDN origin, **not** the API, if a CDN serves the media. |
-| `CATALOG_REVALIDATE_SECONDS` | no (`300`) | —        | Storefront only.                                                                                                                   |
+| Variable                     | Storefront | Admin      | Notes                                                                                                                              |
+| ---------------------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                   | yes        | yes        |                                                                                                                                    |
+| `API_INTERNAL_URL`           | local only | local only | Standalone server-side API URL. Vercel Services supplies `API_SERVICE_URL` through a binding at runtime.                           |
+| `NEXT_PUBLIC_API_URL`        | **yes**    | **yes**    | Browser-facing API base; may be an absolute URL or same-origin `/api`.                                                             |
+| `NEXT_PUBLIC_SITE_URL`       | **yes**    | **yes**    | Canonical origin, used for SEO/metadata.                                                                                           |
+| `NEXT_PUBLIC_MEDIA_BASE_URL` | no (`/`)   | no (`/`)   | Prefix for root-relative catalogue image paths. In production point at the CDN origin, **not** the API, if a CDN serves the media. |
+| `CATALOG_REVALIDATE_SECONDS` | no (`300`) | —          | Storefront only.                                                                                                                   |
+
+---
+
+### Vercel Services
+
+For the single-project layout, the storefront and admin call the API privately
+through Vercel's `API_SERVICE_URL` bindings. Do not create that variable in
+Vercel settings; Vercel injects it for each caller at runtime. Browser requests
+and provider webhooks use the public `/api` path. Set `API_PUBLIC_URL` to
+`https://<shop-domain>/api`, while `CORS_ORIGINS` and `ADMIN_ORIGINS` use
+the origin only (for example, `https://<shop-domain>`). The admin app is
+publicly mounted under `/admin`; `ADMIN_PUBLIC_URL` should include that path.
 
 ---
 
@@ -277,34 +289,34 @@ This is the authoritative deployment matrix. Every row is a variable whose
 value differs between the three targets, or whose presence is a
 go-live decision.
 
-| Variable                     | Development              | Staging                             | Production                         |
-| ---------------------------- | ------------------------ | ----------------------------------- | ---------------------------------- |
-| `NODE_ENV`                   | `development`            | `production`                        | `production`                       |
-| `PORT`                       | `4000`                   | platform-assigned                   | platform-assigned                  |
-| `MONGODB_URI`                | local `mongod`           | staging cluster                     | production cluster                 |
-| `MONGODB_DB`                 | `ajooba_development`     | `ajooba_staging`                    | `ajooba_production`                |
-| `API_PUBLIC_URL`             | `http://localhost:4000`  | `https://staging-api.…`             | `https://api.…`                    |
-| `STOREFRONT_PUBLIC_URL`      | `http://localhost:3000`  | `https://staging.…`                 | `https://…`                        |
-| `ADMIN_PUBLIC_URL`           | `http://localhost:3001`  | `https://staging-admin.…`           | `https://admin.…`                  |
-| `CORS_ORIGINS`               | both localhost origins   | staging storefront only             | production storefront only         |
-| `ADMIN_ORIGINS`              | `http://localhost:3001`  | staging admin only                  | production admin only              |
-| `SESSION_SECRET`             | local throwaway          | generated secret                     | generated secret                    |
-| `JWT_SECRET`                 | local throwaway          | generated secret                     | generated secret                    |
-| `BCRYPT_COST`                | `10`                     | `12` (default)                      | `12` (default)                     |
-| `LOG_LEVEL`                  | `debug`                  | `info`                              | `info`                             |
-| `RAZORPAY_MODE`              | `test`                   | `test`                              | `live`                             |
-| `RAZORPAY_KEY_ID`            | blank                    | test key                            | live key                           |
-| `RAZORPAY_KEY_SECRET`        | blank                    | test secret                         | live secret                        |
-| `RAZORPAY_WEBHOOK_SECRET`    | blank                    | test webhook secret                 | live webhook secret                |
-| `RESEND_API_KEY`             | blank                    | Resend key                          | Resend key                         |
-| `RESEND_FROM_EMAIL`          | blank                    | `orders-staging@…`                  | `orders@…`                         |
-| `EMAIL_ALLOWLIST`            | **required**             | unset (deliberately)                | unset (deliberately)               |
-| `SHIPROCKET_API_EMAIL`       | blank                    | Shiprocket API user                 | Shiprocket API user                |
-| `SHIPROCKET_API_PASSWORD`    | blank                    | Shiprocket API password             | Shiprocket API password            |
-| `SHIPROCKET_PICKUP_LOCATION` | blank                    | exact account name                  | exact account name                 |
-| `SHIPROCKET_WEBHOOK_SECRET`  | blank                    | shared secret                       | shared secret                      |
-| `MEDIA_STATIC_DIR`           | local `public/`          | blank (CDN serves media)            | blank (CDN serves media)           |
-| `NEXT_PUBLIC_MEDIA_BASE_URL` | API origin               | CDN origin                          | CDN origin                         |
+| Variable                     | Development             | Staging                   | Production                 |
+| ---------------------------- | ----------------------- | ------------------------- | -------------------------- |
+| `NODE_ENV`                   | `development`           | `production`              | `production`               |
+| `PORT`                       | `4000`                  | platform-assigned         | platform-assigned          |
+| `MONGODB_URI`                | local `mongod`          | staging cluster           | production cluster         |
+| `MONGODB_DB`                 | `ajooba_development`    | `ajooba_staging`          | `ajooba_production`        |
+| `API_PUBLIC_URL`             | `http://localhost:4000` | `https://staging-api.…`   | `https://api.…`            |
+| `STOREFRONT_PUBLIC_URL`      | `http://localhost:3000` | `https://staging.…`       | `https://…`                |
+| `ADMIN_PUBLIC_URL`           | `http://localhost:3001` | `https://staging-admin.…` | `https://admin.…`          |
+| `CORS_ORIGINS`               | both localhost origins  | staging storefront only   | production storefront only |
+| `ADMIN_ORIGINS`              | `http://localhost:3001` | staging admin only        | production admin only      |
+| `SESSION_SECRET`             | local throwaway         | generated secret          | generated secret           |
+| `JWT_SECRET`                 | local throwaway         | generated secret          | generated secret           |
+| `BCRYPT_COST`                | `10`                    | `12` (default)            | `12` (default)             |
+| `LOG_LEVEL`                  | `debug`                 | `info`                    | `info`                     |
+| `RAZORPAY_MODE`              | `test`                  | `test`                    | `live`                     |
+| `RAZORPAY_KEY_ID`            | blank                   | test key                  | live key                   |
+| `RAZORPAY_KEY_SECRET`        | blank                   | test secret               | live secret                |
+| `RAZORPAY_WEBHOOK_SECRET`    | blank                   | test webhook secret       | live webhook secret        |
+| `RESEND_API_KEY`             | blank                   | Resend key                | Resend key                 |
+| `RESEND_FROM_EMAIL`          | blank                   | `orders-staging@…`        | `orders@…`                 |
+| `EMAIL_ALLOWLIST`            | **required**            | unset (deliberately)      | unset (deliberately)       |
+| `SHIPROCKET_API_EMAIL`       | blank                   | Shiprocket API user       | Shiprocket API user        |
+| `SHIPROCKET_API_PASSWORD`    | blank                   | Shiprocket API password   | Shiprocket API password    |
+| `SHIPROCKET_PICKUP_LOCATION` | blank                   | exact account name        | exact account name         |
+| `SHIPROCKET_WEBHOOK_SECRET`  | blank                   | shared secret             | shared secret              |
+| `MEDIA_STATIC_DIR`           | local `public/`         | blank (CDN serves media)  | blank (CDN serves media)   |
+| `NEXT_PUBLIC_MEDIA_BASE_URL` | API origin              | CDN origin                | CDN origin                 |
 
 Three of these deserve emphasis:
 
@@ -433,7 +445,7 @@ A 400 on that third call is the **correct** result and needs no credentials.
 
 A fourth probe reports whether the deployment can actually take money. It is
 public by design — the storefront needs it to decide whether to offer a card
-option — and it exposes only *whether* the integration is configured, never a
+option — and it exposes only _whether_ the integration is configured, never a
 secret:
 
 ```bash

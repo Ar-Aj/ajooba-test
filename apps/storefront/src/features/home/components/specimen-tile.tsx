@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { HomepageProductCard, InteractionSurface } from '@ajooba/contracts';
 import { mediaUrl } from '@/lib/media';
 import { hasDiscount, rupees } from '@/lib/format';
+import { PriceSavings } from '@/components/ui/price-savings';
 import { fieldForIndex } from '@/lib/specimen';
 import { cn } from '@/lib/cn';
 import { TapLink } from '@/components/track/tap-link';
@@ -33,10 +34,6 @@ export function SpecimenTile({
 }) {
   const soldOut = !product.isPurchasable;
   const discounted = hasDiscount(product.mrp, product.sellingPrice);
-  const percent = discounted
-    ? Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100)
-    : 0;
-  const saved = discounted ? product.mrp - product.sellingPrice : 0;
 
   return (
     <TapLink
@@ -106,12 +103,6 @@ export function SpecimenTile({
             Sold out
           </span>
         ) : null}
-
-        {discounted ? (
-          <span className="tnum absolute right-2 top-2 bg-gold-400 px-2.5 py-1 text-sm font-medium text-ink-950">
-            −{percent}% · Save {rupees(saved)}
-          </span>
-        ) : null}
       </div>
 
       <div className="mt-3">
@@ -133,12 +124,10 @@ export function SpecimenTile({
           {discounted ? (
             <>
               <span className="tnum text-sm text-ink-500 line-through">{rupees(product.mrp)}</span>
-              <span className="tnum bg-gold-100 px-2 py-0.5 text-sm font-medium text-gold-900">
-                Save {rupees(saved)} ({percent}% off)
-              </span>
             </>
           ) : null}
         </div>
+        <PriceSavings mrp={product.mrp} sellingPrice={product.sellingPrice} className="mt-1.5" />
 
         {product.verifiedColours.length > 0 ? (
           <p className="mt-1.5 text-sm text-ink-600">

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Coupon } from '@ajooba/contracts';
 import { cn, dateOnly, rupees } from '@/lib/format';
 import { Status } from '@/components/ui/status';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * Promotions.
@@ -130,7 +131,7 @@ async function call<T>(
   }
 
   try {
-    const response = await fetch(`/api/admin/promotions?${params.toString()}`, {
+    const response = await fetch(adminPath('/api/admin/promotions?' + params.toString()), {
       method,
       ...(body === undefined
         ? {}

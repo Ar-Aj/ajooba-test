@@ -10,9 +10,12 @@ import { adminEnvSchema, type AdminEnv } from '@ajooba/contracts';
 function readServerEnv(): Record<string, string | undefined> {
   return {
     NODE_ENV: process.env.NODE_ENV,
-    API_INTERNAL_URL: process.env.API_INTERNAL_URL,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    API_INTERNAL_URL: process.env.API_SERVICE_URL ?? process.env.API_INTERNAL_URL,
+    NEXT_PUBLIC_API_URL:
+      process.env.NEXT_PUBLIC_API_URL ?? (process.env.VERCEL ? '/api' : undefined),
+    NEXT_PUBLIC_SITE_URL:
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : undefined),
     NEXT_PUBLIC_MEDIA_BASE_URL: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
   };
 }
@@ -38,7 +41,11 @@ export const adminEnv: Readonly<AdminEnv> = Object.freeze(parseEnv());
 
 /** Build an absolute URL to an API endpoint. */
 export function apiUrl(path: string): string {
-  return new URL(path, adminEnv.API_INTERNAL_URL).toString();
+  const baseUrl = adminEnv.API_INTERNAL_URL;
+  if (!baseUrl) {
+    throw new Error('API service binding is missing. Configure the admin-to-api binding.');
+  }
+  return new URL(path, baseUrl).toString();
 }
 
 /** Build an absolute URL to a public asset served from `public/`. */

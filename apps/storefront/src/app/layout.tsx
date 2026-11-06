@@ -12,6 +12,10 @@ import { A11yBootstrap } from '@/components/a11y/accessibility-controls';
 import { fetchCategories } from '@/lib/api';
 import './globals.css';
 
+// Vercel service bindings are runtime-only, so service-bound API reads must
+// happen in request-time functions instead of static generation.
+export const dynamic = 'force-dynamic';
+
 /**
  * Root layout for the customer storefront.
  *
@@ -27,6 +31,7 @@ import './globals.css';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
   themeColor: '#181512',
 };
 

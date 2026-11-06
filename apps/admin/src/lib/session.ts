@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * Session gate for every panel screen.
@@ -34,7 +35,7 @@ export async function readToken(): Promise<string | null> {
  * external origin.
  */
 export function redirectToLogin(from?: string): never {
-  const target = from ? `/login?next=${encodeURIComponent(from)}` : '/login';
+  const target = from ? adminPath('/login?next=' + encodeURIComponent(from)) : adminPath('/login');
   redirect(target);
 }
 

@@ -131,7 +131,7 @@ export const customerSession = {
 
 /** The browser-side API base. Public by definition. */
 function apiBase(): string {
-  return (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+  return (process.env.NEXT_PUBLIC_API_URL ?? '/api').replace(/\/$/, '');
 }
 
 interface Envelope<T> {

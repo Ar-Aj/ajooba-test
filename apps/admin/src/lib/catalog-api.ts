@@ -8,6 +8,7 @@ import type {
   ImageReviewQueue,
   StockSetResult,
 } from '@ajooba/contracts';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * Client for the catalogue administration API.
@@ -56,7 +57,7 @@ function proxyUrl(
   const queryString = search.toString();
   if (queryString) params.set('query', queryString);
 
-  return `/api/admin/catalog?${params.toString()}`;
+  return adminPath('/api/admin/catalog?' + params.toString());
 }
 
 async function request<T>(

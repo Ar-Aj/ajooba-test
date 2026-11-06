@@ -471,11 +471,11 @@ export type ImporterEnv = z.infer<typeof importerEnvSchema>;
 export const storefrontEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']),
 
-  /** Base URL of the REST API, called from the server. */
-  API_INTERNAL_URL: z.string().url(),
+  /** Local server-side API URL; Vercel Services supplies API_SERVICE_URL at runtime. */
+  API_INTERNAL_URL: z.string().url().optional(),
 
-  /** Base URL of the REST API, used by browser-side fetches. */
-  NEXT_PUBLIC_API_URL: z.string().url(),
+  /** Public API origin or same-origin Vercel service path, used by browser fetches. */
+  NEXT_PUBLIC_API_URL: z.union([z.string().url(), z.literal('/api')]),
 
   /** Canonical public origin of this storefront, used for SEO/metadata. */
   NEXT_PUBLIC_SITE_URL: z.string().url(),
@@ -508,11 +508,11 @@ export type StorefrontEnv = z.infer<typeof storefrontEnvSchema>;
 export const adminEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']),
 
-  /** Base URL of the REST API, called from the server. */
-  API_INTERNAL_URL: z.string().url(),
+  /** Local server-side API URL; Vercel Services supplies API_SERVICE_URL at runtime. */
+  API_INTERNAL_URL: z.string().url().optional(),
 
-  /** Base URL of the REST API, used by browser-side fetches. */
-  NEXT_PUBLIC_API_URL: z.string().url(),
+  /** Public API origin or same-origin Vercel service path, used by browser fetches. */
+  NEXT_PUBLIC_API_URL: z.union([z.string().url(), z.literal('/api')]),
 
   /** Canonical public origin of this admin panel. */
   NEXT_PUBLIC_SITE_URL: z.string().url(),

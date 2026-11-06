@@ -215,7 +215,7 @@ let listenersBound = false;
 
 function apiBase(): string {
   // Referenced as a full literal so Next inlines it into the client bundle.
-  return (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+  return (process.env.NEXT_PUBLIC_API_URL ?? '/api').replace(/\/$/, '');
 }
 
 function scheduleFlush(): void {

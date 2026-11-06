@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Minus, Plus } from 'lucide-react';
 import { STOCK_MOVEMENT_REASONS } from '@ajooba/contracts';
 import { cn } from '@/lib/format';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * Stock adjustment.
@@ -99,7 +100,7 @@ export function StockAdjustDialog({
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/inventory/adjustments', {
+      const response = await fetch(adminPath('/api/admin/inventory/adjustments'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

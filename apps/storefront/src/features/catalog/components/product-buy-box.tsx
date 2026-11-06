@@ -2,14 +2,16 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import type { Product, ProductImage, ProductVariant } from '@ajooba/contracts';
+import { Button } from '@/components/ui/button';
+import { PriceSavings } from '@/components/ui/price-savings';
 import { useToast } from '@/components/ui/toast';
 import { useCommerce } from '@/lib/commerce-context';
 import { cartStore } from '@/lib/cart-store';
 import { wishlistStore } from '@/lib/wishlist-store';
 import { mediaUrl } from '@/lib/media';
-import { discountPercent, hasDiscount, rupees } from '@/lib/format';
+import { hasDiscount, rupees } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { trackAddToCart, trackTap, trackWishlist } from '@/lib/track';
 
@@ -36,7 +38,7 @@ import { trackAddToCart, trackTap, trackWishlist } from '@/lib/track';
  *
  *   - size chosen and in stock        → "Add to cart", enabled
  *   - size chosen but sold out        → "Out of stock", disabled
- *   - no size chosen, colour has stock → "Select a size", disabled
+ *   - no size chosen, colour has stock → "Select a size", enabled to guide the shopper
  *   - no size chosen, colour sold out  → "Sold out", disabled
  *
  * With this catalogue every variant is currently unstocked, so a shopper must
@@ -56,6 +58,7 @@ export function ProductBuyBox({
   const { toast } = useToast();
   const { cart, isWishlisted, account } = useCommerce();
   const pathname = usePathname();
+  const router = useRouter();
   const [selectedSku, setSelectedSku] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
 
@@ -119,8 +122,26 @@ export function ProductBuyBox({
           ? 'Sold out'
           : 'Select a size';
 
-  function addToCart() {
-    if (!selectedVariant) return;
+  const purchaseUnavailable = ctaState === 'sold-out' || ctaState === 'out-of-stock';
+  const addDisabled = purchaseUnavailable || (ctaState === 'add' && maxAddable <= 0);
+  const buyDisabled =
+    purchaseUnavailable || (ctaState === 'add' && maxAddable <= 0 && inCartQuantity === 0);
+
+  function scrollToSize() {
+    const sizeSelector = document.getElementById('pdp-size-selector');
+    if (!sizeSelector) return;
+
+    sizeSelector.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'center',
+    });
+  }
+
+  function addToCart(proceedToCheckout = false) {
+    if (!selectedVariant) {
+      if (ctaState === 'select-size') scrollToSize();
+      return;
+    }
     if (!selectedVariant.inStock) {
       toast({
         title: 'That size is out of stock',
@@ -130,7 +151,12 @@ export function ProductBuyBox({
       return;
     }
 
-    const qty = Math.min(Math.max(1, quantity), Math.max(1, maxAddable));
+    if (maxAddable <= 0) {
+      if (proceedToCheckout && inCartQuantity > 0) router.push('/checkout');
+      return;
+    }
+
+    const qty = Math.min(Math.max(1, quantity), maxAddable);
     const lineImage = colourImage ?? product.images[0];
 
     cartStore.add({
@@ -168,11 +194,15 @@ export function ProductBuyBox({
       categoryName: product.subcategory,
     });
 
-    toast({
-      title: 'Added to your cart',
-      description: `${product.title} — ${selectedVariant.colour}, UK ${selectedVariant.size}`,
-      tone: 'success',
-    });
+    if (proceedToCheckout) {
+      router.push('/checkout');
+    } else {
+      toast({
+        title: 'Added to your cart',
+        description: `${product.title} — ${selectedVariant.colour}, UK ${selectedVariant.size}`,
+        tone: 'success',
+      });
+    }
   }
 
   const wishlisted = isWishlisted(product.id);
@@ -244,14 +274,10 @@ export function ProductBuyBox({
       <div className="mt-4 flex flex-wrap items-baseline gap-3">
         <span className="tnum step-lg text-ink-900">{rupees(displayPrice)}</span>
         {hasDiscount(displayMrp, displayPrice) ? (
-          <>
-            <span className="tnum step-sm text-ink-400 line-through">{rupees(displayMrp)}</span>
-            <span className="step-xs text-gold-700">
-              {discountPercent(displayMrp, displayPrice)}% off
-            </span>
-          </>
+          <span className="tnum step-sm text-ink-400 line-through">{rupees(displayMrp)}</span>
         ) : null}
       </div>
+      <PriceSavings mrp={displayMrp} sellingPrice={displayPrice} className="mt-1.5" />
       <p className="step-xs mt-1 text-ink-400">Inclusive of all taxes</p>
 
       {product.description ? (
@@ -356,7 +382,7 @@ export function ProductBuyBox({
       ) : null}
 
       {/* ---- size -------------------------------------------------------- */}
-      <fieldset className="mt-8">
+      <fieldset id="pdp-size-selector" tabIndex={-1} className="mt-8 scroll-mt-24 outline-none">
         <legend className="mb-3 flex w-full items-baseline justify-between gap-4">
           <span className="label-cap text-ink-400">
             Size <span className="text-ink-800">UK / India</span>
@@ -482,29 +508,44 @@ export function ProductBuyBox({
           ) : null}
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <button
+        <div className="mt-4 hidden grid-cols-2 gap-2 md:grid">
+          <Button
             type="button"
-            onClick={addToCart}
-            disabled={ctaState !== 'add' || maxAddable <= 0}
-            className="btn-press step-sm flex-1 bg-ink-900 py-4 font-medium text-cream-50 hover:bg-ink-800 disabled:cursor-not-allowed disabled:bg-ink-200 disabled:text-ink-500 sm:flex-[2]"
+            onClick={() => addToCart()}
+            intent="outline"
+            size="lg"
+            block
+            disabled={addDisabled}
           >
             {ctaLabel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            onClick={toggleWishlist}
-            aria-pressed={wishlisted}
-            className={cn(
-              'btn-press step-sm border px-6 py-4 font-medium',
-              wishlisted
-                ? 'border-ink-900 bg-cream-100 text-ink-950'
-                : 'border-border text-ink-700 hover:border-ink-500 hover:text-ink-950',
-            )}
+            onClick={() => addToCart(true)}
+            intent="gold"
+            size="lg"
+            block
+            disabled={buyDisabled}
           >
-            {wishlisted ? 'Saved' : 'Save'}
-          </button>
+            {ctaState === 'select-size'
+              ? 'Choose size'
+              : ctaState === 'sold-out'
+                ? 'Sold out'
+                : ctaState === 'out-of-stock'
+                  ? 'Unavailable'
+                  : 'Buy now'}
+          </Button>
         </div>
+        <Button
+          type="button"
+          onClick={toggleWishlist}
+          aria-pressed={wishlisted}
+          intent="ghost"
+          size="sm"
+          className="mt-2 self-start px-0 underline underline-offset-4"
+        >
+          {wishlisted ? 'Saved' : 'Save'}
+        </Button>
 
         {selectedVariant && !selectedVariant.inStock ? (
           <p className="step-xs mt-3 text-claret-700">
@@ -564,6 +605,64 @@ export function ProductBuyBox({
             </li>
           ))}
         </ul>
+
+        <div
+          role="region"
+          aria-label="Quick purchase options"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-cream-50/95 px-4 pb-[env(safe-area-inset-bottom)] pt-2 shadow-[0_-8px_24px_rgba(24,21,18,0.08)] backdrop-blur-sm md:hidden"
+        >
+          <div className="mx-auto max-w-lg">
+            <div className="mb-2 flex items-end justify-between gap-3">
+              <div>
+                <p className="tnum step-md font-semibold text-ink-900">{rupees(displayPrice)}</p>
+                <PriceSavings
+                  mrp={displayMrp}
+                  sellingPrice={displayPrice}
+                  className="text-[0.6875rem]"
+                />
+              </div>
+              <p className="step-xs pb-0.5 text-ink-500">
+                {selectedVariant
+                  ? `UK ${selectedVariant.size} · ${selectedVariant.colour}`
+                  : 'Choose a size'}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pb-2">
+              <Button
+                intent="outline"
+                size="md"
+                block
+                className="h-12"
+                disabled={addDisabled}
+                onClick={() => addToCart()}
+              >
+                {ctaState === 'select-size'
+                  ? 'Choose size'
+                  : ctaState === 'sold-out'
+                    ? 'Sold out'
+                    : ctaState === 'out-of-stock'
+                      ? 'Unavailable'
+                      : 'Add to cart'}
+              </Button>
+              <Button
+                intent="gold"
+                size="md"
+                block
+                className="h-12"
+                disabled={buyDisabled}
+                onClick={() => addToCart(true)}
+              >
+                {ctaState === 'select-size'
+                  ? 'Choose size'
+                  : ctaState === 'sold-out'
+                    ? 'Sold out'
+                    : ctaState === 'out-of-stock'
+                      ? 'Unavailable'
+                      : 'Buy now'}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

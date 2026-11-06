@@ -7,6 +7,7 @@ import { cartStore } from '@/lib/cart-store';
 import type { CartLine } from '@/lib/commerce-types';
 import { fieldForIndex } from '@/lib/specimen';
 import { rupees } from '@/lib/format';
+import { PriceSavings } from '@/components/ui/price-savings';
 import { cn } from '@/lib/cn';
 import { trackTap } from '@/lib/track';
 
@@ -173,6 +174,11 @@ export function CartItemList({ lines, compact = false }: CartItemListProps) {
                     {rupees(line.unitMrp * line.quantity)}
                   </p>
                 ) : null}
+                <PriceSavings
+                  mrp={line.unitMrp * line.quantity}
+                  sellingPrice={line.unitPrice * line.quantity}
+                  className="mt-1 text-right"
+                />
               </div>
             </div>
           </div>

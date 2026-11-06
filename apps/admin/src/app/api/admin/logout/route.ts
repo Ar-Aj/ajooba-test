@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * Administrator sign-out.
@@ -14,7 +15,7 @@ import { NextResponse } from 'next/server';
  * session), it changes here and nowhere else.
  */
 export async function POST(request: Request) {
-  const url = new URL('/login', request.url);
+  const url = new URL(adminPath('/login'), request.url);
   const response = NextResponse.redirect(url, { status: 303 });
 
   response.cookies.set('ajooba_admin_token', '', {

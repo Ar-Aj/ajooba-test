@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { adminPath } from '@/lib/public-path';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
@@ -353,7 +354,7 @@ export function AdminShell({
             <span>View storefront</span>
           </a>
 
-          <form action="/api/admin/logout" method="post">
+          <form action={adminPath('/api/admin/logout')} method="post">
             <button
               type="submit"
               className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[0.9375rem] text-white/55 transition-colors hover:bg-white/[0.07] hover:text-white"
@@ -431,7 +432,7 @@ export function AdminShell({
               {admin ? (
                 <p className="truncate px-3 pb-1 text-[0.75rem] text-white/35">{admin.email}</p>
               ) : null}
-              <form action="/api/admin/logout" method="post">
+              <form action={adminPath('/api/admin/logout')} method="post">
                 <button
                   type="submit"
                   className="flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-left text-[0.9375rem] text-white/60 transition-colors hover:bg-white/10 hover:text-white"

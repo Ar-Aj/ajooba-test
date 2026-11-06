@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { OrderStatus } from '@ajooba/contracts';
 import { ORDER_TRANSITIONS, TRANSITION_COPY } from '@/lib/order-lifecycle';
 import { cn } from '@/lib/format';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * The status control on an order.
@@ -53,11 +54,14 @@ export function OrderStatusControl({
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/orders/${encodeURIComponent(orderId)}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: pending, ...(note.trim() ? { note: note.trim() } : {}) }),
-      });
+      const response = await fetch(
+        adminPath('/api/admin/orders/' + encodeURIComponent(orderId) + '/status'),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: pending, ...(note.trim() ? { note: note.trim() } : {}) }),
+        },
+      );
 
       const body = (await response.json().catch(() => ({}))) as {
         ok?: boolean;

@@ -5,6 +5,7 @@ import { Pagination, queryString } from '@/components/ui/pagination';
 import { Status } from '@/components/ui/status';
 import { OpsApiError, fetchCustomers, type CustomerRow, type Page } from '@/lib/ops';
 import { dateOnly, relativeTime } from '@/lib/format';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * Customers.
@@ -75,7 +76,7 @@ export default async function CustomersPage({
           ) : null
         }
         actions={
-          <form action="/customers" method="get" className="flex items-center gap-2">
+          <form action={adminPath('/customers')} method="get" className="flex items-center gap-2">
             <label htmlFor="customer-search" className="sr-only">
               Search customers
             </label>

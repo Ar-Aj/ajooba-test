@@ -7,6 +7,7 @@ import { Status, orderStatusTone, paymentStatusTone } from '@/components/ui/stat
 import { OpsApiError, fetchOrders, type Page } from '@/lib/ops';
 import { dateTime, relativeTime, rupees } from '@/lib/format';
 import { cn } from '@/lib/format';
+import { adminPath } from '@/lib/public-path';
 
 /**
  * The orders list.
@@ -112,7 +113,7 @@ export default async function OrdersPage({
         }
         actions={
           /* A real form, so the search is a URL and works without JavaScript. */
-          <form action="/orders" method="get" className="flex items-center gap-2">
+          <form action={adminPath('/orders')} method="get" className="flex items-center gap-2">
             {status ? <input type="hidden" name="status" value={status} /> : null}
             <label htmlFor="order-number" className="sr-only">
               Order number
