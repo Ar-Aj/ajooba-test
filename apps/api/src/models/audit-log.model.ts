@@ -31,6 +31,7 @@ const auditLogSchema = new Schema(
         'import',
         // Issuing a refund moves real money; it must be greppable on its own.
         'refund',
+        'refund-reconcile',
         /*
          * Fulfilment actions. Each is distinct because they have different
          * consequences and different failure modes: a dispatch that was never

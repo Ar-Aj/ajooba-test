@@ -17,7 +17,7 @@ import { getRequestId } from '../middleware/error-handler.js';
 import { requireAdmin, requireCustomer, requirePermission } from '../middleware/auth.js';
 import { validateBody, validateQuery, validated, validatedBody } from '../middleware/validate.js';
 import { writeAuditLog } from '../services/audit.service.js';
-import { issueRefundForReturn } from '../services/refund.service.js';
+import { issueRefundForReturn, reconcileReturnRefund } from '../services/refund.service.js';
 import {
   createReturnRequest,
   getReturnForCustomer,
@@ -168,7 +168,7 @@ adminReturnsRouter.get(
 );
 
 /**
- * Approve or reject a return.
+ * Approve, reject, or record receipt after inspection.
  *
  * Note what this route cannot do: mark a return `refunded`. `refunded` is not
  * in the accepted status enum, so it is a 422 before any code runs. Recording
@@ -211,14 +211,13 @@ adminReturnsRouter.patch(
 );
 
 /**
- * Issue a refund against an **approved** return.
+ * Issue a refund against a return that staff have received and inspected.
  *
  * This is the only route in the platform that can move money backwards, and
- * it is deliberately separate from the PATCH above. Resolving a return to
- * `refunded` records a *decision*; this route *acts* on it and then waits for
- * the payment provider to confirm. The two are only ever connected by a real
- * provider response, so no amount of admin input can make the system claim a
- * refund happened when no money moved.
+ * it is deliberately separate from the PATCH above. The PATCH can record the
+ * decision and receipt/inspection; this route then acts on that decision and
+ * waits for the provider to confirm. No admin input can make the system claim
+ * that a refund happened when no money moved.
  *
  * Requires an administrator session and is audit-logged.
  */
@@ -254,6 +253,41 @@ adminReturnsRouter.post(
           providerStatus: outcome.providerStatus,
           settled: outcome.settled,
           note: body.note ?? null,
+        },
+        ip: req.ip ?? null,
+      });
+
+      sendSuccess(res, outcome, getRequestId(req));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/** Re-check a pending refund against the provider's current state. */
+adminReturnsRouter.post(
+  '/:returnId/reconcile',
+  requireAdmin,
+  requirePermission('returns:write'),
+  async (req, res, next) => {
+    try {
+      const principal = req.principal;
+      const outcome = await reconcileReturnRefund(routeParam(req, 'returnId'), getRequestId(req));
+
+      await writeAuditLog({
+        actorId: principal?.id ?? null,
+        actorEmail: principal?.email ?? 'system',
+        actorRole: principal?.role ?? 'system',
+        action: 'refund-reconcile',
+        entity: 'return',
+        entityId: outcome.returnId,
+        summary:
+          `Refund ${outcome.refundId ?? 'unknown'} for return ${outcome.returnNumber}: ` +
+          `provider status "${outcome.providerStatus ?? 'unknown'}", settled=${outcome.settled}.`,
+        changes: {
+          refundId: outcome.refundId,
+          providerStatus: outcome.providerStatus,
+          settled: outcome.settled,
         },
         ip: req.ip ?? null,
       });

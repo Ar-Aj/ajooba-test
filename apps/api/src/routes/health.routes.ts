@@ -123,9 +123,21 @@ healthRouter.get('/', (req, res) => {
           'DELETE /v1/cart/coupon',
         ],
         wishlist: ['GET /v1/wishlist', 'POST /v1/wishlist', 'DELETE /v1/wishlist/:productId'],
+        addresses: [
+          'GET /v1/addresses',
+          'POST /v1/addresses',
+          'PATCH /v1/addresses/:addressId',
+          'DELETE /v1/addresses/:addressId',
+        ],
         checkout: ['POST /v1/checkout/orders'],
         orders: ['GET /v1/orders', 'GET /v1/orders/:orderNumber'],
         returns: ['POST /v1/returns', 'GET /v1/returns', 'GET /v1/returns/:returnId'],
+        exchanges: [
+          'POST /v1/exchanges',
+          'GET /v1/exchanges',
+          'GET /v1/exchanges/options',
+          'GET /v1/exchanges/:exchangeId',
+        ],
         payments: [
           'GET /v1/payments/configuration',
           'POST /v1/payments/:orderId/intent',
@@ -196,6 +208,7 @@ healthRouter.get('/', (req, res) => {
           'PATCH /v1/admin/returns/:returnId',
           'POST /v1/admin/returns/:returnId/refund',
         ],
+        adminExchanges: ['GET /v1/admin/exchanges', 'PATCH /v1/admin/exchanges/:exchangeId'],
         adminShipments: [
           'GET /v1/admin/shipments/configuration',
           'GET /v1/admin/shipments',

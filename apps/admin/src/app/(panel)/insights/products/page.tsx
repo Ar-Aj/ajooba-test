@@ -146,7 +146,9 @@ export default async function ProductSpectrumPage({
             <HeaderFact label="Added" value={count(carters)} />
           </>
         }
-        actions={<WindowTabs windows={WINDOWS} active={days} hrefFor={(next) => hrefFor({ days: next })} />}
+        actions={
+          <WindowTabs windows={WINDOWS} active={days} hrefFor={(next) => hrefFor({ days: next })} />
+        }
       />
 
       <div className="page-body">
@@ -289,13 +291,7 @@ export default async function ProductSpectrumPage({
  * piece of judgement on the screen: when a design has been configured and not
  * added, that is the row worth a phone call, and it says so in words.
  */
-function ProductRow({
-  product,
-  index,
-}: {
-  product: InteractionProductSpectrumRow;
-  index: number;
-}) {
+function ProductRow({ product, index }: { product: InteractionProductSpectrumRow; index: number }) {
   /*
    * The verdict. Deliberately conservative: a design needs a real amount of
    * configuration before "configured but not added" means anything, so the

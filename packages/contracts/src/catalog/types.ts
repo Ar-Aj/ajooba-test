@@ -161,6 +161,8 @@ export const BRAND_NAME = 'Ajooba Footwear' as const;
  *   - `Your Selling Price`-> `sellingPrice`
  */
 export interface ProductVariant {
+  /** Mongo variant id, included by the public API for server-cart operations. */
+  readonly id?: string;
   readonly sku: string;
   readonly productId: string;
   readonly size: number;

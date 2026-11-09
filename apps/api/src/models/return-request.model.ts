@@ -49,7 +49,7 @@ const returnRequestSchema = new Schema(
     status: {
       type: String,
       required: true,
-      enum: ['requested', 'approved', 'rejected', 'refunded'],
+      enum: ['requested', 'approved', 'rejected', 'received', 'refunded'],
       default: 'requested',
       index: true,
     },

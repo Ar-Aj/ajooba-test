@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { Product, ProductImage, ProductVariant } from '@ajooba/contracts';
 import { Button } from '@/components/ui/button';
 import { PriceSavings } from '@/components/ui/price-savings';
+import { ProductConfidence } from './product-confidence';
 import { useToast } from '@/components/ui/toast';
 import { useCommerce } from '@/lib/commerce-context';
 import { cartStore } from '@/lib/cart-store';
@@ -161,6 +162,7 @@ export function ProductBuyBox({
 
     cartStore.add({
       variantSku: selectedVariant.sku,
+      ...(selectedVariant.id ? { variantId: selectedVariant.id } : {}),
       productId: product.id,
       productSlug: product.slug,
       productTitle: product.title,
@@ -221,8 +223,7 @@ export function ProductBuyBox({
     if (!account) {
       toast({
         title: 'Sign in to save designs',
-        description:
-          'A wishlist follows you between devices, so it needs an account. Signing in takes a moment and keeps this pair here when you come back.',
+        description: 'Sign in to save this design to your account wishlist.',
         tone: 'warning',
         action: { label: 'Sign in', href: `/login?next=${encodeURIComponent(pathname)}` },
       });
@@ -234,25 +235,35 @@ export function ProductBuyBox({
       return;
     }
 
-    const result = wishlistStore.toggle({
-      productId: product.id,
-      productSlug: product.slug,
-      productTitle: product.title,
-      productCode: product.code,
-      unitPrice: product.sellingPrice,
-      unitMrp: product.mrp,
-      ...(colourImage ? { imageUrl: mediaUrl(colourImage.url), imageAlt: colourImage.alt } : {}),
-    });
-    toast({
-      title: result.added ? 'Saved to your wishlist' : 'Removed from your wishlist',
-      tone: 'info',
-    });
-    trackWishlist({
-      productId: product.id,
-      surface: 'pdp-buy-box',
-      saved: result.added,
-      categorySlug: product.subcategorySlug,
-    });
+    void wishlistStore
+      .toggleRemote({
+        productId: product.id,
+        productSlug: product.slug,
+        productTitle: product.title,
+        productCode: product.code,
+        unitPrice: product.sellingPrice,
+        unitMrp: product.mrp,
+        ...(colourImage ? { imageUrl: mediaUrl(colourImage.url), imageAlt: colourImage.alt } : {}),
+      })
+      .then((result) => {
+        toast({
+          title: result.added ? 'Saved to your wishlist' : 'Removed from your wishlist',
+          tone: 'info',
+        });
+        trackWishlist({
+          productId: product.id,
+          surface: 'pdp-buy-box',
+          saved: result.added,
+          categorySlug: product.subcategorySlug,
+        });
+      })
+      .catch((error: unknown) => {
+        toast({
+          title: 'Could not update wishlist',
+          description: error instanceof Error ? error.message : 'Please try again in a moment.',
+          tone: 'warning',
+        });
+      });
   }
 
   return (
@@ -278,7 +289,7 @@ export function ProductBuyBox({
         ) : null}
       </div>
       <PriceSavings mrp={displayMrp} sellingPrice={displayPrice} className="mt-1.5" />
-      <p className="step-xs mt-1 text-ink-400">Inclusive of all taxes</p>
+      <p className="step-xs mt-1 text-ink-400">Taxes and delivery are shown at checkout.</p>
 
       {product.description ? (
         <p className="step-sm mt-6 max-w-prose text-ink-600">{product.description}</p>
@@ -397,8 +408,8 @@ export function ProductBuyBox({
 
         {colourVariants.length === 0 ? (
           <p className="step-sm border border-border px-4 py-3 text-ink-500">
-            We have no size data for this colour yet. Try another colour, or contact us and we will
-            confirm availability.
+            We have no size data for this colour yet. Try another colour, or check back once
+            availability is updated.
           </p>
         ) : (
           <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-9">
@@ -569,7 +580,7 @@ export function ProductBuyBox({
             <p className="step-sm mt-1.5 max-w-prose text-ink-500">
               Stock is confirmed against our warehouse before a pair is listed as available, so we
               would rather show you an honest sold out than take an order we cannot ship. Save the
-              design, or write to us and we will tell you when it returns.
+              design, or check the contact page for enquiries about this design code.
             </p>
             <div className="mt-3 flex flex-wrap gap-4">
               <Link
@@ -588,23 +599,7 @@ export function ProductBuyBox({
           </div>
         ) : null}
 
-        {/*
-          The three reassurances, as a plain list rather than icon tiles. They
-          are the same promises the trust band makes, restated where the shopper
-          is actually deciding.
-        */}
-        <ul className="mt-8 space-y-2 border-t border-border pt-5">
-          {[
-            'Free shipping over ₹1,499 · dispatched in 1 working day',
-            '10-day returns, prepaid label in the box',
-            'Photographed colour by colour — what you see is the pair you get',
-          ].map((line) => (
-            <li key={line} className="step-xs flex gap-2.5 text-ink-500">
-              <span aria-hidden="true" className="mt-1.5 h-1 w-1 shrink-0 bg-gold-500" />
-              {line}
-            </li>
-          ))}
-        </ul>
+        <ProductConfidence />
 
         <div
           role="region"

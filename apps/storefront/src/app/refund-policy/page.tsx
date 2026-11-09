@@ -3,7 +3,7 @@ import { ProsePage, ProseSection, ProseList } from '@/components/layout/prose-pa
 
 export const metadata: Metadata = {
   title: 'Refund policy',
-  description: 'How and when Ajooba Footwear refunds are issued, and what happens to your money.',
+  description: 'How Ajooba Footwear return requests and confirmed payment refunds are handled.',
   alternates: { canonical: '/refund-policy' },
 };
 
@@ -11,64 +11,36 @@ export default function RefundPolicyPage() {
   return (
     <ProsePage
       title="Refund policy"
-      lede="Where your money goes, how long it takes, and what we need from you."
+      lede="A return approval and a completed refund are separate steps."
     >
-      <ProseSection heading="Where the money goes">
-        <p>
-          Refunds are issued to the original payment method. If you paid by UPI or card, the amount
-          returns to the same account and the money appears as a credit — usually within 5 to 7
-          working days of us processing it, depending on your bank.
-        </p>
+      <ProseSection heading="How a refund is handled">
         <ProseList
           items={[
-            'UPI, cards and net-banking: refunded to the original account.',
-            'Cash on delivery: refunded by bank transfer to an account you nominate.',
-            'Store credit, if you choose it: issued immediately, and valid for 12 months.',
+            'Submit a return request from your account within 10 days of delivery. Our team reviews the request and confirms how to send the item back.',
+            'The returned item is checked before a refund is approved.',
+            'For eligible online payments, the refund is sent through the payment provider to the original payment method.',
+            'A refund is shown as complete only after the provider confirms it. Your bank may take additional time to post the credit.',
           ]}
         />
         <p>
-          We do not refund to a different person, account or method than the one used for the order.
-          That is a standard fraud control, and we would rather explain it than quietly lose your
-          money.
+          Cash-on-delivery refunds are not sent through the online payment provider and require a
+          manual payout process. The refund must be reconciled by the team.
         </p>
       </ProseSection>
 
-      <ProseSection heading="How long a refund takes">
-        <ProseList
-          items={[
-            'The parcel must reach our workshop and be checked first — typically 2 to 4 days after pickup.',
-            'Once checked, we process the refund within 24 hours.',
-            'Your bank then takes 3 to 5 further working days to post it.',
-          ]}
-        />
+      <ProseSection heading="Cancellations">
         <p>
-          You will get an email at each of those two points — when we receive the parcel, and when
-          we process the refund — so you are never wondering whether it has been forgotten.
+          Cancellation availability depends on the order status. Check the order in your account;
+          the team must stop fulfillment and confirm any applicable refund before a cancellation is
+          complete.
         </p>
       </ProseSection>
 
-      <ProseSection heading="Cancellations before dispatch">
+      <ProseSection heading="Failed or pending payments">
         <p>
-          If you cancel before we dispatch, you get a full refund with no deductions. We dispatch
-          the same working day for orders placed before 2pm, so if it is urgent, call us — that is
-          faster than email.
-        </p>
-      </ProseSection>
-
-      <ProseSection heading="Partial refunds">
-        <p>
-          If a pair comes back with wear, missing packaging or damage that is not our fault, we may
-          offer a partial refund instead of sending it back. We will explain the reduction and show
-          you the photographs that led to it. You are free to decline and return the item instead.
-        </p>
-      </ProseSection>
-
-      <ProseSection heading="Failed or cancelled payments">
-        <p>
-          If a payment fails after the order is placed, the order is held for 24 hours while the
-          payment is retried. If it cannot be completed, the order is cancelled automatically and
-          nothing is charged. If money is debited but the order is cancelled, it is refunded in full
-          to the same method.
+          A payment can remain pending while the provider confirms its result. Check your order
+          status before placing a second order. If a payment was captured, the team must reconcile
+          it against the order before the payment or refund is considered complete.
         </p>
       </ProseSection>
     </ProsePage>

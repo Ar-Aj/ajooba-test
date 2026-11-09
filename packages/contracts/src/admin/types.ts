@@ -104,6 +104,7 @@ export const AUDIT_ACTIONS = [
    * be greppable in the audit trail on its own.
    */
   'refund',
+  'refund-reconcile',
   /*
    * Fulfilment actions. Each one is distinct because they fail in
    * different ways: a dispatch that was never created, an AWB that was

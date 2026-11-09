@@ -33,7 +33,7 @@ export const FEATURED_SUBCATEGORIES: readonly FeaturedSubcategory[] = [
     slug: 'shoe',
     raw: 'shoe',
     label: 'Formal Shoes',
-    blurb: 'Patent, suede and leather dress shoes for the working wardrobe.',
+    blurb: 'Smart styles for work and special occasions.',
   },
   {
     slug: 'sandal',
@@ -45,7 +45,7 @@ export const FEATURED_SUBCATEGORIES: readonly FeaturedSubcategory[] = [
     slug: 'chappal',
     raw: 'Chappal',
     label: 'Chappal',
-    blurb: 'Classic everyday Indian chappals in leather and suede.',
+    blurb: 'Everyday chappals for a relaxed look.',
   },
 ] as const;
 

@@ -140,6 +140,8 @@ interface Envelope<T> {
   error?: { code: string; message: string };
 }
 
+let refreshInFlight: Promise<string | null> | null = null;
+
 /** A failure from the customer auth surface, with the API's own message. */
 export class CustomerAuthError extends Error {
   readonly code: string;
@@ -184,6 +186,119 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   if (!response.ok || !payload.ok || payload.data === undefined) {
     throw new CustomerAuthError(
       payload.error?.message ?? 'That did not work. Please try again.',
+      payload.error?.code ?? 'UNKNOWN',
+    );
+  }
+
+  return payload.data;
+}
+
+/** Rotate an expired access token once for all requests in this browser tab. */
+async function refreshCustomerAccessToken(): Promise<string | null> {
+  const session = customerSession.read();
+  if (!session) return null;
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    let response: Response;
+    try {
+      response = await fetch(`${apiBase()}/v1/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ refreshToken: session.refreshToken }),
+        cache: 'no-store',
+      });
+    } catch {
+      throw new CustomerAuthError(
+        'We could not refresh your sign-in. Check your connection and try again.',
+        'UNREACHABLE',
+      );
+    }
+
+    const payload = (await response.json().catch(() => ({}))) as Envelope<{
+      kind: 'customer' | 'admin';
+      tokens: { accessToken: string; refreshToken: string; expiresIn: number };
+    }>;
+
+    if (!response.ok || !payload.ok || !payload.data || payload.data.kind !== 'customer') {
+      customerSession.clear();
+      return null;
+    }
+
+    customerSession.save({ ...payload.data.tokens, user: session.user });
+    return payload.data.tokens.accessToken;
+  })();
+
+  try {
+    return await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
+}
+
+/** Make an authenticated request to the customer-facing API. */
+export async function customerApiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const session = customerSession.read();
+  if (!session) {
+    throw new CustomerAuthError('Sign in to continue.', 'UNAUTHENTICATED');
+  }
+
+  let token = customerSession.accessToken();
+  if (!token) token = await refreshCustomerAccessToken();
+  if (!token) {
+    throw new CustomerAuthError(
+      'Your sign-in has expired. Please sign in again.',
+      'UNAUTHENTICATED',
+    );
+  }
+
+  const makeRequest = (accessToken: string) => {
+    const headers = new Headers(init.headers);
+    headers.set('Accept', 'application/json');
+    headers.set('Authorization', `Bearer ${accessToken}`);
+    if (init.body && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    return fetch(`${apiBase()}${path}`, {
+      ...init,
+      headers,
+      cache: 'no-store',
+    });
+  };
+
+  let response: Response;
+  try {
+    response = await makeRequest(token);
+  } catch {
+    throw new CustomerAuthError(
+      'We could not reach the shop just now. Please try again.',
+      'UNREACHABLE',
+    );
+  }
+
+  if (response.status === 401) {
+    token = await refreshCustomerAccessToken();
+    if (!token) {
+      throw new CustomerAuthError(
+        'Your sign-in has expired. Please sign in again.',
+        'UNAUTHENTICATED',
+      );
+    }
+    try {
+      response = await makeRequest(token);
+    } catch {
+      throw new CustomerAuthError(
+        'We could not reach the shop just now. Please try again.',
+        'UNREACHABLE',
+      );
+    }
+  }
+
+  const payload = (await response.json().catch(() => ({}))) as Envelope<T>;
+  if (!response.ok || !payload.ok || payload.data === undefined) {
+    throw new CustomerAuthError(
+      payload.error?.message ?? 'That request could not be completed. Please try again.',
       payload.error?.code ?? 'UNKNOWN',
     );
   }
@@ -331,7 +446,12 @@ export async function signOut(): Promise<void> {
   customerSession.clear();
   if (!session) return;
   try {
-    await post<{ revoked: boolean }>('/v1/auth/logout', { refreshToken: session.refreshToken });
+    await fetch(`${apiBase()}/v1/auth/logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+      cache: 'no-store',
+    });
   } catch {
     /* A session we can no longer revoke is still a session we must forget. */
   }

@@ -45,9 +45,17 @@ wishlistRouter.get('/', requireCustomer, async (req, res, next) => {
 
     const products = await ProductModel.find({ _id: { $in: customer.wishlist } })
       .select('code slug title colours images mrp sellingPrice inStock')
-      .lean<Array<Record<string, unknown>>>();
+      .lean<Array<Record<string, unknown> & { _id: Types.ObjectId }>>();
 
-    sendSuccess(res, { items: products, count: products.length }, getRequestId(req));
+    const order = new Map(customer.wishlist.map((id, index) => [id.toString(), index]));
+    const items = products
+      .map((doc) => ({
+        ...doc,
+        id: doc._id.toString(),
+      }))
+      .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+
+    sendSuccess(res, { items, count: items.length }, getRequestId(req));
   } catch (error) {
     next(error);
   }

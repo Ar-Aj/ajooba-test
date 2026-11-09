@@ -113,9 +113,6 @@ export function SpecimenTile({
           {product.subcategory}
           {product.code ? ` · ${product.code}` : ''}
         </p>
-        <p className="step-sm mt-1 line-clamp-2 font-medium text-ink-800 group-hover:text-ink-950">
-          {product.title}
-        </p>
 
         <div className="mt-2 flex flex-wrap items-baseline gap-2">
           <span className="tnum step-md font-semibold text-ink-900">

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   COUPON_TYPES,
+  EXCHANGE_STATUSES,
   ORDER_STATUSES,
   PAYMENT_STATUSES,
   RETURN_REASONS,
@@ -201,10 +202,45 @@ export const createReturnRequestSchema = z.object({
 
 export type CreateReturnRequest = z.infer<typeof createReturnRequestSchema>;
 
+export const createExchangeRequestSchema = z.object({
+  orderId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Must be a valid order id'),
+  originalVariantId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Must be a valid variant id'),
+  replacementVariantId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Must be a valid variant id'),
+  quantity: z.coerce.number().int().min(1).max(20),
+  reasonNote: z.string().trim().max(1000).default(''),
+});
+
+export type CreateExchangeRequest = z.infer<typeof createExchangeRequestSchema>;
+
+export const exchangeOptionsQuerySchema = z.object({
+  orderId: z.string().regex(/^[0-9a-fA-F]{24}$/),
+  originalVariantId: z.string().regex(/^[0-9a-fA-F]{24}$/),
+});
+
+export type ExchangeOptionsQuery = z.infer<typeof exchangeOptionsQuerySchema>;
+
+export const adminExchangeQuerySchema = paginationQuerySchema.extend({
+  status: z.enum(EXCHANGE_STATUSES).optional(),
+  orderId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .optional(),
+});
+
+export type AdminExchangeQuery = z.infer<typeof adminExchangeQuerySchema>;
+
+export const resolveExchangeRequestSchema = z.object({
+  status: z.enum(['approved', 'rejected', 'received', 'replacement-shipped', 'completed']),
+  note: z.string().trim().max(500).default(''),
+});
+
+export type ResolveExchangeRequest = z.infer<typeof resolveExchangeRequestSchema>;
+
 /**
- * The admin decision on a return: approve or reject.
+ * The staff transition on a return: approve, reject, or confirm receipt and inspection.
  *
- * `refunded` is deliberately **absent** from this enum.
+ * `refunded` is deliberately **absent** from this enum. It is only set after
+ * the payment provider confirms that money was returned.
  *
  * A return reaching `refunded` means the customer has their money back. That
  * is a statement about the world, not an administrative decision — it can
@@ -217,14 +253,13 @@ export type CreateReturnRequest = z.infer<typeof createReturnRequestSchema>;
  * provider and then waits for the provider to confirm it.
  */
 export const resolveReturnRequestSchema = z.object({
-  status: z.enum(['approved', 'rejected']),
+  status: z.enum(['approved', 'rejected', 'received']),
   refundAmount: z.coerce.number().int().nonnegative().optional(),
-  refundRef: z.string().trim().max(120).optional(),
   note: z.string().trim().max(500).optional(),
 });
 
-/** What an administrator may decide about a return. `refunded` is excluded. */
-export type ResolveReturnStatus = 'approved' | 'rejected';
+/** What staff may record on a return. Receipt is operational; `refunded` is excluded. */
+export type ResolveReturnStatus = 'approved' | 'rejected' | 'received';
 
 export type ResolveReturnRequest = z.infer<typeof resolveReturnRequestSchema>;
 
@@ -512,6 +547,7 @@ export const returnRequestSchema = z.object({
   status: z.enum(RETURN_STATUSES),
   refundAmount: z.number().int().nonnegative(),
   refundRef: z.string().nullable(),
+  resolutionNote: z.string().nullable(),
   requestedAt: z.string(),
   resolvedAt: z.string().nullable(),
 });

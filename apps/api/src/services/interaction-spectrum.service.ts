@@ -385,16 +385,14 @@ export async function getProductInteractionProfile(
 
   const [product, totalsRows, actions, surfaces, trendRows, customers, alsoViewed] =
     await Promise.all([
-      ProductModel.findById(objectId)
-        .select('code title subcategory subcategorySlug images')
-        .lean<{
-          _id: Types.ObjectId;
-          code: string;
-          title: string;
-          subcategory: string;
-          subcategorySlug: string;
-          images: Array<{ url: string }>;
-        } | null>(),
+      ProductModel.findById(objectId).select('code title subcategory subcategorySlug images').lean<{
+        _id: Types.ObjectId;
+        code: string;
+        title: string;
+        subcategory: string;
+        subcategorySlug: string;
+        images: Array<{ url: string }>;
+      } | null>(),
       ActivityEventModel.aggregate<{
         views: number;
         taps: number;
@@ -674,8 +672,6 @@ function emptyProductProfile(window: InteractionWindow): InteractionProductProfi
     generatedAt: new Date().toISOString(),
   };
 }
-
-
 
 /* -------------------------------------------------------------------------- */
 /* The customer spectrum                                                      */
@@ -972,4 +968,3 @@ export async function customerSpectrumSummary(days: number): Promise<{
     generatedAt: new Date().toISOString(),
   };
 }
-

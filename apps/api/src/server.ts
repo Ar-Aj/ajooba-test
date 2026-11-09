@@ -73,7 +73,20 @@ async function main(): Promise<void> {
   });
 }
 
-main().catch((error: unknown) => {
-  logger.fatal({ err: error }, 'Fatal error during startup');
-  process.exit(1);
-});
+const defaultApp = createApp();
+
+if (process.env.VERCEL) {
+  logger.info('Booting @ajooba/api in Vercel serverless environment');
+  void connectToDatabase()
+    .then(() => reconcileCategoryTaxonomyAtBoot())
+    .catch((error) => {
+      logger.warn({ err: error }, 'Deferred MongoDB connection on Vercel boot');
+    });
+} else {
+  main().catch((error: unknown) => {
+    logger.fatal({ err: error }, 'Fatal error during startup');
+    process.exit(1);
+  });
+}
+
+export default defaultApp;

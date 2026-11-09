@@ -14,6 +14,8 @@ import {
   paymentsRouter,
 } from './checkout.routes.js';
 import { adminReturnsRouter, returnsRouter } from './returns.routes.js';
+import { adminExchangesRouter, exchangesRouter } from './exchanges.routes.js';
+import { addressesRouter } from './addresses.routes.js';
 import { wishlistRouter } from './wishlist.routes.js';
 import { adminShipmentsRouter, orderShippingRouter } from './shipping.routes.js';
 
@@ -37,6 +39,7 @@ v1Router.use('/analytics', analyticsRouter);
 
 /* Customer-authenticated -------------------------------------------------- */
 v1Router.use('/auth', authRouter);
+v1Router.use('/addresses', addressesRouter);
 v1Router.use('/cart', cartRouter);
 v1Router.use('/wishlist', wishlistRouter);
 v1Router.use('/checkout', checkoutRouter);
@@ -44,6 +47,7 @@ v1Router.use('/orders', ordersRouter);
 v1Router.use('/shipments', orderShippingRouter);
 v1Router.use('/payments', paymentsRouter);
 v1Router.use('/returns', returnsRouter);
+v1Router.use('/exchanges', exchangesRouter);
 
 /* Administrator-only ------------------------------------------------------ */
 v1Router.use('/admin/auth', adminAuthRouter);
@@ -53,5 +57,6 @@ v1Router.use('/admin/catalog', adminCatalogRouter);
 v1Router.use('/admin/orders', adminOrdersRouter);
 v1Router.use('/admin/payments', adminPaymentsRouter);
 v1Router.use('/admin/returns', adminReturnsRouter);
+v1Router.use('/admin/exchanges', adminExchangesRouter);
 v1Router.use('/admin/shipments', adminShipmentsRouter);
 v1Router.use('/admin', adminRouter);

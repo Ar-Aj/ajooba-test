@@ -74,12 +74,8 @@ describe('registerRequestSchema', () => {
   });
 
   it('still refuses an empty first name, a bad email and a short password', () => {
-    expect(
-      registerRequestSchema.safeParse({ ...base, firstName: '  ' }).success,
-    ).toBe(false);
-    expect(
-      registerRequestSchema.safeParse({ ...base, email: 'not-an-email' }).success,
-    ).toBe(false);
+    expect(registerRequestSchema.safeParse({ ...base, firstName: '  ' }).success).toBe(false);
+    expect(registerRequestSchema.safeParse({ ...base, email: 'not-an-email' }).success).toBe(false);
     expect(registerRequestSchema.safeParse({ ...base, password: 'short' }).success).toBe(false);
   });
 });
@@ -96,4 +92,3 @@ describe('nextPathSchema', () => {
     expect(nextPathSchema.safeParse('/\\evil.example').success).toBe(false);
   });
 });
-

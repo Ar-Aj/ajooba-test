@@ -31,10 +31,9 @@ export default function PrivacyPage() {
       <ProseSection heading="What we use it for">
         <ProseList
           items={[
-            'To take your order, deliver it, and handle returns or warranty claims.',
-            'To send you order confirmations and delivery updates.',
+            'To take your order, deliver it, and handle return or size-exchange requests.',
+            'To send you order confirmations, account recovery links and delivery updates.',
             'To answer your questions, and to fix pages that are not working.',
-            'To send you the newsletter, if you asked for it. You can unsubscribe in one click, in every email.',
           ]}
         />
       </ProseSection>
@@ -51,9 +50,8 @@ export default function PrivacyPage() {
 
       <ProseSection heading="Your rights">
         <p>
-          You can ask us to show you what we hold, correct it, or delete it, and you can withdraw
-          consent for marketing at any time. Write to us and we will action it — most requests take
-          under a week, and we will confirm when it is done.
+          You can ask us to show you what we hold, correct it, or delete it. Check the contact page
+          for available support details or manage your profile from your account.
         </p>
         <p>
           We keep order records for as long as tax and accounting rules require, which is longer
@@ -64,13 +62,13 @@ export default function PrivacyPage() {
       <ProseSection heading="This website">
         <p>
           The site works offline to a limited degree: static pages and images are cached by your
-          browser so the shop is not completely unusable on a poor connection. Your cart, wishlist
-          and account details are stored in your own browser and are never written to a shared
-          cache.
+          browser so the shop is not completely unusable on a poor connection. When you sign in,
+          your profile, saved addresses and wishlist are stored with your customer account and
+          cached in your browser — never in a shared cache.
         </p>
         <p>
-          We use an essential-cookie-free analytics approach, and where cookies are used at all,
-          they are limited to keeping your session and remembering your cart.
+          We use essential browser storage to keep your shopping cart, local cache, accessibility
+          preferences and sign-in state on this device, alongside cookie-free event analytics.
         </p>
       </ProseSection>
     </ProsePage>

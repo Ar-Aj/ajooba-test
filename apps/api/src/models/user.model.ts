@@ -97,10 +97,7 @@ const userSchema = new Schema(
 userSchema.index({ createdAt: -1 });
 // The OAuth callback's first lookup: "which customer is this Google id?"
 // Sparse, because password-only accounts have no links at all.
-userSchema.index(
-  { 'oauthAccounts.provider': 1, 'oauthAccounts.providerId': 1 },
-  { sparse: true },
-);
+userSchema.index({ 'oauthAccounts.provider': 1, 'oauthAccounts.providerId': 1 }, { sparse: true });
 // A customer may have at most one default address; the service enforces the
 // invariant, this index simply makes the lookup cheap.
 userSchema.index({ 'addresses.isDefault': 1 });

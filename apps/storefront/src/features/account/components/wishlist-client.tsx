@@ -23,7 +23,7 @@ export function WishlistClient() {
         title="Your wishlist is empty"
         description={
           account
-            ? 'Tap Save on any design to keep it here. Your wishlist stays with your account on this device.'
+            ? 'Tap Save on any design to keep it in your account wishlist across devices.'
             : 'Saving a design needs an account, so it is waiting for you on your next visit instead of vanishing. Sign in, then tap Save on anything you like.'
         }
         action={
@@ -87,8 +87,21 @@ export function WishlistClient() {
                 size="sm"
                 onClick={() => {
                   startTransition(() => {
-                    wishlistStore.remove(item.productId);
-                    toast({ title: 'Removed from wishlist' });
+                    void wishlistStore
+                      .removeRemote(item.productId)
+                      .then(() => {
+                        toast({ title: 'Removed from wishlist' });
+                      })
+                      .catch((error: unknown) => {
+                        toast({
+                          title: 'Could not update wishlist',
+                          description:
+                            error instanceof Error
+                              ? error.message
+                              : 'Please try again in a moment.',
+                          tone: 'warning',
+                        });
+                      });
                   });
                 }}
                 aria-label={`Remove ${item.productTitle} from wishlist`}
@@ -114,8 +127,8 @@ export function WishlistBulkNote() {
   if (wishlist.length < 1) return null;
   return (
     <p className="mt-4 text-xs text-ink-500">
-      Sizes have to be chosen on each design, so items move to the cart one at a time. Your wishlist
-      is saved to your account.
+      Sizes have to be chosen on each design, so items move to the cart one at a time. When you are
+      signed in, your wishlist is saved to your account.
     </p>
   );
 }

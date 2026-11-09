@@ -150,7 +150,9 @@ export default async function CustomerSpectrumPage({
             <HeaderFact label="Saved" value={count(wishlisted)} />
           </>
         }
-        actions={<WindowTabs windows={WINDOWS} active={days} hrefFor={(next) => hrefFor({ days: next })} />}
+        actions={
+          <WindowTabs windows={WINDOWS} active={days} hrefFor={(next) => hrefFor({ days: next })} />
+        }
       />
 
       <div className="page-body">

@@ -72,12 +72,18 @@ desktop.ini
 .tmp/
 tmp/
 scratch/
-artifacts/
+artifacts/*
+!artifacts/catalog-extract.json
+!artifacts/homepage.json
 backups/
 .taste-skill/
 PROMPT5.txt
 *.local
 !.env.local.example
+
+# Synced catalogue photography for local/deployment build
+apps/storefront/public/products/
+apps/admin/public/products/
 
 # Build/tool caches
 .cache/

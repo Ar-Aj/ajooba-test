@@ -100,11 +100,7 @@ async function readJson(response: Response, what: string): Promise<Record<string
   try {
     return JSON.parse(text) as Record<string, unknown>;
   } catch {
-    throw new AppError(
-      'SERVICE_UNAVAILABLE',
-      `${what} returned an unreadable response.`,
-      502,
-    );
+    throw new AppError('SERVICE_UNAVAILABLE', `${what} returned an unreadable response.`, 502);
   }
 }
 
@@ -120,7 +116,7 @@ const google: ProviderAdapter = {
   configured() {
     return Boolean(
       readProviderSetting('GOOGLE_OAUTH_CLIENT_ID') &&
-        readProviderSetting('GOOGLE_OAUTH_CLIENT_SECRET'),
+      readProviderSetting('GOOGLE_OAUTH_CLIENT_SECRET'),
     );
   },
   authorizeUrl(state, redirectUri) {
@@ -156,11 +152,7 @@ const google: ProviderAdapter = {
     const tokens = await readJson(tokenResponse, 'Google');
     const accessToken = str(tokens.access_token);
     if (!accessToken) {
-      throw new AppError(
-        'SERVICE_UNAVAILABLE',
-        'Google did not return an access token.',
-        502,
-      );
+      throw new AppError('SERVICE_UNAVAILABLE', 'Google did not return an access token.', 502);
     }
 
     const profileResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
@@ -195,7 +187,7 @@ const facebook: ProviderAdapter = {
   configured() {
     return Boolean(
       readProviderSetting('FACEBOOK_OAUTH_APP_ID') &&
-        readProviderSetting('FACEBOOK_OAUTH_APP_SECRET'),
+      readProviderSetting('FACEBOOK_OAUTH_APP_SECRET'),
     );
   },
   authorizeUrl(state, redirectUri) {
@@ -210,18 +202,17 @@ const facebook: ProviderAdapter = {
   async exchange(code, redirectUri) {
     const tokenUrl = new URL('https://graph.facebook.com/v19.0/oauth/access_token');
     tokenUrl.searchParams.set('client_id', readProviderSetting('FACEBOOK_OAUTH_APP_ID') ?? '');
-    tokenUrl.searchParams.set('client_secret', readProviderSetting('FACEBOOK_OAUTH_APP_SECRET') ?? '');
+    tokenUrl.searchParams.set(
+      'client_secret',
+      readProviderSetting('FACEBOOK_OAUTH_APP_SECRET') ?? '',
+    );
     tokenUrl.searchParams.set('redirect_uri', redirectUri);
     tokenUrl.searchParams.set('code', code);
 
     const tokens = await readJson(await fetch(tokenUrl), 'Facebook');
     const accessToken = str(tokens.access_token);
     if (!accessToken) {
-      throw new AppError(
-        'SERVICE_UNAVAILABLE',
-        'Facebook did not return an access token.',
-        502,
-      );
+      throw new AppError('SERVICE_UNAVAILABLE', 'Facebook did not return an access token.', 502);
     }
 
     const profileUrl = new URL('https://graph.facebook.com/v19.0/me');

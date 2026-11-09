@@ -11,6 +11,7 @@ const NAV = [
   { href: '/account/addresses', label: 'Addresses' },
   { href: '/account/wishlist', label: 'Wishlist' },
   { href: '/account/returns', label: 'Returns' },
+  { href: '/account/exchanges', label: 'Exchanges' },
 ];
 
 export function AccountNav() {

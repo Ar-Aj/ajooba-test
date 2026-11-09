@@ -317,6 +317,10 @@ export async function placeOrder(input: CheckoutInput): Promise<Order> {
 
   const settings = await getStoreSettings();
 
+  if (input.paymentMethod === 'cod' && !settings.isCodEnabled) {
+    throw new ConflictError('Cash on delivery is not available right now. Choose online payment.');
+  }
+
   // Load the live variants for the lines. The caller supplies variant ids
   // and quantities — never prices.
   const variantIds = input.lines.map((line) => line.variantId);
@@ -397,6 +401,10 @@ export async function placeOrder(input: CheckoutInput): Promise<Order> {
     }
 
     const breakdown = priceBasket(priceLines, settings, couponRule);
+
+    if (input.paymentMethod === 'cod' && breakdown.totalAmount > 10_000) {
+      throw new ConflictError('Cash on delivery is available for orders up to ₹10,000.');
+    }
 
     // The frozen line items. Prices come from the live variant at the
     // moment of purchase and never change afterwards.

@@ -76,7 +76,10 @@ function stubProvider(profile: Record<string, unknown>): void {
     'fetch',
     vi.fn(async (input: string | URL) => {
       const url = String(input);
-      if (url.includes('oauth2.googleapis.com/token') || url.includes('graph.facebook.com/v19.0/oauth')) {
+      if (
+        url.includes('oauth2.googleapis.com/token') ||
+        url.includes('graph.facebook.com/v19.0/oauth')
+      ) {
         return new Response(JSON.stringify({ access_token: 'provider-access-token' }), {
           status: 200,
           headers: { 'content-type': 'application/json' },
@@ -151,17 +154,13 @@ describe('GET /v1/auth/oauth/:provider/start', () => {
   it('redirects to the consent screen with a signed state and the derived redirect URI', async () => {
     withProviders({});
 
-    const response = await api()
-      .get('/v1/auth/oauth/google/start?next=/products/a11')
-      .expect(302);
+    const response = await api().get('/v1/auth/oauth/google/start?next=/products/a11').expect(302);
 
     const location = response.headers.location as string;
     expect(location).toContain('accounts.google.com');
     const url = new URL(location);
     expect(url.searchParams.get('client_id')).toBe('google-client-id.apps.googleusercontent.com');
-    expect(url.searchParams.get('redirect_uri')).toMatch(
-      /\/v1\/auth\/oauth\/google\/callback$/,
-    );
+    expect(url.searchParams.get('redirect_uri')).toMatch(/\/v1\/auth\/oauth\/google\/callback$/);
     expect(url.searchParams.get('state')).toBeTruthy();
   });
 
@@ -240,9 +239,7 @@ describe('GET /v1/auth/oauth/:provider/callback', () => {
       family_name: 'Sheikh',
     });
 
-    const start = await api()
-      .get('/v1/auth/oauth/google/start?next=/account/orders')
-      .expect(302);
+    const start = await api().get('/v1/auth/oauth/google/start?next=/account/orders').expect(302);
     const state = stateFrom(start.headers.location as string);
 
     const callback = await api()
@@ -305,7 +302,7 @@ describe('GET /v1/auth/oauth/:provider/callback', () => {
       )
       .expect(302);
 
-    expect((second.headers.location as string)).toContain('created=0');
+    expect(second.headers.location as string).toContain('created=0');
     expect(await UserModel.countDocuments()).toBe(1);
   });
 
@@ -369,7 +366,7 @@ describe('GET /v1/auth/oauth/:provider/callback', () => {
       )
       .expect(302);
 
-    expect((callback.headers.location as string)).toContain('created=0');
+    expect(callback.headers.location as string).toContain('created=0');
 
     const customer = await UserModel.findOne({ email: 'verified@example.test' }).lean();
     expect(customer!.oauthAccounts).toHaveLength(1);
@@ -408,11 +405,13 @@ describe('GET /v1/auth/oauth/:provider/callback', () => {
      * The empty hash is the whole reason this test exists: if it ever compared
      * equal to an empty submission, this account would have no password at all.
      */
-    await api().post('/v1/auth/login').send({ email: 'nopassword@example.test', password: '' }).expect(422);
+    await api()
+      .post('/v1/auth/login')
+      .send({ email: 'nopassword@example.test', password: '' })
+      .expect(422);
     await api()
       .post('/v1/auth/login')
       .send({ email: 'nopassword@example.test', password: 'anything-at-all' })
       .expect(401);
   });
 });
-

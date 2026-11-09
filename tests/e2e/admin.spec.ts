@@ -21,7 +21,9 @@ test.describe('admin authentication', () => {
     await expect(page).toHaveURL(/\/login/);
     // The sign-in screen's own heading, not a generic one: the redirect must land
     // on a page that is unmistakably the administrator sign-in.
-    await expect(page.getByRole('heading', { name: "The shop's ledger." })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'The shop, from the back of the house.' }),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
   });
 
@@ -40,7 +42,7 @@ test.describe('admin authentication', () => {
     await page.getByLabel('Password').fill('WrongPassword!2026');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByRole('alert').filter({ hasText: 'Email or password' })).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
   });
 
@@ -147,7 +149,7 @@ test.describe('admin session lifecycle', () => {
     await page.getByLabel('Password').fill('WrongPassword!2026');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByRole('alert').filter({ hasText: 'Email or password' })).toBeVisible();
 
     // A failed sign-in must never leave a session behind.
     const cookies = await page.context().cookies();

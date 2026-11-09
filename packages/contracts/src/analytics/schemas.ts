@@ -1,10 +1,6 @@
 import { z } from 'zod';
 import { ACTIVITY_EVENTS } from '../admin/types.js';
-import {
-  INTERACTION_ACTIONS,
-  INTERACTION_DEVICES,
-  INTERACTION_SURFACES,
-} from './types.js';
+import { INTERACTION_ACTIONS, INTERACTION_DEVICES, INTERACTION_SURFACES } from './types.js';
 
 /**
  * Analytics event schemas.
@@ -95,7 +91,10 @@ export type RecordEventRequest = z.infer<typeof recordEventRequestSchema>;
  */
 export const recordEventBatchSchema = z.object({
   sessionId: z.string().trim().min(8).max(120),
-  events: z.array(recordEventRequestSchema.omit({ sessionId: true })).min(1).max(25),
+  events: z
+    .array(recordEventRequestSchema.omit({ sessionId: true }))
+    .min(1)
+    .max(25),
 });
 
 export type RecordEventBatch = z.infer<typeof recordEventBatchSchema>;

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { ApiRequestError, fetchProductBySlug, fetchProducts } from '@/lib/api';
+import { ApiRequestError, fetchProductBySlug, fetchProducts, fetchStoreSettings } from '@/lib/api';
 
 /**
  * The storefront must distinguish three catalogue states:
@@ -111,5 +111,39 @@ describe('fetchProductBySlug', () => {
     );
 
     await expect(fetchProductBySlug('!!!')).rejects.toBeInstanceOf(ApiRequestError);
+  });
+});
+
+describe('fetchStoreSettings', () => {
+  it('returns store settings when the API responds with a valid envelope', async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      jsonResponse(200, {
+        ok: true,
+        data: {
+          storeName: 'Ajooba Footwear',
+          tagline: 'Footwear for celebrations and daily wear',
+          supportEmail: 'help@ajoobafootwear.com',
+          supportPhone: '+919988776655',
+          currency: 'INR',
+          freeShippingThreshold: 1999,
+          shippingFee: 99,
+          taxRatePercent: 12,
+          isCodEnabled: true,
+          socialLinks: {},
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      }),
+    );
+
+    const settings = await fetchStoreSettings();
+    expect(settings?.supportEmail).toBe('help@ajoobafootwear.com');
+    expect(settings?.freeShippingThreshold).toBe(1999);
+    expect(settings?.isCodEnabled).toBe(true);
+  });
+
+  it('degrades to null instead of throwing when the API is unreachable', async () => {
+    vi.mocked(globalThis.fetch).mockRejectedValue(new Error('ECONNREFUSED'));
+
+    await expect(fetchStoreSettings()).resolves.toBeNull();
   });
 });

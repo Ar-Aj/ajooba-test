@@ -26,8 +26,8 @@
   --color-ink-100: #ebe5da;
   --color-ink-200: #cfc6b6;
   --color-ink-300: #a89d8c;
-  --color-ink-400: #7d7264;
-  --color-ink-500: #5c5247;
+  --color-ink-400: #645a4d;
+  --color-ink-500: #50473d;
   --color-ink-600: #433b33;
   --color-ink-700: #2f2923;
   --color-ink-800: #211d18;
@@ -41,8 +41,8 @@
   --color-gold-400: #cd9f45;
   --color-gold-500: #c9a24a;
   --color-gold-600: #b38938;
-  --color-gold-700: #8f6a2c;
-  --color-gold-800: #6f5221;
+  --color-gold-700: #785822;
+  --color-gold-800: #63481c;
   --color-gold-900: #4a3817;
 
   --color-cream-50: #fdfaf2;
@@ -224,6 +224,10 @@
     html {
       font-size: 16px;
     }
+  }
+
+  html.text-lg {
+    font-size: 112.5%;
   }
 
   /* Visible focus ring, mobile-friendly, identical in every app. */

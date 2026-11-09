@@ -143,6 +143,10 @@ export const productImageSchema = z.object({
 });
 
 export const productVariantSchema = z.object({
+  id: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .optional(),
   sku: z.string().min(1),
   productId: z.string().min(1),
   size: sizeValueSchema,

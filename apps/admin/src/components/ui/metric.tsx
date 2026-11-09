@@ -42,10 +42,7 @@ export function Metric({
   return (
     <div className={cn('relative bg-white px-4 py-5 md:px-6 md:py-6', className)}>
       {accent ? (
-        <span
-          className="absolute inset-x-0 top-0 h-[2px] bg-rose-500"
-          aria-hidden="true"
-        />
+        <span className="absolute inset-x-0 top-0 h-[2px] bg-rose-500" aria-hidden="true" />
       ) : null}
       <p className="text-[0.8125rem] font-medium text-ink-500">{label}</p>
       <p

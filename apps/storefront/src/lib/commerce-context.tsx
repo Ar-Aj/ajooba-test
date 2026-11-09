@@ -8,6 +8,7 @@ import { addressStore } from './address-store';
 import { orderStore } from './order-store';
 import { returnStore } from './return-store';
 import { accountStore, type LocalAccount } from './account-store';
+import { customerSession, type CustomerSession } from './customer-session';
 import { useLocalStore } from './use-local-store';
 
 interface CommerceContextValue {
@@ -98,11 +99,31 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
     returnStore.subscribe,
     NO_RETURNS,
   );
-  const account = useLocalStore<LocalAccount | null>(
+  const storedAccount = useLocalStore<LocalAccount | null>(
     () => accountStore.read(),
     accountStore.subscribe,
     null,
   );
+  const session = useLocalStore<CustomerSession | null>(
+    () => customerSession.read(),
+    customerSession.subscribe,
+    null,
+  );
+
+  const account = useMemo<LocalAccount | null>(() => {
+    if (storedAccount) return storedAccount;
+    if (!session) return null;
+    const fullName =
+      [session.user.firstName, session.user.lastName].filter(Boolean).join(' ').trim() ||
+      session.user.email;
+    return {
+      id: session.user.id,
+      fullName,
+      email: session.user.email,
+      phone: session.user.phone,
+      joinedAt: '',
+    };
+  }, [storedAccount, session]);
 
   /*
    * `ready` flips after the first effect, when every store above has read the
@@ -112,6 +133,21 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
    */
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
+
+  /*
+   * Whenever an authenticated customer session is active, hydrate the wishlist
+   * and saved address book from the API so saved items follow the customer
+   * across devices and browser sessions.
+   */
+  useEffect(() => {
+    if (!ready || !session?.user.id) return;
+    void wishlistStore.syncFromServer().catch(() => {
+      /* Preserve cached state if the API is temporarily unreachable. */
+    });
+    void addressStore.syncFromServer().catch(() => {
+      /* Preserve cached state if the API is temporarily unreachable. */
+    });
+  }, [ready, session?.user.id]);
 
   const value = useMemo<CommerceContextValue>(() => {
     const cartCount = cart.reduce((n, line) => n + line.quantity, 0);

@@ -43,7 +43,7 @@ export function generateMetadata(): Metadata {
       template: '%s | Ajooba Footwear',
     },
     description:
-      'Ajooba Footwear — hand-finished ethnic footwear, mojris, juttis, sandals and chappals for men. Free shipping across India.',
+      'Explore Ajooba Footwear designs, check product details and review the total at checkout.',
     applicationName: 'Ajooba Footwear',
     manifest: '/manifest.webmanifest',
     icons: {

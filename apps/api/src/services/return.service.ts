@@ -7,6 +7,8 @@ import { buildReturnNumber } from './password.service.js';
 import { recordActivityEvent } from './analytics.service.js';
 import { logger } from '../config/logger.js';
 
+const RETURN_WINDOW_DAYS = 10;
+
 /**
  * Returns.
  *
@@ -22,8 +24,9 @@ import { logger } from '../config/logger.js';
 export const RETURN_TRANSITIONS: Readonly<Record<ReturnStatus, readonly ReturnStatus[]>> =
   Object.freeze({
     requested: ['approved', 'rejected'],
-    approved: ['refunded'],
+    approved: ['received', 'rejected'],
     rejected: [],
+    received: [],
     refunded: [],
   });
 
@@ -60,6 +63,7 @@ export function mapReturn(doc: ReturnDoc): ReturnRequest {
     status: doc.status,
     refundAmount: doc.refundAmount,
     refundRef: doc.refundRef ?? null,
+    resolutionNote: doc.resolutionNote ?? null,
     requestedAt: doc.requestedAt.toISOString(),
     resolvedAt: doc.resolvedAt ? doc.resolvedAt.toISOString() : null,
   };
@@ -96,6 +100,7 @@ export async function createReturnRequest(input: CreateReturnInput): Promise<Ret
     items: OrderItem[];
     status: string;
     placedAt: Date;
+    deliveredAt?: Date;
   } | null>();
 
   if (!order) {
@@ -106,10 +111,19 @@ export async function createReturnRequest(input: CreateReturnInput): Promise<Ret
     throw new ConflictError('A cancelled order cannot be returned.');
   }
 
+  if (order.status !== 'completed' || !order.deliveredAt) {
+    throw new ConflictError('A return can be requested after the order is delivered.');
+  }
+
+  const returnDeadline = order.deliveredAt.getTime() + RETURN_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  if (Date.now() > returnDeadline) {
+    throw new ConflictError(`The ${RETURN_WINDOW_DAYS}-day return window has ended.`);
+  }
+
   // Lines the customer has already returned cannot be returned again.
   const existing = await ReturnRequestModel.find({
     orderId: order._id,
-    status: { $in: ['requested', 'approved', 'refunded'] },
+    status: { $in: ['requested', 'approved', 'received', 'refunded'] },
   }).lean<Array<{ items: OrderItem[] }>>();
 
   /*
@@ -256,12 +270,13 @@ async function notifyReturn(
  * `refunded` is **not** an accepted input. Moving a return to `refunded` is
  * a claim that money has gone back to the customer, and the only thing that
  * can establish that is a confirmed provider refund — see
- * `refund.service.ts`. This function therefore handles exactly two
- * decisions: approve, or reject.
+ * `refund.service.ts`. This function records a decision or the later receipt
+ * and inspection of the returned pair; only the refund service can mark it
+ * refunded.
  */
 export async function resolveReturnRequest(
   returnId: string,
-  status: Extract<ReturnStatus, 'approved' | 'rejected'>,
+  status: Extract<ReturnStatus, 'approved' | 'rejected' | 'received'>,
   options: { refundAmount?: number; note?: string },
 ): Promise<ReturnRequest> {
   if (!Types.ObjectId.isValid(returnId)) {
@@ -294,11 +309,17 @@ export async function resolveReturnRequest(
    * Recording the agreed amount here is a decision; moving money is not.
    */
   if (options.refundAmount !== undefined) {
+    const returnValue = doc.items.reduce((total, item) => total + item.lineTotal, 0);
+    if (options.refundAmount > returnValue) {
+      throw new ConflictError(
+        `The approved refund cannot exceed the returned items' value of ${returnValue} rupee(s).`,
+      );
+    }
     update.refundAmount = options.refundAmount;
   }
 
   const updated = await ReturnRequestModel.findByIdAndUpdate(
-    returnId,
+    { _id: returnId, status: doc.status },
     { $set: update },
     {
       returnDocument: 'after',
@@ -306,10 +327,12 @@ export async function resolveReturnRequest(
   ).lean<ReturnDoc | null>();
 
   if (!updated) {
-    throw new NotFoundError('Return request');
+    throw new ConflictError(
+      'The return changed while you were reviewing it. Refresh and try again.',
+    );
   }
 
-  await notifyReturn(updated, status);
+  if (status !== 'received') await notifyReturn(updated, status);
 
   return mapReturn(updated);
 }

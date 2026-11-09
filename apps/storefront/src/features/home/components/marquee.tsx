@@ -20,12 +20,7 @@ export function Marquee({ items, className }: { items: readonly string[]; classN
   if (items.length === 0) return null;
 
   return (
-    <div
-      className={cn(
-        'relative flex overflow-hidden bg-field-b py-3.5 text-ink-800',
-        className,
-      )}
-    >
+    <div className={cn('relative flex overflow-hidden bg-field-b py-3.5 text-ink-800', className)}>
       {/*
         Static, accessible copy. Visually hidden because the marquee below
         already shows it; present so assistive tech reads it exactly once.

@@ -87,6 +87,7 @@ interface ProductDoc {
 }
 
 interface VariantDoc {
+  _id: { toString(): string };
   sku: string;
   productId: { toString(): string };
   size: number;
@@ -124,6 +125,7 @@ function isSellable(doc: VariantDoc): boolean {
 
 function mapVariant(doc: VariantDoc, productId: string): ProductVariant {
   return {
+    id: doc._id.toString(),
     sku: doc.sku,
     productId,
     size: doc.size,

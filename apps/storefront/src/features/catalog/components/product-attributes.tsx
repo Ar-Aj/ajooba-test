@@ -43,8 +43,8 @@ export function ProductAttributes({ product }: { product: Product }) {
               label="Sizes in stock"
               value={availableSizes.length > 0 ? availableSizes.join(', ') : 'None right now'}
             />
-            <SpecRow label="Material" value="Leather / suede — see the description" />
-            <SpecRow label="Care" value="Wipe dry. Never machine wash." />
+            <SpecRow label="Material" value="Not listed for this design" />
+            <SpecRow label="Care" value="Not listed for this design" />
           </dl>
         </section>
       </Reveal>
@@ -64,15 +64,17 @@ export function ProductAttributes({ product }: { product: Product }) {
                   content: (
                     <div className="space-y-2">
                       <p>
-                        Orders placed before 2 PM IST are dispatched the same working day. Metro
-                        cities typically receive parcels in 2–4 working days; the rest of India in
-                        4–7.
+                        Any shipping charge is calculated from the current store settings and shown
+                        in your order total before payment.
                       </p>
                       <p>
-                        Shipping is free on orders above ₹1,499. Below that a flat courier fee is
-                        applied and shown before you pay.
+                        Courier availability and delivery estimates can vary by destination PIN
+                        code.
                       </p>
-                      <p>Cash on delivery is available on orders up to ₹10,000.</p>
+                      <p>
+                        Cash on delivery appears at checkout when enabled in store settings and the
+                        order total is within the configured limit.
+                      </p>
                     </div>
                   ),
                 },
@@ -82,17 +84,17 @@ export function ProductAttributes({ product }: { product: Product }) {
                   content: (
                     <div className="space-y-2">
                       <p>
-                        Return or exchange any unused pair within 10 days of delivery. A prepaid
-                        reverse pickup label is included in every box.
+                        Request a return within 10 days of delivery. Our team reviews each request
+                        and confirms the return or pickup instructions before you send the pair.
                       </p>
                       <p>
-                        Start a return from your account, or write to us and we will arrange the
-                        pickup. Refunds are issued to the original payment method once the item is
-                        checked.
+                        Refunds are processed after the item is received and checked. The request
+                        status changes only after the payment provider confirms a refund.
                       </p>
                       <p>
-                        A size exchange is treated as a return plus a new order, so the new pair
-                        ships once the return is collected.
+                        Size exchanges are for the same design and colour in another available size.
+                        The replacement is held only after staff approval; a different price needs
+                        support review.
                       </p>
                     </div>
                   ),
@@ -103,12 +105,7 @@ export function ProductAttributes({ product }: { product: Product }) {
                   content: (
                     <div className="space-y-2">
                       <p>
-                        Wipe with a dry cloth after every wear. For leather, use a conditioner once
-                        a month — never machine wash.
-                      </p>
-                      <p>
-                        Store on the shelf, not the floor, and keep them out of damp. A pair that is
-                        dried properly lasts for years.
+                        Material and care instructions are not listed separately for this design.
                       </p>
                     </div>
                   ),
@@ -119,13 +116,12 @@ export function ProductAttributes({ product }: { product: Product }) {
                   content: (
                     <div className="space-y-2">
                       <p>
-                        Sizes shown are UK/India. Our lasts run true to size, with a slightly wider
-                        toe box than most European brands. If you are between sizes or have a wide
-                        foot, we recommend going up half a size.
+                        Sizes are shown in UK/India sizing. If a delivered order does not fit, you
+                        can request an eligible same-design size exchange from your account within
+                        10 days of delivery.
                       </p>
                       <p>
-                        Not sure? Order two sizes, wear one indoors, and return the other — we cover
-                        the reverse pickup.
+                        Review the return policy before ordering if you are unsure between sizes.
                       </p>
                     </div>
                   ),

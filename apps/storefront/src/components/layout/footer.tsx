@@ -11,9 +11,8 @@ import { AccessibilityControls } from '@/components/a11y/accessibility-controls'
  * copies — which meant a category created in the admin appeared in the header
  * and not here. Now there is exactly one list.
  *
- * Everything below the columns is the legal and reassurance line: made-in,
- * payment methods, and the display controls. Those belong at the very end of a
- * page because nobody reads them first.
+ * Keep customer-facing footer copy factual until business-origin, shipping and
+ * payment claims have been confirmed in store settings.
  */
 export function SiteFooter({ categories }: { categories: readonly CategoryView[] }) {
   const shopLinks = [
@@ -30,7 +29,7 @@ export function SiteFooter({ categories }: { categories: readonly CategoryView[]
       title: 'Customer care',
       links: [
         { href: '/shipping', label: 'Shipping' },
-        { href: '/returns', label: 'Returns' },
+        { href: '/returns', label: 'Returns & exchanges' },
         { href: '/refund-policy', label: 'Refunds' },
         { href: '/contact', label: 'Contact us' },
       ],
@@ -39,7 +38,6 @@ export function SiteFooter({ categories }: { categories: readonly CategoryView[]
       title: 'The house',
       links: [
         { href: '/about', label: 'About Ajooba' },
-        { href: '/about#story', label: 'Our story' },
         { href: '/privacy', label: 'Privacy' },
         { href: '/terms', label: 'Terms of use' },
       ],
@@ -54,42 +52,25 @@ export function SiteFooter({ categories }: { categories: readonly CategoryView[]
         <div className="col-span-2 md:col-span-1 md:pr-6">
           <Logo variant="inverse" className="mb-5" />
           <p className="step-sm max-w-xs text-cream-50/70">
-            Hand-finished ethnic and contemporary footwear, made in Uttar Pradesh for Indian feet
-            and Indian occasions.
+            Explore the current footwear collection and review the available details for each
+            design.
           </p>
-
-          <form className="mt-7 max-w-xs" action="/contact" method="get">
-            <label htmlFor="footer-email" className="label-cap mb-2 block text-cream-50/50">
-              New collections
-            </label>
-            <div className="flex border-b border-cream-50/25 focus-within:border-gold-400">
-              <input
-                id="footer-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="your@email.in"
-                className="step-sm flex-1 bg-transparent py-2.5 text-cream-50 placeholder:text-cream-50/35 focus:outline-none"
-                required
-              />
-              <button
-                type="submit"
-                className="step-xs btn-press px-2 font-medium tracking-[0.14em] uppercase text-gold-300 hover:text-gold-200"
-              >
-                Join
-              </button>
-            </div>
-          </form>
+          <Link
+            href="/products"
+            className="step-xs mt-5 inline-block font-medium tracking-[0.14em] text-gold-300 uppercase hover:text-gold-200"
+          >
+            Explore the collection →
+          </Link>
 
           <div className="mt-7 flex items-center gap-3">
-            <span className="label-cap text-cream-50/40">Display</span>
+            <span className="label-cap text-cream-50/60">Display</span>
             <AccessibilityControls variant="inverse" />
           </div>
         </div>
 
         {columns.map((column) => (
           <div key={column.title}>
-            <h3 className="label-cap mb-5 text-cream-50/50">{column.title}</h3>
+            <h3 className="label-cap mb-5 text-cream-50/60">{column.title}</h3>
             <ul className="space-y-3">
               {column.links.map((link) => (
                 <li key={link.href + link.label}>
@@ -108,15 +89,11 @@ export function SiteFooter({ categories }: { categories: readonly CategoryView[]
 
       <div className="border-t border-cream-50/10">
         <div className="container-page flex flex-col gap-3 py-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="step-xs text-cream-50/50">
+          <p className="step-xs text-cream-50/60">
             © {new Date().getFullYear()} Ajooba Footwear. All rights reserved.
           </p>
-          <p className="step-xs flex flex-wrap items-center gap-x-3 gap-y-1 text-cream-50/50">
-            <span>Made in Uttar Pradesh, India</span>
-            <span aria-hidden="true" className="text-cream-50/25">
-              ·
-            </span>
-            <span>UPI · Cards · Net-banking · Cash on delivery</span>
+          <p className="step-xs flex flex-wrap items-center gap-x-3 gap-y-1 text-cream-50/60">
+            <span>Payment methods are shown at checkout</span>
           </p>
         </div>
       </div>

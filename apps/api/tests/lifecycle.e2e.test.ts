@@ -557,6 +557,13 @@ describe('end-to-end order lifecycle', () => {
     expect(stillApproved?.status).toBe('approved');
     expect(stillApproved?.refundRef ?? null).toBeNull();
 
+    const receive = await api()
+      .patch(`/v1/admin/returns/${returnRequest.id}`)
+      .set(bearer(adminJwt))
+      .send({ status: 'received', note: 'Pair received and inspected.' });
+    expect(receive.status).toBe(200);
+    expect(success<{ status: string }>(receive.body).status).toBe('received');
+
     const paymentAfterApproval = await PaymentModel.findOne({
       orderId: new Types.ObjectId(order.id),
     }).lean<{ status: string; refundedAmount: number }>();
@@ -564,7 +571,7 @@ describe('end-to-end order lifecycle', () => {
     expect(paymentAfterApproval?.refundedAmount).toBe(0);
 
     /* ---------------------------------------------------------------- */
-    /* 10. The refund is issued and confirmed by the provider           */
+    /* 10. The refund is issued only after receipt and inspection        */
     /* ---------------------------------------------------------------- */
 
     const refund = await api()

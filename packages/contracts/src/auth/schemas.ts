@@ -245,6 +245,36 @@ export const addressInputSchema = z.object({
 
 export type AddressInput = z.infer<typeof addressInputSchema>;
 
+/**
+ * Partial address update schema.
+ *
+ * Kept free of `.default(...)` so a PATCH request only modifies fields the
+ * caller explicitly sent and never resets `line2`, `country`, or `isDefault`
+ * back to their creation defaults.
+ */
+export const addressUpdateSchema = z
+  .object({
+    label: z.string().trim().min(1).max(40).optional(),
+    fullName: z.string().trim().min(1).max(120).optional(),
+    phone: phoneSchema.optional(),
+    line1: z.string().trim().min(1).max(200).optional(),
+    line2: z.string().trim().max(200).optional(),
+    city: z.string().trim().min(1).max(80).optional(),
+    state: z.string().trim().min(1).max(80).optional(),
+    postalCode: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, 'Must be a 6-digit Indian PIN code')
+      .optional(),
+    country: z.string().trim().min(2).max(80).optional(),
+    isDefault: z.boolean().optional(),
+  })
+  .refine((val) => Object.keys(val).length > 0, {
+    message: 'At least one address field must be provided.',
+  });
+
+export type AddressUpdateInput = z.infer<typeof addressUpdateSchema>;
+
 export const updateProfileRequestSchema = z.object({
   firstName: z.string().trim().min(1).max(80).optional(),
   lastName: z.string().trim().min(1).max(80).optional(),

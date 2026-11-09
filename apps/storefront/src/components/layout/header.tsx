@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { CategoryView } from '@ajooba/contracts';
@@ -10,7 +10,10 @@ import { useToast } from '@/components/ui/toast';
 import { useCommerce } from '@/lib/commerce-context';
 import { useHydrated } from '@/lib/use-hydrated';
 import { accountStore } from '@/lib/account-store';
+import { addressStore } from '@/lib/address-store';
+import { signOut as signOutCustomer } from '@/lib/customer-session';
 import { cartStore } from '@/lib/cart-store';
+import { wishlistStore } from '@/lib/wishlist-store';
 import { mediaUrl } from '@/lib/media';
 import { rupees } from '@/lib/format';
 import { cn } from '@/lib/cn';
@@ -131,14 +134,11 @@ export function SiteHeader({ categories }: { categories: readonly CategoryView[]
         {/* --- utility strip: desktop only --------------------------------- */}
         <div className="hidden bg-ink-900 text-cream-50 lg:block">
           <div className="container-page flex h-9 items-center justify-between text-[0.6875rem] tracking-[0.12em] uppercase">
-            <p>Made in Uttar Pradesh · Free shipping over ₹1,499</p>
+            <p>Discover the current Ajooba Footwear collection</p>
             <div className="flex items-center gap-6">
               <Link href="/" className="hover:text-gold-300">
                 Home
               </Link>
-              <a href="tel:+918000012345" className="hover:text-gold-300">
-                +91 80000 12345
-              </a>
               <Link href="/contact" className="hover:text-gold-300">
                 Contact
               </Link>
@@ -152,13 +152,13 @@ export function SiteHeader({ categories }: { categories: readonly CategoryView[]
         {/* --- main band --------------------------------------------------- */}
         <div
           className={cn(
-            'container-page flex items-center gap-4 transition-[height] duration-200',
+            'container-page flex items-center gap-2 transition-[height] duration-200 sm:gap-4',
             condensed ? 'h-14 md:h-16' : 'h-16 md:h-20',
           )}
         >
           <button
             type="button"
-            className="-ml-2 p-2 text-ink-900 lg:hidden"
+            className="-ml-2 shrink-0 p-2 text-ink-900 lg:hidden"
             aria-label="Open navigation"
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
@@ -168,7 +168,7 @@ export function SiteHeader({ categories }: { categories: readonly CategoryView[]
 
           <Logo className="lg:mr-6" />
 
-          <div className="flex items-center gap-4 lg:hidden">
+          <div className="flex shrink-0 items-center gap-3 lg:hidden sm:gap-4">
             <Link
               href="/"
               aria-current={pathname === '/' ? 'page' : undefined}
@@ -297,10 +297,10 @@ export function SiteHeader({ categories }: { categories: readonly CategoryView[]
           </nav>
 
           {/* --- utilities -------------------------------------------------- */}
-          <div className="ml-auto flex items-center gap-0.5">
+          <div className="ml-auto flex shrink-0 items-center gap-0.5">
             <button
               type="button"
-              className="p-2.5 text-ink-700 hover:text-ink-950"
+              className="p-2 text-ink-700 hover:text-ink-950 sm:p-2.5"
               aria-label="Search products"
               onClick={() => setSearchOpen(true)}
             >
@@ -309,7 +309,7 @@ export function SiteHeader({ categories }: { categories: readonly CategoryView[]
 
             <Link
               href="/account/wishlist"
-              className="relative hidden p-2.5 text-ink-700 hover:text-ink-950 sm:inline-flex"
+              className="relative hidden p-2 text-ink-700 hover:text-ink-950 sm:inline-flex sm:p-2.5"
               aria-label={`Wishlist, ${savedCount} saved`}
             >
               <Icon name="heart" />
@@ -322,7 +322,7 @@ export function SiteHeader({ categories }: { categories: readonly CategoryView[]
                 onClick={() => setAccountOpen((open) => !open)}
                 aria-haspopup="menu"
                 aria-expanded={accountOpen}
-                className="p-2.5 text-ink-700 hover:text-ink-950"
+                className="p-2 text-ink-700 hover:text-ink-950 sm:p-2.5"
                 aria-label="Account"
               >
                 <Icon name="user" />
@@ -332,7 +332,10 @@ export function SiteHeader({ categories }: { categories: readonly CategoryView[]
                   account={account}
                   onClose={() => setAccountOpen(false)}
                   onSignOut={() => {
+                    void signOutCustomer();
                     accountStore.signOut();
+                    wishlistStore.clear();
+                    addressStore.clear();
                     setAccountOpen(false);
                     toast({
                       title: 'Signed out',
@@ -346,7 +349,7 @@ export function SiteHeader({ categories }: { categories: readonly CategoryView[]
 
             <button
               type="button"
-              className="relative p-2.5 text-ink-700 hover:text-ink-950"
+              className="relative p-2 text-ink-700 hover:text-ink-950 sm:p-2.5"
               aria-label={`Cart, ${bagCount} ${bagCount === 1 ? 'item' : 'items'}`}
               onClick={() => setCartOpen(true)}
             >
@@ -431,6 +434,7 @@ function AccountMenu({
     { href: '/account', label: 'Overview' },
     { href: '/account/orders', label: 'Orders' },
     { href: '/account/returns', label: 'Returns' },
+    { href: '/account/exchanges', label: 'Size exchanges' },
     { href: '/account/addresses', label: 'Addresses' },
     { href: '/account/wishlist', label: 'Wishlist' },
   ];
@@ -571,6 +575,8 @@ function MobileNav({
           { href: '/account', label: 'Overview' },
           { href: '/account/orders', label: 'Orders' },
           { href: '/account/returns', label: 'Returns' },
+          { href: '/account/exchanges', label: 'Size exchanges' },
+          { href: '/account/addresses', label: 'Addresses' },
           { href: '/account/wishlist', label: 'Wishlist' },
           { href: '/login', label: 'Sign in' },
         ].map((link) => (
@@ -724,13 +730,6 @@ function CartDrawer({
 }) {
   const { cart, cartSubtotal, cartCount } = useCommerce();
 
-  const shippingNote = useMemo(() => {
-    const threshold = 1499;
-    if (cartSubtotal >= threshold) return 'Free shipping on this order.';
-    const remaining = threshold - cartSubtotal;
-    return `${rupees(remaining)} more for free shipping.`;
-  }, [cartSubtotal]);
-
   return (
     <Sheet
       open={open}
@@ -744,7 +743,9 @@ function CartDrawer({
               <span className="step-sm text-ink-600">Subtotal</span>
               <span className="tnum step-lg text-ink-900">{rupees(cartSubtotal)}</span>
             </div>
-            <p className="step-xs mt-1 text-ink-500">{shippingNote}</p>
+            <p className="step-xs mt-1 text-ink-500">
+              Delivery and the final total are confirmed at checkout.
+            </p>
             <button
               type="button"
               onClick={onCheckout}

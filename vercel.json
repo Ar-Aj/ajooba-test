@@ -15,7 +15,8 @@
     },
     "api": {
       "root": "apps/api",
-      "framework": "express"
+      "framework": "express",
+      "entrypoint": "dist/server.js"
     },
     "storefront": {
       "root": "apps/storefront",

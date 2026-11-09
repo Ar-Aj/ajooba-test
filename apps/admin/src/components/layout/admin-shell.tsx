@@ -17,6 +17,8 @@ import {
   Package,
   PackageSearch,
   Percent,
+  RefreshCw,
+  RotateCcw,
   ScrollText,
   ShoppingBag,
   Tags,
@@ -113,6 +115,8 @@ const NAV: readonly NavGroup[] = [
     title: 'Sell',
     items: [
       { href: '/orders', label: 'Orders', icon: ShoppingBag, permission: 'orders:read' },
+      { href: '/exchanges', label: 'Exchanges', icon: RefreshCw, permission: 'orders:read' },
+      { href: '/returns', label: 'Returns', icon: RotateCcw, permission: 'returns:read' },
       { href: '/customers', label: 'Customers', icon: Users, permission: 'customers:read' },
       { href: '/promotions', label: 'Promotions', icon: Percent, permission: 'coupons:read' },
     ],

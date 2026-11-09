@@ -26,7 +26,7 @@ export default function Error({
     <div className="container-page py-16">
       <ErrorPanel
         title="This page didn't load"
-        message="Something went wrong on our side. Try again — if it keeps happening, our customer care team would like to hear about it."
+        message="Something went wrong on our side. Please try loading the page again in a moment."
         action={
           <Button intent="primary" onClick={reset}>
             Try again

@@ -14,13 +14,13 @@ import { colourwaysOf } from '@/lib/colour-swatch';
 import { fetchCatalogueIndex, fetchHomepage } from '@/lib/api';
 
 export const metadata: Metadata = {
-  title: 'Ajooba Footwear — Hand-finished ethnic footwear, mojris and chappals',
+  title: 'Ajooba Footwear — Mojris, juttis, sandals and chappals',
   description:
-    'Shop hand-embroidered mojris, juttis, sandals and chappals from Ajooba Footwear. Made in Uttar Pradesh. Free shipping across India.',
+    'Explore Ajooba Footwear designs, check sizes and availability, and see your final order total at checkout.',
   alternates: { canonical: '/' },
   openGraph: {
     title: 'Ajooba Footwear',
-    description: 'Hand-finished ethnic footwear, mojris, juttis, sandals and chappals.',
+    description: 'Explore Ajooba Footwear designs, available sizes and product details.',
     images: [{ url: '/og.png', width: 1200, height: 630 }],
   },
 };

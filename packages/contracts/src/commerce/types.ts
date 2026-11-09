@@ -176,7 +176,13 @@ export const RETURN_REASONS = [
 ] as const;
 export type ReturnReason = (typeof RETURN_REASONS)[number];
 
-export const RETURN_STATUSES = ['requested', 'approved', 'rejected', 'refunded'] as const;
+export const RETURN_STATUSES = [
+  'requested',
+  'approved',
+  'rejected',
+  'received',
+  'refunded',
+] as const;
 export type ReturnStatus = (typeof RETURN_STATUSES)[number];
 
 export interface ReturnRequest {
@@ -191,8 +197,64 @@ export interface ReturnRequest {
   readonly status: ReturnStatus;
   readonly refundAmount: number;
   readonly refundRef: string | null;
+  readonly resolutionNote: string | null;
   readonly requestedAt: string;
   readonly resolvedAt: string | null;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Size exchanges                                                             */
+/* -------------------------------------------------------------------------- */
+
+export const EXCHANGE_STATUSES = [
+  'requested',
+  'approved',
+  'rejected',
+  'received',
+  'replacement-shipped',
+  'completed',
+] as const;
+export type ExchangeStatus = (typeof EXCHANGE_STATUSES)[number];
+
+/** A frozen size/price snapshot for the replacement requested by the customer. */
+export interface ExchangeItem {
+  readonly productId: string;
+  readonly variantId: string;
+  readonly sku: string;
+  readonly title: string;
+  readonly imageUrl: string | null;
+  readonly colour: string;
+  readonly size: number;
+  readonly unitPrice: number;
+  readonly mrp: number;
+  readonly quantity: number;
+}
+
+/** A size swap request, separate from return/refund records. */
+export interface ExchangeRequest {
+  readonly id: string;
+  readonly exchangeNumber: string;
+  readonly orderId: string;
+  readonly orderNumber: string;
+  readonly customerId: string;
+  readonly originalItem: OrderItem;
+  readonly replacementItem: ExchangeItem;
+  /** Total difference between current replacement price and frozen order price. */
+  readonly priceDifference: number;
+  readonly reasonNote: string;
+  readonly status: ExchangeStatus;
+  readonly resolutionNote: string | null;
+  readonly requestedAt: string;
+  readonly resolvedAt: string | null;
+}
+
+export interface ExchangeOption {
+  readonly variantId: string;
+  readonly size: number;
+  readonly available: boolean;
+  readonly sellingPrice: number;
+  readonly mrp: number;
+  readonly unavailableReason: 'out-of-stock' | 'catalogue-review' | 'price-difference' | null;
 }
 
 /* -------------------------------------------------------------------------- */

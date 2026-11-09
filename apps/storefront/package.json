@@ -6,7 +6,7 @@
   "description": "Ajooba Footwear customer storefront",
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "pnpm --filter @ajooba/contracts build && next build",
+    "build": "pnpm --filter @ajooba/contracts build && node ../../scripts/sync-storefront-assets.mjs && next build",
     "start": "next start --port 3000",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",

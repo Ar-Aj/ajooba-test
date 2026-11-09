@@ -18,8 +18,7 @@ export default function OfflinePage() {
       <ServiceUnavailable what="the internet" className="mx-auto max-w-xl" />
       <div className="mx-auto mt-6 max-w-xl text-center">
         <p className="text-sm text-ink-500">
-          Pages you have already visited may still open. Try again once you have a connection, or
-          call us on +91 80000 12345.
+          Pages you have already visited may still open. Try again once you have a connection.
         </p>
       </div>
     </div>

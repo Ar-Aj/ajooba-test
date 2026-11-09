@@ -8,21 +8,22 @@ import { Reveal } from '@/components/ui/reveal';
  * commerce design; the same information set on the page with a rule between
  * items reads as a shop notice, which is what it is.
  *
- * Nothing here is a claim the business has not already published: the shipping
- * threshold and the return window match `docs/` and the policy pages.
+ * Keep these notices tied to rules the API and account flows enforce. The
+ * shipping charge and final total are calculated from live store settings at
+ * checkout, so this band does not advertise a fixed threshold or fee.
  */
 const PROMISES = [
   {
-    title: 'Made for Indian feet',
-    body: 'Lasts developed over decades, fitted to Indian widths and arches — not adapted from Western patterns.',
+    title: 'Same-design size exchange',
+    body: 'Request another size of the same colour within 10 days of delivery.',
   },
   {
-    title: 'Free shipping over ₹1,499',
-    body: 'No-questions delivery on orders above ₹1,499. Below that, a flat courier fee applies.',
+    title: 'Replacement stock checked',
+    body: 'The replacement size must be available and approved before it is held.',
   },
   {
-    title: 'Returns within 10 days',
-    body: 'If the fit is off, send it back with the prepaid label included in your box.',
+    title: 'Clear totals before payment',
+    body: 'Checkout confirms the current delivery charge, applicable tax and final total.',
   },
 ];
 

@@ -70,8 +70,8 @@ export function AddressBookClient() {
     }
 
     const existing = editing;
-    const address: Address = {
-      id: existing?.id ?? `addr-${Math.random().toString(36).slice(2, 10)}`,
+    const addressInput = {
+      ...(existing?.id ? { id: existing.id } : {}),
       label: draft.label || 'Home',
       fullName: draft.fullName.trim(),
       phone: draft.phone.trim(),
@@ -80,29 +80,53 @@ export function AddressBookClient() {
       city: draft.city.trim(),
       state: draft.state,
       postalCode: draft.postalCode.trim(),
-      country: 'India',
+      country: 'India' as const,
       isDefault: existing?.isDefault ?? addresses.length === 0,
     };
 
     startTransition(() => {
-      addressStore.upsert(address);
-      toast({ title: 'Address saved', tone: 'success' });
-      close();
+      void addressStore
+        .saveRemote(addressInput)
+        .then(() => {
+          toast({ title: 'Address saved', tone: 'success' });
+          close();
+        })
+        .catch((error: unknown) => {
+          toast({
+            title: 'Address could not be saved',
+            description: error instanceof Error ? error.message : 'Please try again in a moment.',
+            tone: 'warning',
+          });
+        });
     });
   }
 
   function remove(address: Address) {
     startTransition(() => {
-      addressStore.remove(address.id);
-      toast({ title: 'Address removed', description: address.label });
+      void addressStore
+        .removeRemote(address.id)
+        .then(() => {
+          toast({ title: 'Address removed', description: address.label });
+        })
+        .catch((error: unknown) => {
+          toast({
+            title: 'Address could not be removed',
+            description: error instanceof Error ? error.message : 'Please try again in a moment.',
+            tone: 'warning',
+          });
+        });
     });
   }
 
   function makeDefault(address: Address) {
     startTransition(() => {
-      for (const existing of addresses) {
-        addressStore.upsert({ ...existing, isDefault: existing.id === address.id });
-      }
+      void addressStore.makeDefaultRemote(address.id).catch((error: unknown) => {
+        toast({
+          title: 'Could not update default address',
+          description: error instanceof Error ? error.message : 'Please try again in a moment.',
+          tone: 'warning',
+        });
+      });
     });
   }
 
@@ -111,7 +135,13 @@ export function AddressBookClient() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="font-display text-xl">Saved addresses</h2>
+        <div>
+          <h2 className="font-display text-xl">Saved addresses</h2>
+          <p className="mt-1 text-xs text-ink-500">
+            Addresses saved while signed in are stored with your account for faster checkout across
+            devices.
+          </p>
+        </div>
         <Button intent="primary" size="sm" onClick={openAdd}>
           Add address
         </Button>
@@ -121,7 +151,7 @@ export function AddressBookClient() {
         <div className="rounded-2xl border border-dashed border-ink-200 bg-white px-6 py-12 text-center">
           <h3 className="font-display text-lg">No saved addresses</h3>
           <p className="mx-auto mt-2 max-w-sm text-sm text-ink-500">
-            Save an address now and checkout will fill it in for you next time.
+            Save an address to your account and checkout will fill it in for you next time.
           </p>
           <Button intent="gold" className="mt-5" onClick={openAdd}>
             Add your first address

@@ -89,10 +89,7 @@ export function ShareList({
             role="presentation"
           >
             <div
-              className={cn(
-                'h-full rounded-full',
-                tone === 'rose' ? 'bg-rose-500' : 'bg-ink-600',
-              )}
+              className={cn('h-full rounded-full', tone === 'rose' ? 'bg-rose-500' : 'bg-ink-600')}
               style={{ width: `${Math.max((row.taps / max) * 100, 2)}%` }}
             />
           </div>
@@ -132,9 +129,7 @@ export function ActionMatrix({
 }) {
   const shown = actions.filter((action) => action.taps > 0).slice(0, limit);
   if (shown.length === 0) {
-    return (
-      <p className="text-[0.9375rem] leading-relaxed text-ink-500">{emptyLabel}</p>
-    );
+    return <p className="text-[0.9375rem] leading-relaxed text-ink-500">{emptyLabel}</p>;
   }
 
   const max = Math.max(...shown.map((action) => action.taps), 1);
@@ -304,7 +299,10 @@ export function SessionStrip({
         {points.map((point) => (
           <div
             key={point.date}
-            className={cn('flex-1 rounded-t-sm', point.sessions === 0 ? 'bg-panel-300' : 'bg-rose-500')}
+            className={cn(
+              'flex-1 rounded-t-sm',
+              point.sessions === 0 ? 'bg-panel-300' : 'bg-rose-500',
+            )}
             style={{ height: point.sessions === 0 ? 2 : Math.max(3, (point.sessions / max) * 80) }}
             title={`${point.date}: ${point.sessions} sessions`}
           />
@@ -423,7 +421,9 @@ export function ProductTable({
                   {product.addToCart === 0 ? (
                     <span className="text-ink-400">—</span>
                   ) : (
-                    <span className="font-semibold text-ink-900">{share(product.addToCartRate)}</span>
+                    <span className="font-semibold text-ink-900">
+                      {share(product.addToCartRate)}
+                    </span>
                   )}
                 </td>
               </tr>

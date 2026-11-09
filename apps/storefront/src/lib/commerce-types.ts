@@ -1,17 +1,8 @@
 /**
  * Domain types for the storefront's local stores.
  *
- * The cart, wishlist, addresses and orders use these shapes. They mirror
- * what the API will eventually return so the UI can swap to a real backend
- * without touching presentation components — the type contracts are the
- * boundary.
- *
- * Why local? `docs/API_CONTRACT.md` §3.4 enumerates the entire commerce
- * surface as "Not started". Building a real admin+orders pipeline is a
- * separate, explicitly scheduled phase. Until it lands, these stores are
- * the only honest answer for customer interactions: the storefront allows
- * carting, addressing and a "place a local-test order" flow that the user
- * can see and undo, never producing a paid order or inventory change.
+ * Browser-side display shapes for the guest cart and account UI. The API is
+ * authoritative for variant identity, availability, prices, orders and payment.
  */
 
 import type { ProductVariant } from '@ajooba/contracts';
@@ -22,6 +13,8 @@ export interface CartLine {
   /** The variant the line refers to — the API is the source of truth for the
    *  numbers (MRP, selling price). */
   variantSku: string;
+  /** API variant id, when this line came from the current public catalogue. */
+  variantId?: string;
   productId: string;
   productSlug: string;
   productTitle: string;

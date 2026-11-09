@@ -23,7 +23,8 @@ import {
   type VerifyResetTokenRequest,
 } from '@ajooba/contracts';
 import { env } from '../config/env.js';
-import { NotFoundError, UnauthorizedError } from '../core/errors.js';import { sendSuccess } from '../core/http.js';
+import { NotFoundError, UnauthorizedError } from '../core/errors.js';
+import { sendSuccess } from '../core/http.js';
 import { getRequestId } from '../middleware/error-handler.js';
 import { requireAdmin, requireCustomer } from '../middleware/auth.js';
 import {

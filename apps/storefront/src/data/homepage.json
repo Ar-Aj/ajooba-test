@@ -1,0 +1,289 @@
+{
+  "ok": true,
+  "data": {
+    "sections": [
+      {
+        "id": "6ada582b25c8bcadc6bc3794",
+        "type": "hero",
+        "position": 0,
+        "isVisible": true,
+        "heading": "Hand-finished mojris for the celebrations ahead",
+        "subheading": "",
+        "startsAt": null,
+        "endsAt": null,
+        "config": {
+          "heading": "Hand-finished mojris for the celebrations ahead",
+          "subheading": "",
+          "bannerId": "6ada2d9f6f6a1ef18aea1124",
+          "ctaHref": "/products",
+          "ctaLabel": "Shop the collection",
+          "type": "hero",
+          "imageUrl": "/banner/banner home hero 1.png",
+          "mobileImageUrl": null,
+          "alt": "Festive mojri edit",
+          "linkUrl": "/products?subcategory=mojri-jutti"
+        },
+        "products": [],
+        "deals": [],
+        "colourTiles": [],
+        "unresolvedProductIds": [],
+        "hiddenBecause": null,
+        "campaignEndsAt": null
+      },
+      {
+        "id": "6ada582b25c8bcadc6bc3795",
+        "type": "category-grid",
+        "position": 1,
+        "isVisible": true,
+        "heading": "Shop by category",
+        "subheading": "",
+        "startsAt": null,
+        "endsAt": null,
+        "config": {
+          "heading": "Shop by category",
+          "subheading": "",
+          "layout": "grid",
+          "categorySlugs": ["mojri-jutti", "shoe", "sandal", "chappal"],
+          "type": "category-grid"
+        },
+        "products": [],
+        "deals": [],
+        "colourTiles": [],
+        "unresolvedProductIds": [],
+        "hiddenBecause": null,
+        "campaignEndsAt": null
+      },
+      {
+        "id": "6ada582b25c8bcadc6bc3796",
+        "type": "featured",
+        "position": 2,
+        "isVisible": true,
+        "heading": "The Ajooba Edit",
+        "subheading": "Hand-finished, built to last.",
+        "startsAt": null,
+        "endsAt": null,
+        "config": {
+          "heading": "The Ajooba Edit",
+          "subheading": "Hand-finished, built to last.",
+          "layout": "spotlight",
+          "mode": "manual",
+          "productIds": ["6ad99cb6cc19a080846be415", "6ad99cb6cc19a080846be414"],
+          "limit": 4,
+          "spotlightProductId": "6ad99cb6cc19a080846be415",
+          "type": "featured"
+        },
+        "products": [
+          {
+            "id": "6ad99cb6cc19a080846be415",
+            "code": "A57",
+            "slug": "a57-ajooba-men-s-suede-finish-tassel-slip-on-loafers",
+            "title": "AJOOBA Men's Suede-Finish Tassel Slip-On Loafers",
+            "subcategory": "shoe",
+            "subcategorySlug": "shoe",
+            "mrp": 1999,
+            "sellingPrice": 1499,
+            "inStock": false,
+            "imageUrl": "/products/AJ-A57/A57-BLK-1.jpeg",
+            "imageAlt": "AJOOBA Men's Suede-Finish Tassel Slip-On Loafers — A57-BLK-1.jpeg",
+            "isPurchasable": false,
+            "verifiedColours": []
+          },
+          {
+            "id": "6ad99cb6cc19a080846be414",
+            "code": "A56",
+            "slug": "a56-ajooba-men-s-suede-finish-penny-loafers-with-contrast-stitching",
+            "title": "AJOOBA Men's Suede-Finish Penny Loafers with Contrast Stitching",
+            "subcategory": "shoe",
+            "subcategorySlug": "shoe",
+            "mrp": 2499,
+            "sellingPrice": 1699,
+            "inStock": false,
+            "imageUrl": "/products/AJ-A56/A56-BLK-1.png",
+            "imageAlt": "AJOOBA Men's Suede-Finish Penny Loafers with Contrast Stitching — A56-BLK-1.png",
+            "isPurchasable": false,
+            "verifiedColours": []
+          }
+        ],
+        "deals": [],
+        "colourTiles": [],
+        "unresolvedProductIds": [],
+        "hiddenBecause": null,
+        "campaignEndsAt": null
+      },
+      {
+        "id": "6ada582b25c8bcadc6bc3797",
+        "type": "collection-spotlight",
+        "position": 3,
+        "isVisible": true,
+        "heading": "Occasion wear",
+        "subheading": "",
+        "startsAt": null,
+        "endsAt": null,
+        "config": {
+          "heading": "Occasion wear",
+          "subheading": "",
+          "layout": "rail",
+          "categorySlug": "mojri-jutti",
+          "mode": "category",
+          "productIds": [],
+          "limit": 6,
+          "type": "collection-spotlight"
+        },
+        "products": [
+          {
+            "id": "6ad99cb6cc19a080846be40e",
+            "code": "A48",
+            "slug": "a48-ajooba-men-s-grey-marble-textured-ethnic-slip-on-loafers",
+            "title": "AJOOBA Men's Grey Marble-Textured Ethnic Slip-On Loafers",
+            "subcategory": "Mojri / Jutti",
+            "subcategorySlug": "mojri-jutti",
+            "mrp": 1999,
+            "sellingPrice": 1599,
+            "inStock": false,
+            "imageUrl": "/products/Aj-A48/A48-GRY-1.png",
+            "imageAlt": "AJOOBA Men's Grey Marble-Textured Ethnic Slip-On Loafers — A48-GRY-1.png",
+            "isPurchasable": false,
+            "verifiedColours": []
+          },
+          {
+            "id": "6ad99cb6cc19a080846be40c",
+            "code": "A46",
+            "slug": "a46-ajooba-men-s-black-gold-embroidered-ethnic-slip-on-loafers",
+            "title": "AJOOBA Men's Black Gold Embroidered Ethnic Slip-On Loafers",
+            "subcategory": "Mojri / Jutti",
+            "subcategorySlug": "mojri-jutti",
+            "mrp": 2499,
+            "sellingPrice": 1599,
+            "inStock": false,
+            "imageUrl": "/products/AJ-A46/A46-BLK-1.jpeg",
+            "imageAlt": "AJOOBA Men's Black Gold Embroidered Ethnic Slip-On Loafers — A46-BLK-1.jpeg",
+            "isPurchasable": false,
+            "verifiedColours": []
+          },
+          {
+            "id": "6ad99cb5cc19a080846be402",
+            "code": "A36",
+            "slug": "a36-ajooba-men-s-ivory-suede-look-gold-embroidered-ethnic-loafers-wedding-festiv",
+            "title": "AJOOBA Men's Ivory Suede-Look Gold Embroidered Ethnic Loafers – Wedding & Festive Wear",
+            "subcategory": "Mojri / Jutti",
+            "subcategorySlug": "mojri-jutti",
+            "mrp": 1999,
+            "sellingPrice": 1399,
+            "inStock": false,
+            "imageUrl": "/products/AJ-A36/A36-IVY-1.jpeg",
+            "imageAlt": "AJOOBA Men's Ivory Suede-Look Gold Embroidered Ethnic Loafers – Wedding & Festive Wear — A36-IVY-1.jpeg",
+            "isPurchasable": false,
+            "verifiedColours": []
+          },
+          {
+            "id": "6ad99cb5cc19a080846be3f0",
+            "code": "A18",
+            "slug": "a18-ajooba-men-s-gold-embroidered-ethnic-mojri-wedding-festive-slip-on-shoes",
+            "title": "AJOOBA Men's Gold Embroidered Ethnic Mojri – Wedding & Festive Slip-On Shoes",
+            "subcategory": "Mojri / Jutti",
+            "subcategorySlug": "mojri-jutti",
+            "mrp": 1999,
+            "sellingPrice": 1399,
+            "inStock": false,
+            "imageUrl": "/products/AJ-A18/A18-BRN-1.jpg",
+            "imageAlt": "AJOOBA Men's Gold Embroidered Ethnic Mojri – Wedding & Festive Slip-On Shoes — A18-BRN-1.jpg",
+            "isPurchasable": false,
+            "verifiedColours": []
+          },
+          {
+            "id": "6ad99cb5cc19a080846be3ef",
+            "code": "A17",
+            "slug": "a17-ajooba-men-s-white-gold-embroidered-ethnic-mojri-wedding-festive-slip-on-sho",
+            "title": "AJOOBA Men's White Gold Embroidered Ethnic Mojri – Wedding & Festive Slip-On Shoes",
+            "subcategory": "Mojri / Jutti",
+            "subcategorySlug": "mojri-jutti",
+            "mrp": 1999,
+            "sellingPrice": 1399,
+            "inStock": false,
+            "imageUrl": null,
+            "imageAlt": null,
+            "isPurchasable": false,
+            "verifiedColours": []
+          },
+          {
+            "id": "6ad99cb5cc19a080846be3ee",
+            "code": "A16",
+            "slug": "a16-ajooba-men-s-dark-brown-gold-embroidered-ethnic-mojri-wedding-festive-slip-o",
+            "title": "AJOOBA Men's Dark Brown Gold Embroidered Ethnic Mojri – Wedding & Festive Slip-On Shoes",
+            "subcategory": "Mojri / Jutti",
+            "subcategorySlug": "mojri-jutti",
+            "mrp": 1999,
+            "sellingPrice": 1399,
+            "inStock": false,
+            "imageUrl": "/products/AJ-A16/A16-BLK-1.jpg",
+            "imageAlt": "AJOOBA Men's Dark Brown Gold Embroidered Ethnic Mojri – Wedding & Festive Slip-On Shoes — A16-BLK-1.jpg",
+            "isPurchasable": false,
+            "verifiedColours": []
+          }
+        ],
+        "deals": [],
+        "colourTiles": [],
+        "unresolvedProductIds": [],
+        "hiddenBecause": null,
+        "campaignEndsAt": null
+      },
+      {
+        "id": "6ada582b25c8bcadc6bc3798",
+        "type": "colour-shop",
+        "position": 4,
+        "isVisible": true,
+        "heading": "Shop by colour",
+        "subheading": "",
+        "startsAt": null,
+        "endsAt": null,
+        "config": {
+          "heading": "Shop by colour",
+          "subheading": "",
+          "colours": ["Black", "Brown", "Tan", "Olive", "Chickoo", "Gold"],
+          "limit": 8,
+          "type": "colour-shop"
+        },
+        "products": [],
+        "deals": [],
+        "colourTiles": [
+          {
+            "colour": "Black",
+            "count": 40,
+            "href": "/products?colour=Black",
+            "imageUrl": "/products/AJ-A57/A57-BLK-1.jpeg",
+            "imageAlt": "AJOOBA Men's Suede-Finish Tassel Slip-On Loafers — A57-BLK-1.jpeg"
+          },
+          {
+            "colour": "Brown",
+            "count": 29,
+            "href": "/products?colour=Brown",
+            "imageUrl": "/products/AJ-A57/A57-BRN-1.jpeg",
+            "imageAlt": "AJOOBA Men's Suede-Finish Tassel Slip-On Loafers — A57-BRN-1.jpeg"
+          },
+          {
+            "colour": "Tan",
+            "count": 16,
+            "href": "/products?colour=Tan",
+            "imageUrl": "/products/AJ-A46/A46-Tan-1.jpeg",
+            "imageAlt": "AJOOBA Men's Black Gold Embroidered Ethnic Slip-On Loafers — A46-Tan-1.jpeg"
+          },
+          {
+            "colour": "Olive",
+            "count": 2,
+            "href": "/products?colour=Olive",
+            "imageUrl": "/products/AJ-A57/A57-OLV-1.png",
+            "imageAlt": "AJOOBA Men's Suede-Finish Tassel Slip-On Loafers — A57-OLV-1.png"
+          }
+        ],
+        "unresolvedProductIds": [],
+        "hiddenBecause": null,
+        "campaignEndsAt": null
+      }
+    ],
+    "count": 5
+  },
+  "meta": {
+    "requestId": "38d11075-efee-4703-93e9-9bbfe9d147bc",
+    "timestamp": "2026-11-03T05:26:03.689Z"
+  }
+}

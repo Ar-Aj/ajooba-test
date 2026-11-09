@@ -42,31 +42,25 @@ test.describe('storefront catalogue', () => {
      */
     await expect(page.getByRole('link', { name: /Ajooba Footwear/i }).first()).toBeVisible();
 
-    /*
-     * The first screen is the specimen index, which is built from the newest
-     * *published* designs rather than from merchandising. That is deliberate:
-     * the opening screen must show real product photography even on an
-     * environment where nobody has configured a homepage yet.
-     */
-    const hero = page.locator('section[aria-labelledby="hero-heading"]');
+    /* The current opening surface is the static seasonal campaign banner. */
+    const hero = page.locator('section[aria-label="Ajooba Footwear seasonal campaign"]');
     await expect(hero).toBeVisible();
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: /Hand-finished footwear, made in Uttar Pradesh/i,
+        name: /mojris for the celebrations ahead/i,
       }),
     ).toBeVisible();
 
-    // The seeded design is the one the hero selected.
-    await expect(hero.getByText('E2E Test Mojari').first()).toBeVisible();
+    // The live catalogue specimen is rendered below the campaign banner.
+    await expect(page.getByText('E2E Test Mojari').first()).toBeVisible();
 
     /*
      * The storefront must not fabricate products. Every product link on the
      * page must point at the single design that actually exists in this
      * database — no placeholder cards, no sample catalogue.
      *
-     * This build has no homepage sections configured, so nothing below the
-     * hero contributes product links either.
+     * Only the synthetic design seeded for this test may appear as a product.
      */
     const productHrefs = await page
       .locator('a[href^="/products/"]')
@@ -95,9 +89,22 @@ test.describe('storefront catalogue', () => {
     await expect(page.getByText('₹1,500').first()).toBeVisible();
 
     // The structured data must carry the real product identity.
-    const jsonLd = await page.locator('script[type="application/ld+json"]').textContent();
-    expect(jsonLd).toContain('E2E Test Mojari');
-    expect(jsonLd).toContain('"priceCurrency":"INR"');
+    const productJsonLd = await page
+      .locator('script[type="application/ld+json"]')
+      .evaluateAll((scripts) => {
+        const product = scripts
+          .map((script) => {
+            try {
+              return JSON.parse(script.textContent ?? '') as { '@type'?: string };
+            } catch {
+              return null;
+            }
+          })
+          .find((value) => value?.['@type'] === 'Product');
+        return product ? JSON.stringify(product) : '';
+      });
+    expect(productJsonLd).toContain('E2E Test Mojari');
+    expect(productJsonLd).toContain('"priceCurrency":"INR"');
   });
 
   test('a product that does not exist returns a genuine 404, not a fake page', async ({
@@ -226,7 +233,10 @@ test.describe('colour-image verification', () => {
 
     // And the primary call to action must not offer to sell it.
     await expect(page.getByRole('button', { name: 'Add to cart' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Sold out' })).toBeDisabled();
+    const soldOutButtons = page.getByRole('button', { name: 'Sold out' });
+    await expect(soldOutButtons).toHaveCount(2);
+    await expect(soldOutButtons.nth(0)).toBeDisabled();
+    await expect(soldOutButtons.nth(1)).toBeDisabled();
   });
 
   test('a colour without photography says so plainly instead of showing another colour', async ({
@@ -261,5 +271,111 @@ test.describe('storefront resilience', () => {
     const response = await request.get(`${STOREFRONT_ORIGIN}/api/health`);
 
     expect(response.status()).toBe(200);
+  });
+});
+
+test.describe('responsive layout, keyboard navigation, and account persistence', () => {
+  test('renders key routes without horizontal overflow at 390px mobile, 1280px desktop, large-text mode, and reduced motion', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+
+    for (const viewport of [
+      { width: 390, height: 844 },
+      { width: 1280, height: 800 },
+    ]) {
+      await page.setViewportSize(viewport);
+      for (const route of [
+        '/',
+        '/products',
+        '/products/e2e-test-mojari',
+        '/cart',
+        '/checkout',
+        '/login',
+        '/contact',
+      ]) {
+        const res = await page.goto(route);
+        expect(res?.status()).toBe(200);
+        await page.evaluate(() => document.documentElement.classList.add('text-lg'));
+
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - window.innerWidth,
+        );
+        expect(overflow, `Overflow on ${route} at ${viewport.width}px`).toBeLessThanOrEqual(1);
+      }
+    }
+
+    // Mobile drawer includes Addresses link and closes on Escape.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Open navigation' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Browse' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('link', { name: 'Addresses' })).toHaveAttribute(
+      'href',
+      '/account/addresses',
+    );
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+  });
+
+  test('persists customer wishlist and address book on the server across device storage resets', async ({
+    page,
+  }) => {
+    await page.goto('/register');
+    const uniqueEmail = `e2e.sync.${Date.now()}@example.com`;
+    await page.getByLabel('Full name').fill('Meera Rathore');
+    await page.getByLabel('Email').fill(uniqueEmail);
+    await page.getByLabel(/Mobile/).fill('9876543210');
+    await page.getByLabel('Password').fill('SafePass123!');
+    await page.getByRole('button', { name: /Create account/i }).click();
+
+    // Registration must persist a real API session before the redirect fires.
+    await expect
+      .poll(() => page.evaluate(() => window.localStorage.getItem('ajooba-session-v1')), {
+        timeout: 10_000,
+      })
+      .not.toBeNull();
+
+    // The form then performs a full-page redirect to /account. Chromium can
+    // occasionally abort that navigation at the network layer
+    // (net::ERR_NETWORK_IO_SUSPENDED) even though the account was created, so
+    // fall back to an explicit navigation and assert the signed-in page renders.
+    await page.waitForURL(/\/account/, { timeout: 5_000 }).catch(async () => {
+      await page.goto('/account');
+    });
+    await expect(page).toHaveURL(/\/account/);
+    await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+
+    // Save product to wishlist on PDP
+    await page.goto('/products/e2e-test-mojari');
+    const saveBtn = page.getByRole('button', { name: /^Save$/ });
+    await saveBtn.click();
+    await expect(page.getByRole('button', { name: /^Saved$/ })).toBeVisible();
+
+    // Add a saved address in /account/addresses
+    await page.goto('/account/addresses');
+    await page.getByRole('button', { name: /Add (your first )?address/i }).first().click();
+    await page.getByLabel('Full name').fill('Meera Rathore');
+    await page.getByLabel('Mobile number').fill('9876543210');
+    await page.getByLabel('Address line 1').fill('22 MI Road, C-Scheme');
+    await page.getByLabel('City').fill('Jaipur');
+    await page.getByLabel('State').selectOption('Rajasthan');
+    await page.getByLabel('PIN code').fill('302001');
+    await page.getByRole('button', { name: 'Save address' }).click();
+    await expect(page.getByText('22 MI Road, C-Scheme')).toBeVisible();
+
+    // Wipe local wishlist & address caches while keeping the auth session token,
+    // simulating opening the account on a second device / fresh browser storage.
+    await page.evaluate(() => {
+      window.localStorage.removeItem('ajooba-wishlist-v1');
+      window.localStorage.removeItem('ajooba-addresses-v1');
+    });
+
+    await page.reload();
+    await expect(page.getByText('22 MI Road, C-Scheme')).toBeVisible();
+
+    await page.goto('/account/wishlist');
+    await expect(page.getByText('E2E Test Mojari')).toBeVisible();
   });
 });

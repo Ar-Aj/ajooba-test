@@ -381,6 +381,7 @@ const COLLECTIONS = [
   'carts',
   'orders',
   'returns',
+  'exchanges',
   'payments',
   'coupons',
   'banners',

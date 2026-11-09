@@ -127,7 +127,7 @@ export function HeroBannerFallback() {
         <div className="container-page flex h-full items-center">
           <div>
             <h1 className="max-w-3xl font-display text-[clamp(1.375rem,3.1vw,2.75rem)] leading-[1.08] text-cream-50">
-              Hand-finished footwear, made in Uttar Pradesh.
+              Find a pair for your next occasion.
             </h1>
             <Link
               href="/products"

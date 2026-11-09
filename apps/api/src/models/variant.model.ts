@@ -55,6 +55,8 @@ const variantSchema = new Schema(
      * oversell a variant.
      */
     reservedStock: { type: Number, required: true, min: 0, default: 0 },
+    /** Exchange reservations stay attached to the SKU so release/commit is idempotent. */
+    exchangeReservations: { type: [String], required: true, default: [] },
     /** `EAN/UPC` — empty across the entire source catalogue. */
     ean: { type: String, default: '' },
     /**

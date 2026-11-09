@@ -214,7 +214,7 @@ export function SavingsAvailabilitySection({ products }: { products: readonly Pr
       <div className="container-page">
         <SectionHeading
           heading="Pairs by price and savings"
-          subheading="Browse hand-finished designs grouped by direct workshop markdowns, pairs under ₹1,499, and multi-shade editions."
+          subheading="Browse catalogue designs grouped by current price reductions, pairs under ₹1,499, and multi-shade editions."
           href={activeShelf.href}
           linkLabel={`Explore all (${activeShelf.items.length})`}
         />

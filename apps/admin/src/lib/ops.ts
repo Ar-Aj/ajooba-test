@@ -7,6 +7,8 @@ import type {
   CouponInput,
   CustomerInteractionProfile,
   DashboardMetrics,
+  ExchangeRequest,
+  ExchangeStatus,
   InteractionCustomerSpectrumRow,
   InteractionInsights,
   InteractionProductProfile,
@@ -16,6 +18,10 @@ import type {
   Order,
   OrderStatus,
   ReturnRequest,
+  ReturnStatus,
+  ResolveReturnRequest,
+  InitiateRefundRequest,
+  ResolveExchangeRequest,
   StockMovement,
   UpdateCouponRequest,
 } from '@ajooba/contracts';
@@ -224,6 +230,28 @@ export async function updateOrderStatus(
 }
 
 /* -------------------------------------------------------------------------- */
+/* Size exchanges                                                             */
+/* -------------------------------------------------------------------------- */
+
+export async function fetchExchanges(query: {
+  status?: ExchangeStatus;
+  page?: number;
+  pageSize?: number;
+}): Promise<Page<ExchangeRequest>> {
+  return get<Page<ExchangeRequest>>('/v1/admin/exchanges', query as Query);
+}
+
+export async function updateExchange(
+  exchangeId: string,
+  input: ResolveExchangeRequest,
+): Promise<ExchangeRequest> {
+  return call<ExchangeRequest>(`/v1/admin/exchanges/${encodeURIComponent(exchangeId)}`, {
+    method: 'PATCH',
+    body: input,
+  });
+}
+
+/* -------------------------------------------------------------------------- */
 /* Customers                                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -366,7 +394,7 @@ export async function previewCoupon(couponId: string, subtotal: number): Promise
 /* -------------------------------------------------------------------------- */
 
 export async function fetchReturns(query: {
-  status?: string;
+  status?: ReturnStatus;
   orderId?: string;
   page?: number;
   pageSize?: number;
@@ -374,11 +402,57 @@ export async function fetchReturns(query: {
   return get<Page<ReturnRequest>>('/v1/admin/returns', query);
 }
 
+export async function updateReturnRequest(
+  returnId: string,
+  input: ResolveReturnRequest,
+): Promise<ReturnRequest> {
+  return call<ReturnRequest>(`/v1/admin/returns/${encodeURIComponent(returnId)}`, {
+    method: 'PATCH',
+    body: input,
+  });
+}
+
+export async function initiateReturnRefund(
+  returnId: string,
+  input: InitiateRefundRequest = {},
+): Promise<{
+  returnId: string;
+  returnNumber: string;
+  orderId: string;
+  refundId: string | null;
+  amountRupees: number;
+  providerStatus: string | null;
+  settled: boolean;
+  message: string;
+}> {
+  return call(`/v1/admin/returns/${encodeURIComponent(returnId)}/refund`, {
+    method: 'POST',
+    body: input,
+  });
+}
+
+export async function reconcileReturnRefund(returnId: string): Promise<{
+  returnId: string;
+  returnNumber: string;
+  orderId: string;
+  refundId: string | null;
+  amountRupees: number;
+  providerStatus: string | null;
+  settled: boolean;
+  message: string;
+}> {
+  return call(`/v1/admin/returns/${encodeURIComponent(returnId)}/reconcile`, {
+    method: 'POST',
+    body: {},
+  });
+}
+
 /** What each return status means for the operator, in one word. */
 export const RETURN_STATUS_LABEL: Readonly<Record<string, string>> = {
   requested: 'Awaiting decision',
   approved: 'Approved',
   rejected: 'Rejected',
+  received: 'Received & inspected',
   refunded: 'Refunded',
 };
 
@@ -464,9 +538,7 @@ export async function fetchProductSpectrum(query: {
   limit?: number;
   categorySlug?: string;
   sort?: 'taps' | 'views' | 'addToCart' | 'wishlist' | 'rate';
-}): Promise<
-  ProductSpectrumResponse<InteractionProductSpectrumRow>
-> {
+}): Promise<ProductSpectrumResponse<InteractionProductSpectrumRow>> {
   return get<ProductSpectrumResponse<InteractionProductSpectrumRow>>(
     '/v1/admin/analytics/products',
     query as Query,

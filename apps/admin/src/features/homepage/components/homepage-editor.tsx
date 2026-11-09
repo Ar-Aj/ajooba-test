@@ -51,7 +51,7 @@ function blankSection(type: HomepageSectionInput['type']): HomepageSectionInput 
       return {
         ...shared,
         type: 'hero',
-        heading: 'Hand-finished mojris for the celebrations ahead',
+        heading: 'Juttis, mojris and daily pairs for the season ahead',
         subheading: '',
         bannerId: '',
         ctaHref: '/products',

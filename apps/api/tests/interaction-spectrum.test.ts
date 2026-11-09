@@ -122,10 +122,7 @@ describe('the product spectrum', () => {
       surface: 'pdp-buy-box',
     });
 
-    const response = await api()
-      .get('/v1/admin/analytics/products')
-      .set(bearer(token))
-      .expect(200);
+    const response = await api().get('/v1/admin/analytics/products').set(bearer(token)).expect(200);
 
     const envelope = success<ProductSpectrumEnvelope>(response.body);
     const row = envelope.items.find((item) => item.productId === product.id);
@@ -164,10 +161,7 @@ describe('the product spectrum', () => {
       });
     }
 
-    const response = await api()
-      .get('/v1/admin/analytics/products')
-      .set(bearer(token))
-      .expect(200);
+    const response = await api().get('/v1/admin/analytics/products').set(bearer(token)).expect(200);
 
     const row = success<ProductSpectrumEnvelope>(response.body).items.find(
       (item) => item.productId === product.id,
@@ -226,10 +220,7 @@ describe('the product spectrum', () => {
 
   it('requires analytics:read', async () => {
     const customer = await customerToken();
-    await api()
-      .get('/v1/admin/analytics/products')
-      .set(bearer(customer.token))
-      .expect(403);
+    await api().get('/v1/admin/analytics/products').set(bearer(customer.token)).expect(403);
   });
 });
 
@@ -244,13 +235,23 @@ describe('the customer spectrum', () => {
     for (let tap = 0; tap < 4; tap += 1) {
       await record(
         'spectrum-session-gggg',
-        { event: 'interaction', action: 'select-size', productId: busier.id, surface: 'pdp-gallery' },
+        {
+          event: 'interaction',
+          action: 'select-size',
+          productId: busier.id,
+          surface: 'pdp-gallery',
+        },
         customer.token,
       );
     }
     await record(
       'spectrum-session-gggg',
-      { event: 'interaction', action: 'select-colour', productId: quieter.id, surface: 'pdp-gallery' },
+      {
+        event: 'interaction',
+        action: 'select-colour',
+        productId: quieter.id,
+        surface: 'pdp-gallery',
+      },
       customer.token,
     );
 
@@ -283,7 +284,12 @@ describe('the customer spectrum', () => {
     for (let tap = 0; tap < 3; tap += 1) {
       await record(
         'spectrum-session-hhhh',
-        { event: 'interaction', action: 'select-size', productId: product.id, surface: 'pdp-gallery' },
+        {
+          event: 'interaction',
+          action: 'select-size',
+          productId: product.id,
+          surface: 'pdp-gallery',
+        },
         customer.token,
       );
     }
@@ -293,9 +299,12 @@ describe('the customer spectrum', () => {
       .set(bearer(token))
       .expect(200);
 
-    const profile = success<{ productActions: readonly { productId: string; actions: readonly { key: string; taps: number }[] }[] }>(
-      response.body,
-    );
+    const profile = success<{
+      productActions: readonly {
+        productId: string;
+        actions: readonly { key: string; taps: number }[];
+      }[];
+    }>(response.body);
 
     const item = profile.productActions.find((entry) => entry.productId === product.id);
     expect(item).toBeDefined();

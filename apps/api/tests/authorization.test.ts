@@ -118,6 +118,15 @@ describe('admin token against customer routes', () => {
     expect(response.status).toBe(403);
   });
 
+  it('is rejected by the customer address book', async () => {
+    const admin = await createAdmin();
+    const token = await adminToken(admin.email, admin.password);
+
+    const response = await api().get('/v1/addresses').set(bearer(token));
+
+    expect(response.status).toBe(403);
+  });
+
   it('is rejected by the customer order list', async () => {
     const admin = await createAdmin();
     const token = await adminToken(admin.email, admin.password);

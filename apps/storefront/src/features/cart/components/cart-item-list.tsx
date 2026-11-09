@@ -15,6 +15,8 @@ interface CartItemListProps {
   lines: readonly CartLine[];
   /** Compact mode is used inside the checkout rail. */
   compact?: boolean;
+  /** Checkout renders the server cart without local-only edit controls. */
+  readOnly?: boolean;
 }
 
 /**
@@ -39,7 +41,7 @@ interface CartItemListProps {
  * - The quantity input is a real number input with a label, so it can be typed
  *   into as well as stepped.
  */
-export function CartItemList({ lines, compact = false }: CartItemListProps) {
+export function CartItemList({ lines, compact = false, readOnly = false }: CartItemListProps) {
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
@@ -109,61 +111,67 @@ export function CartItemList({ lines, compact = false }: CartItemListProps) {
                 <p className="step-xs mt-0.5 text-ink-400">{line.variantSku}</p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => remove(line)}
-                aria-label={`Remove ${line.productTitle} (UK ${line.size}) from cart`}
-                className="shrink-0 p-1.5 text-ink-400 transition-colors hover:text-claret-700"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
+              {!readOnly ? (
+                <button
+                  type="button"
+                  onClick={() => remove(line)}
+                  aria-label={`Remove ${line.productTitle} (UK ${line.size}) from cart`}
+                  className="shrink-0 p-1.5 text-ink-400 transition-colors hover:text-claret-700"
                 >
-                  <path d="M4 7h16M9 7V5h6v2M18 7l-1 13H7L6 7" strokeLinecap="round" />
-                </svg>
-              </button>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  >
+                    <path d="M4 7h16M9 7V5h6v2M18 7l-1 13H7L6 7" strokeLinecap="round" />
+                  </svg>
+                </button>
+              ) : null}
             </div>
 
             <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-4">
-              <div className="flex items-center border border-border">
-                <button
-                  type="button"
-                  onClick={() => changeQuantity(line, line.quantity - 1)}
-                  aria-label={`Decrease quantity of ${line.productTitle}`}
-                  className="btn-press h-9 w-9 text-ink-600 hover:text-ink-900"
-                >
-                  −
-                </button>
-                <label htmlFor={`qty-${line.id}`} className="sr-only">
-                  Quantity of {line.productTitle}, UK {line.size}
-                </label>
-                <input
-                  id={`qty-${line.id}`}
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={line.quantity}
-                  onChange={(event) => {
-                    const parsed = Number.parseInt(event.target.value, 10);
-                    changeQuantity(line, Number.isFinite(parsed) ? parsed : 1);
-                  }}
-                  className="tnum step-xs h-9 w-9 border-x border-border bg-transparent text-center focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => changeQuantity(line, line.quantity + 1)}
-                  aria-label={`Increase quantity of ${line.productTitle}`}
-                  disabled={line.quantity >= 10}
-                  className="btn-press h-9 w-9 text-ink-600 hover:text-ink-900 disabled:opacity-30"
-                >
-                  +
-                </button>
-              </div>
+              {readOnly ? (
+                <p className="step-xs text-ink-500">Quantity {line.quantity}</p>
+              ) : (
+                <div className="flex items-center border border-border">
+                  <button
+                    type="button"
+                    onClick={() => changeQuantity(line, line.quantity - 1)}
+                    aria-label={`Decrease quantity of ${line.productTitle}`}
+                    className="btn-press h-9 w-9 text-ink-600 hover:text-ink-900"
+                  >
+                    −
+                  </button>
+                  <label htmlFor={`qty-${line.id}`} className="sr-only">
+                    Quantity of {line.productTitle}, UK {line.size}
+                  </label>
+                  <input
+                    id={`qty-${line.id}`}
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={line.quantity}
+                    onChange={(event) => {
+                      const parsed = Number.parseInt(event.target.value, 10);
+                      changeQuantity(line, Number.isFinite(parsed) ? parsed : 1);
+                    }}
+                    className="tnum step-xs h-9 w-9 border-x border-border bg-transparent text-center focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => changeQuantity(line, line.quantity + 1)}
+                    aria-label={`Increase quantity of ${line.productTitle}`}
+                    disabled={line.quantity >= 10}
+                    className="btn-press h-9 w-9 text-ink-600 hover:text-ink-900 disabled:opacity-30"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
 
               <div className="text-right">
                 <p className="tnum step-sm text-ink-900">
@@ -198,35 +206,59 @@ export function CartItemList({ lines, compact = false }: CartItemListProps) {
  */
 export function OrderSummary({
   subtotal,
+  discount = 0,
   shipping,
+  tax = 0,
   total,
   children,
   className,
+  title = 'Order summary',
+  subtotalLabel = 'Subtotal',
 }: {
   subtotal: number;
-  shipping: number;
-  total: number;
+  discount?: number;
+  shipping?: number;
+  tax?: number;
+  total?: number;
   children?: React.ReactNode;
   className?: string;
+  title?: string;
+  subtotalLabel?: string;
 }) {
   return (
     <div className={cn('border-t-2 border-ink-900 pt-5', className)}>
-      <h2 className="label-cap text-ink-400">Order summary</h2>
+      <h2 className="label-cap text-ink-400">{title}</h2>
       <dl className="mt-4 space-y-2.5">
         <div className="flex justify-between">
-          <dt className="step-sm text-ink-600">Subtotal</dt>
+          <dt className="step-sm text-ink-600">{subtotalLabel}</dt>
           <dd className="tnum step-sm text-ink-900">{rupees(subtotal)}</dd>
         </div>
-        <div className="flex justify-between">
-          <dt className="step-sm text-ink-600">Shipping</dt>
-          <dd className="tnum step-sm text-ink-900">
-            {shipping === 0 ? 'Free' : rupees(shipping)}
-          </dd>
-        </div>
-        <div className="flex items-baseline justify-between border-t border-border pt-3">
-          <dt className="step-sm font-medium text-ink-900">Total</dt>
-          <dd className="tnum step-lg text-ink-900">{rupees(total)}</dd>
-        </div>
+        {discount > 0 ? (
+          <div className="flex justify-between">
+            <dt className="step-sm text-ink-600">Discount</dt>
+            <dd className="tnum step-sm text-claret-700">−{rupees(discount)}</dd>
+          </div>
+        ) : null}
+        {shipping !== undefined ? (
+          <div className="flex justify-between">
+            <dt className="step-sm text-ink-600">Shipping</dt>
+            <dd className="tnum step-sm text-ink-900">
+              {shipping === 0 ? 'Free' : rupees(shipping)}
+            </dd>
+          </div>
+        ) : null}
+        {tax > 0 ? (
+          <div className="flex justify-between">
+            <dt className="step-sm text-ink-600">Tax</dt>
+            <dd className="tnum step-sm text-ink-900">{rupees(tax)}</dd>
+          </div>
+        ) : null}
+        {total !== undefined ? (
+          <div className="flex items-baseline justify-between border-t border-border pt-3">
+            <dt className="step-sm font-medium text-ink-900">Total</dt>
+            <dd className="tnum step-lg text-ink-900">{rupees(total)}</dd>
+          </div>
+        ) : null}
       </dl>
       {children}
     </div>

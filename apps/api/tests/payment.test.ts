@@ -1153,7 +1153,7 @@ describe('razorpay webhook', () => {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Take an order all the way to a paid, approved return.
+ * Take an order all the way to a paid return received and inspected by staff.
  *
  * Module scope rather than nested inside `describe('refunds')` so the
  * documented-payload-shape suite can reach it too.
@@ -1171,7 +1171,14 @@ async function paidOrderWithApprovedReturn(): Promise<{
 
   await OrderModel.updateOne(
     { _id: new Types.ObjectId(order.orderId) },
-    { $set: { paymentStatus: 'paid', paymentRef: 'pay_ref' } },
+    {
+      $set: {
+        paymentStatus: 'paid',
+        paymentRef: 'pay_ref',
+        status: 'completed',
+        deliveredAt: new Date(),
+      },
+    },
   );
 
   const created = await api()
@@ -1195,6 +1202,12 @@ async function paidOrderWithApprovedReturn(): Promise<{
     .send({ status: 'approved', note: 'Approved for refund' });
   expect(approved.status).toBe(200);
 
+  const received = await api()
+    .patch(`/v1/admin/returns/${returnId}`)
+    .set(bearer(token))
+    .send({ status: 'received', note: 'Pair received and inspected' });
+  expect(received.status).toBe(200);
+
   return { order, returnId, adminToken: token };
 }
 
@@ -1208,7 +1221,7 @@ describe('refunds', () => {
     });
     await OrderModel.updateOne(
       { _id: new Types.ObjectId(order.orderId) },
-      { $set: { paymentStatus: 'paid' } },
+      { $set: { paymentStatus: 'paid', status: 'completed', deliveredAt: new Date() } },
     );
 
     const created = await api()
@@ -1231,7 +1244,7 @@ describe('refunds', () => {
       .send({});
 
     expect(response.status).toBe(409);
-    expect(failure(response.body).message).toMatch(/approve/i);
+    expect(failure(response.body).message).toMatch(/received|inspection/i);
   });
 
   it('will not refund an order that was never paid', async () => {
@@ -1246,7 +1259,7 @@ describe('refunds', () => {
       items: [],
       reason: 'other',
       reasonNote: '',
-      status: 'approved',
+      status: 'received',
       refundAmount: 100,
       requestedAt: new Date(),
     });
@@ -1260,6 +1273,43 @@ describe('refunds', () => {
       .send({});
 
     expect(response.status).toBe(409);
+  });
+
+  it('will not refund until staff receive and inspect the returned pair', async () => {
+    withRazorpay();
+    const order = await placeOnlineOrder();
+    await seedPayment(order, 'order_not_received', {
+      providerReference: 'pay_not_received',
+      status: 'paid',
+    });
+    await OrderModel.updateOne(
+      { _id: new Types.ObjectId(order.orderId) },
+      { $set: { paymentStatus: 'paid', status: 'completed', deliveredAt: new Date() } },
+    );
+    const created = await api()
+      .post('/v1/returns')
+      .set(bearer(order.token))
+      .send({
+        orderId: order.orderId,
+        items: [{ variantId: order.firstVariantId, quantity: 1 }],
+        reason: 'damaged',
+        reasonNote: '',
+      });
+    const returnId = success<{ id: string }>(created.body).id;
+    const admin = await createAdmin();
+    const token = await adminToken(admin.email, admin.password);
+    await api()
+      .patch(`/v1/admin/returns/${returnId}`)
+      .set(bearer(token))
+      .send({ status: 'approved', note: 'Approved subject to receipt' });
+
+    const response = await api()
+      .post(`/v1/admin/returns/${returnId}/refund`)
+      .set(bearer(token))
+      .send({});
+
+    expect(response.status).toBe(409);
+    expect(failure(response.body).message).toMatch(/received|inspection/i);
   });
 
   it('refuses to mark a return refunded as an administrative decision', async () => {
@@ -1276,7 +1326,7 @@ describe('refunds', () => {
     expect(response.status).toBe(422);
 
     const stored = await ReturnRequestModel.findById(returnId).lean<{ status: string }>();
-    expect(stored?.status).toBe('approved');
+    expect(stored?.status).toBe('received');
 
     const order = await OrderModel.findById(
       (await ReturnRequestModel.findById(returnId).lean<{ orderId: Types.ObjectId }>())!.orderId,
@@ -1311,7 +1361,54 @@ describe('refunds', () => {
     expect(outcome.settled).toBe(false);
 
     const stored = await ReturnRequestModel.findById(returnId).lean<{ status: string }>();
-    expect(stored?.status).toBe('approved');
+    expect(stored?.status).toBe('received');
+  });
+
+  it('reconciles a pending refund without reserving its amount twice', async () => {
+    withRazorpay();
+    const { returnId, adminToken, order } = await paidOrderWithApprovedReturn();
+
+    stubFetch({
+      id: 'rfnd_reconcile',
+      entity: 'refund',
+      amount: 150_000,
+      currency: 'INR',
+      payment_id: 'pay_ref',
+      status: 'pending',
+      created_at: 1_700_000_000,
+    });
+    const issued = await api()
+      .post(`/v1/admin/returns/${returnId}/refund`)
+      .set(bearer(adminToken))
+      .send({});
+    expect(issued.status).toBe(200);
+
+    const pendingPayment = await PaymentModel.findOne({ orderId: order.orderId }).lean<{
+      refundedAmount: number;
+    }>();
+    expect(pendingPayment?.refundedAmount).toBe(1500);
+
+    stubFetch({
+      id: 'rfnd_reconcile',
+      entity: 'refund',
+      amount: 150_000,
+      currency: 'INR',
+      payment_id: 'pay_ref',
+      status: 'processed',
+      created_at: 1_700_000_000,
+    });
+    const reconciled = await api()
+      .post(`/v1/admin/returns/${returnId}/reconcile`)
+      .set(bearer(adminToken));
+
+    expect(reconciled.status).toBe(200);
+    expect(success<{ settled: boolean }>(reconciled.body).settled).toBe(true);
+    const finalPayment = await PaymentModel.findOne({ orderId: order.orderId }).lean<{
+      refundedAmount: number;
+    }>();
+    expect(finalPayment?.refundedAmount).toBe(1500);
+    const finalReturn = await ReturnRequestModel.findById(returnId).lean<{ status: string }>();
+    expect(finalReturn?.status).toBe('refunded');
   });
 
   it('marks the return refunded only when the provider confirms', async () => {
@@ -1792,7 +1889,7 @@ describe('razorpay documented payload shape', () => {
       status: string;
       refundRef?: string;
     }>();
-    expect(returnBefore?.status).toBe('approved');
+    expect(returnBefore?.status).toBe('received');
 
     /*
      * Now the provider reports it could not process the refund. This used to
@@ -1834,7 +1931,7 @@ describe('razorpay documented payload shape', () => {
     }>();
 
     // The return is reopened so an administrator can retry.
-    expect(returnAfter?.status).toBe('approved');
+    expect(returnAfter?.status).toBe('received');
     expect(returnAfter?.refundRef).toBeUndefined();
   });
 

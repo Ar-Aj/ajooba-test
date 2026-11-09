@@ -21,8 +21,8 @@ export default function TermsPage() {
 
       <ProseSection heading="Pricing">
         <p>
-          Prices are in Indian Rupees and include GST. Shipping is shown separately, both in the
-          cart and at checkout, before you pay.
+          Prices are shown in Indian Rupees. Shipping and any applicable tax are confirmed at
+          checkout before you pay.
         </p>
         <p>
           If a price is listed in error, we will contact you before dispatch and you can confirm the
@@ -32,9 +32,9 @@ export default function TermsPage() {
 
       <ProseSection heading="Product descriptions and photography">
         <p>
-          We photograph every design ourselves and do our best to represent the colour and finish
-          accurately. Hand-finished and hand-embroidered products vary slightly from pair to pair —
-          small differences in stitching, grain and shade are the nature of the craft, not defects.
+          Product photographs and descriptions are provided for the listed design. Colours may
+          appear differently on different screens; review the selected colourway and product details
+          before ordering.
         </p>
       </ProseSection>
 
@@ -64,9 +64,9 @@ export default function TermsPage() {
 
       <ProseSection heading="Governing law">
         <p>
-          These terms are governed by the laws of India, and the courts of Uttar Pradesh have
-          jurisdiction. If you are a consumer resident elsewhere, you keep the protections of the
-          law of your own country.
+          These terms are governed by the laws of India, subject to applicable consumer protection
+          laws. If you are a consumer resident elsewhere, you keep the mandatory protections of the
+          law of your own jurisdiction.
         </p>
       </ProseSection>
     </ProsePage>

@@ -1,62 +1,130 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { useCommerce } from '@/lib/commerce-context';
-import { accountStore } from '@/lib/account-store';
-import { optionalPhone } from '@/lib/format';
+import type { CustomerProfile } from '@ajooba/contracts';
 import { Input, Field } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
+import { customerApiRequest, customerSession } from '@/lib/customer-session';
+import { optionalPhone } from '@/lib/format';
 
 export function AccountOverviewClient() {
-  const { account, orders, addresses, cart } = useCommerce();
   const { toast } = useToast();
-  const [name, setName] = useState(account?.fullName ?? '');
-  const [phone, setPhone] = useState(optionalPhone(account?.phone) ?? '');
+  const [profile, setProfile] = useState<CustomerProfile | null>(null);
+  const [orderCount, setOrderCount] = useState(0);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [authChecked, setAuthChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+
+  const loadAccount = useCallback(async () => {
+    setLoading(true);
+    setError(undefined);
+    try {
+      const [customer, orders] = await Promise.all([
+        customerApiRequest<CustomerProfile>('/v1/auth/me'),
+        customerApiRequest<{ items: unknown[]; totalItems: number }>(
+          '/v1/orders?page=1&pageSize=1',
+        ),
+      ]);
+      setProfile(customer);
+      setName(`${customer.firstName} ${customer.lastName}`.trim());
+      setPhone(optionalPhone(customer.phone) ?? '');
+      setOrderCount(orders.totalItems);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'We could not load your account.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    setName(account?.fullName ?? '');
-    setPhone(optionalPhone(account?.phone) ?? '');
-  }, [account]);
+    const session = customerSession.read();
+    setAuthChecked(true);
+    if (session) void loadAccount();
+    else setLoading(false);
+  }, [loadAccount]);
 
-  if (!account) {
+  async function save() {
+    if (!profile) return;
+    const names = name.trim().split(/\s+/).filter(Boolean);
+    if (names.length === 0) {
+      toast({ title: 'Enter your name', tone: 'warning' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const digits = phone.replace(/\D/g, '').slice(-10);
+      const updated = await customerApiRequest<CustomerProfile>('/v1/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          firstName: names[0],
+          lastName: names.slice(1).join(' '),
+          ...(digits ? { phone: `+91${digits}` } : {}),
+        }),
+      });
+      setProfile(updated);
+      setName(`${updated.firstName} ${updated.lastName}`.trim());
+      setPhone(optionalPhone(updated.phone) ?? '');
+      toast({ title: 'Profile saved', tone: 'success' });
+    } catch (cause) {
+      toast({
+        title: 'Profile could not be saved',
+        description: cause instanceof Error ? cause.message : 'Try again in a moment.',
+        tone: 'warning',
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!authChecked || loading) {
+    return (
+      <p className="step-sm text-ink-500" role="status" aria-live="polite">
+        Loading your account…
+      </p>
+    );
+  }
+
+  if (!customerSession.read()) {
     return (
       <div className="rounded-2xl border border-ink-200 bg-white p-6">
         <h2 className="font-display text-xl">Sign in to view your account</h2>
         <p className="mt-2 text-sm text-ink-500">
-          Account data lives on this device for now. Sign in or create an account to save orders,
-          addresses and your wishlist.
+          Sign in to see orders and update the profile stored with your account.
         </p>
         <div className="mt-4 flex gap-3">
           <Button intent="gold" asChild>
-            <Link href="/login">Sign in</Link>
+            <Link href="/login?next=%2Faccount">Sign in</Link>
           </Button>
           <Button intent="outline" asChild>
-            <Link href="/register">Create account</Link>
+            <Link href="/register?next=%2Faccount">Create account</Link>
           </Button>
         </div>
       </div>
     );
   }
 
-  function save() {
-    accountStore.write({
-      ...account!,
-      fullName: name.trim() || account!.fullName,
-      phone: phone.trim() || undefined,
-    });
-    toast({ title: 'Profile updated', tone: 'success' });
+  if (error || !profile) {
+    return (
+      <div className="space-y-4" role="alert">
+        <p className="step-sm text-claret-700">{error ?? 'Your account profile is unavailable.'}</p>
+        <Button intent="outline" onClick={() => void loadAccount()}>
+          Try again
+        </Button>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-ink-200 bg-white p-6">
         <h2 className="font-display text-xl">Profile</h2>
-        <p className="mt-1 text-xs text-ink-500">
-          Changes are kept on this device — sign-in is not connected yet.
-        </p>
+        <p className="mt-1 text-xs text-ink-500">Changes are saved to your customer account.</p>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Full name" htmlFor="acc-name">
             <Input
@@ -67,7 +135,7 @@ export function AccountOverviewClient() {
             />
           </Field>
           <Field label="Email" htmlFor="acc-email" hint="Used for order updates">
-            <Input id="acc-email" type="email" value={account.email} disabled readOnly />
+            <Input id="acc-email" type="email" value={profile.email} disabled readOnly />
           </Field>
           <Field label="Mobile" htmlFor="acc-phone">
             <Input
@@ -82,27 +150,28 @@ export function AccountOverviewClient() {
           </Field>
         </div>
         <div className="mt-4 flex justify-end">
-          <Button intent="primary" onClick={save}>
-            Save profile
+          <Button intent="primary" disabled={saving} onClick={() => void save()}>
+            {saving ? 'Saving…' : 'Save profile'}
           </Button>
         </div>
       </section>
 
       <section className="rounded-2xl border border-ink-200 bg-white p-6">
         <h2 className="font-display text-xl">At a glance</h2>
-        <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Orders" value={orders.length} />
-          <Stat label="Saved addresses" value={addresses.length} />
-          <Stat label="Cart items" value={cart.length} />
-          <Stat label="Member since" value={account.joinedAt.slice(0, 7)} />
+        <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Stat label="Orders" value={orderCount} />
+          <Stat
+            label="Member since"
+            value={new Date(profile.createdAt).toLocaleDateString('en-IN', {
+              month: 'short',
+              year: 'numeric',
+            })}
+          />
         </ul>
-        <div className="mt-4">
-          <Badge intent="warning">Local-only data</Badge>
-          <span className="ml-2 text-xs text-ink-500">
-            This device remembers your activity. Customer accounts on a server land in the next
-            phase.
-          </span>
-        </div>
+        <p className="mt-4 text-xs text-ink-500">
+          Order history, saved addresses and your wishlist are stored with your account. Your
+          shopping cart stays in this browser until you check out.
+        </p>
       </section>
     </div>
   );

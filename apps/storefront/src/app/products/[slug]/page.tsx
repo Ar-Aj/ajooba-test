@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { ApiRequestError, fetchCategories, fetchProductBySlug } from '@/lib/api';
+import { storefrontEnv } from '@/lib/env';
 import { mediaUrl } from '@/lib/media';
 import { ProductGallerySection } from '@/features/catalog/components/product-gallery-section';
 import { ProductAttributes } from '@/features/catalog/components/product-attributes';
@@ -158,26 +158,56 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
             },
-          }),
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: new URL('/', storefrontEnv.NEXT_PUBLIC_SITE_URL).toString(),
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Shop',
+                item: new URL('/products', storefrontEnv.NEXT_PUBLIC_SITE_URL).toString(),
+              },
+              ...(categoryHref
+                ? [
+                    {
+                      '@type': 'ListItem',
+                      position: 3,
+                      name: categoryName,
+                      item: new URL(categoryHref, storefrontEnv.NEXT_PUBLIC_SITE_URL).toString(),
+                    },
+                  ]
+                : []),
+              {
+                '@type': 'ListItem',
+                position: categoryHref ? 4 : 3,
+                name: product.title,
+                item: new URL(
+                  `/products/${encodeURIComponent(product.slug)}`,
+                  storefrontEnv.NEXT_PUBLIC_SITE_URL,
+                ).toString(),
+              },
+            ],
+          }).replace(/</g, '\\u003c'),
         }}
       />
 
       <ProductGallerySection product={product} />
 
       <ProductAttributes product={product} />
-
-      {/* Schema.org breadcrumb, mirrored for crawlers. */}
-      <nav aria-label="Breadcrumb" className="sr-only">
-        <ol>
-          <li>
-            <Link href="/">Home</Link>
-          </li>
-          <li>
-            <Link href="/products">Shop</Link>
-          </li>
-          <li aria-current="page">{product.title}</li>
-        </ol>
-      </nav>
 
       {primary ? <p className="sr-only">Reference image {primary.sourceFile}</p> : null}
     </div>

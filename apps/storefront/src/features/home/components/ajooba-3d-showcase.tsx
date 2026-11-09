@@ -190,32 +190,42 @@ export function Ajooba3DShowcase({
     if (!account) {
       toast({
         title: 'Sign in to save designs',
-        description: 'Sign in once to keep your saved colourways across devices.',
+        description: 'Sign in to save this design to your account wishlist.',
         tone: 'warning',
         action: { label: 'Sign in', href: `/login?next=${encodeURIComponent(pathname)}` },
       });
       return;
     }
     const lineImage = primaryWay.images[0] ?? product.images[0];
-    const result = wishlistStore.toggle({
-      productId: product.id,
-      productSlug: product.slug,
-      productTitle: product.title,
-      productCode: product.code,
-      unitPrice: displayPrice,
-      unitMrp: displayMrp,
-      ...(lineImage ? { imageUrl: mediaUrl(lineImage.url), imageAlt: lineImage.alt } : {}),
-    });
-    toast({
-      title: result.added ? 'Saved to your wishlist' : 'Removed from your wishlist',
-      tone: 'info',
-    });
-    trackWishlist({
-      productId: product.id,
-      surface: 'pdp-buy-box',
-      saved: result.added,
-      categorySlug: product.subcategorySlug,
-    });
+    void wishlistStore
+      .toggleRemote({
+        productId: product.id,
+        productSlug: product.slug,
+        productTitle: product.title,
+        productCode: product.code,
+        unitPrice: displayPrice,
+        unitMrp: displayMrp,
+        ...(lineImage ? { imageUrl: mediaUrl(lineImage.url), imageAlt: lineImage.alt } : {}),
+      })
+      .then((result) => {
+        toast({
+          title: result.added ? 'Saved to your wishlist' : 'Removed from your wishlist',
+          tone: 'info',
+        });
+        trackWishlist({
+          productId: product.id,
+          surface: 'pdp-buy-box',
+          saved: result.added,
+          categorySlug: product.subcategorySlug,
+        });
+      })
+      .catch((error: unknown) => {
+        toast({
+          title: 'Could not update wishlist',
+          description: error instanceof Error ? error.message : 'Please try again in a moment.',
+          tone: 'warning',
+        });
+      });
   };
 
   const isDefaultHeading = !heading || heading.trim().toLowerCase() === 'the ajooba edit';
@@ -670,7 +680,7 @@ export function Ajooba3DShowcase({
               </div>
               <PriceSavings mrp={displayMrp} sellingPrice={displayPrice} className="mt-1.5" />
               <p className="step-xs mt-1.5 text-ink-500">
-                Inclusive of all taxes · Free shipping across India over ₹1,499
+                Delivery charge and final total are confirmed at checkout.
               </p>
             </div>
 

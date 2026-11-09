@@ -2,17 +2,7 @@
 
 import { readJSON, writeJSON } from './safe-storage';
 
-/**
- * Account / session placeholder.
- *
- * Auth is **not implemented** in this phase (`docs/API_CONTRACT.md` § 1.5
- * and `docs/ARCHITECTURE.md` § Deliberate non-goals). The customer surfaces
- * still need a way to let a logged-out person explore the account section:
- * the local account record is a single name + email per device, stored in
- * localStorage, never sent anywhere. It exists so that header state and
- * route guards can show a coherent "you're signed in as X" experience
- * without ever making a real auth claim.
- */
+/** A display-only mirror of the authenticated customer for the client header. */
 
 export interface LocalAccount {
   fullName: string;

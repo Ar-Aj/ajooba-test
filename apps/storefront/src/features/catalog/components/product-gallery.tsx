@@ -106,8 +106,8 @@ export function ProductGallery({
                 : 'No image is available for this design yet'}
             </p>
             <p className="step-sm mt-2 max-w-xs text-ink-500">
-              We photograph every colourway before it goes on sale. This one is still with our
-              studio — write to us and we will send you pictures or tell you when they land.
+              We photograph every colourway before it goes on sale. Verified studio photographs for
+              this colourway are pending review, so this colour is not on sale yet.
             </p>
           </div>
         </div>

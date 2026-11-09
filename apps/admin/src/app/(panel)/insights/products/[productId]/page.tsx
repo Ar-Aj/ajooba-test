@@ -140,7 +140,8 @@ export default async function ProductProfilePage({
   const title = product?.title ?? 'A design no longer in the catalogue';
   const empty = profile.totals.productViews === 0 && profile.totals.taps === 0;
 
-  const addRate = profile.funnel.viewed === 0 ? 0 : profile.funnel.addedToCart / profile.funnel.viewed;
+  const addRate =
+    profile.funnel.viewed === 0 ? 0 : profile.funnel.addedToCart / profile.funnel.viewed;
   const intentRate =
     profile.funnel.configured === 0 ? 0 : profile.funnel.addedToCart / profile.funnel.configured;
 

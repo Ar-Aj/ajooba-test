@@ -567,6 +567,7 @@ describe('email templates', () => {
       status: 'rejected',
       refundAmount: 0,
       refundRef: null,
+      resolutionNote: null,
       requestedAt: new Date().toISOString(),
       resolvedAt: new Date().toISOString(),
     } satisfies ReturnRequest;
@@ -688,6 +689,10 @@ describe('outbox durability', () => {
     const order = await placeOnlineOrder({ email: ALLOWED_RECIPIENT });
     const paymentId = await seedPayment(order);
     await capturePayment(order, paymentId);
+    await OrderModel.updateOne(
+      { _id: new Types.ObjectId(order.orderId) },
+      { $set: { status: 'completed', deliveredAt: new Date() } },
+    );
 
     expect((await EmailLogModel.find({ template: 'order-confirmation' }).lean())[0]!.status).toBe(
       'failed',
@@ -738,6 +743,10 @@ describe('outbox durability', () => {
     const order = await placeOnlineOrder({ email: ALLOWED_RECIPIENT });
     const paymentId = await seedPayment(order);
     await capturePayment(order, paymentId);
+    await OrderModel.updateOne(
+      { _id: new Types.ObjectId(order.orderId) },
+      { $set: { status: 'completed', deliveredAt: new Date() } },
+    );
 
     // Drive past the budget.
     for (let i = 0; i < 8; i += 1) {
@@ -842,6 +851,10 @@ describe('order lifecycle notifications', () => {
     const order = await placeOnlineOrder({ email: ALLOWED_RECIPIENT });
     const paymentId = await seedPayment(order);
     await capturePayment(order, paymentId);
+    await OrderModel.updateOne(
+      { _id: new Types.ObjectId(order.orderId) },
+      { $set: { status: 'completed', deliveredAt: new Date() } },
+    );
 
     const projected = await loadOrder(order.orderId);
     const token = await customerToken(ALLOWED_RECIPIENT, 'TestPassw0rd!2026');
@@ -975,6 +988,10 @@ describe('outbox re-rendering', () => {
     const order = await placeOnlineOrder({ email: ALLOWED_RECIPIENT });
     const paymentId = await seedPayment(order);
     await capturePayment(order, paymentId);
+    await OrderModel.updateOne(
+      { _id: new Types.ObjectId(order.orderId) },
+      { $set: { status: 'completed', deliveredAt: new Date() } },
+    );
 
     const projected = await loadOrder(order.orderId);
     const token = await customerToken(ALLOWED_RECIPIENT, 'TestPassw0rd!2026');

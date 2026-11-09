@@ -82,10 +82,10 @@ function isSettled(providerStatus: string | null | undefined): boolean {
 }
 
 /**
- * Issue a refund for an approved return.
+ * Issue a refund for a received and inspected return.
  *
  * Preconditions, all enforced server-side:
- *   - the return must exist and be `approved` (or already `refunded`);
+ *   - the return must exist and be `received` (or already `refunded`);
  *   - the underlying order must have been **paid** — a cash-on-delivery
  *     order has nothing to refund through a gateway;
  *   - there must be a captured payment to refund against;
@@ -147,8 +147,24 @@ export async function issueRefundForReturn(
     );
   }
 
-  if (doc.status !== 'approved') {
-    throw new ConflictError(`A return in "${doc.status}" cannot be refunded. Approve it first.`);
+  if (doc.status !== 'received') {
+    throw new ConflictError(
+      `A return in "${doc.status}" cannot be refunded. Confirm receipt and inspection first.`,
+    );
+  }
+
+  const otherInFlight = await ReturnRequestModel.findOne({
+    orderId: doc.orderId,
+    _id: { $ne: doc._id },
+    status: 'received',
+    refundRef: { $exists: true, $nin: [null, ''] },
+  })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+  if (otherInFlight) {
+    throw new ConflictError(
+      'Another refund for this order is still being processed. Check its provider status first.',
+    );
   }
 
   if (!isRazorpayConfigured()) {
@@ -278,7 +294,7 @@ export async function issueRefundForReturn(
  *
  * What it does:
  *
- *  - reopens the return to `approved`, so an administrator can retry;
+ *  - reopens the return to `received`, so an administrator can retry after review;
  *  - removes the `refundRef` so the return is no longer "in flight";
  *  - restores the order's refundable balance by decrementing the amount
  *    that had been provisionally reserved against it.
@@ -313,7 +329,7 @@ export async function reconcileFailedRefund(
 
   await ReturnRequestModel.updateOne(
     { _id: doc._id },
-    { $set: { status: 'approved' }, $unset: { refundRef: 1 } },
+    { $set: { status: 'received' }, $unset: { refundRef: 1 } },
   );
 
   /*
@@ -408,20 +424,34 @@ async function applyRefundToRecords(
 ): Promise<void> {
   const settled = isSettled(providerStatus);
 
-  await ReturnRequestModel.updateOne(
-    { _id: doc._id },
-    { $set: { refundRef: refundId, refundAmount: amount } },
-  );
+  if (doc.refundRef && doc.refundRef !== refundId) {
+    throw new ConflictError('A different provider refund is already recorded for this return.');
+  }
 
   /*
    * The payment's `refundedAmount` is incremented, not overwritten, so
-   * several partial refunds accumulate correctly. The conditional filter
-   * keeps two concurrent refund paths from both incrementing.
+   * several partial refunds accumulate correctly. The provider id keeps a
+   * pending refund from being reserved a second time when it is reconciled.
    */
-  await PaymentModel.updateOne(
-    { orderId: doc.orderId, status: { $in: ['paid', 'partially_refunded'] } },
-    { $inc: { refundedAmount: amount }, $set: { refundRef: refundId } },
-  );
+  if (doc.refundRef !== refundId) {
+    await PaymentModel.updateOne(
+      {
+        orderId: doc.orderId,
+        status: { $in: ['paid', 'partially_refunded'] },
+        refundRef: { $ne: refundId },
+      },
+      { $inc: { refundedAmount: amount }, $set: { refundRef: refundId } },
+    );
+
+    await ReturnRequestModel.updateOne(
+      {
+        _id: doc._id,
+        status: { $in: ['received', 'refunded'] },
+        $or: [{ refundRef: { $exists: false } }, { refundRef: null }, { refundRef: refundId }],
+      },
+      { $set: { refundRef: refundId, refundAmount: amount } },
+    );
+  }
 
   if (settled) {
     const { refundable } = await refundableAmountForOrder(doc.orderId);
@@ -437,7 +467,7 @@ async function applyRefundToRecords(
 
     // Only a provider-confirmed refund may move the return to `refunded`.
     await ReturnRequestModel.updateOne(
-      { _id: doc._id, status: 'approved' },
+      { _id: doc._id, status: 'received' },
       { $set: { status: 'refunded', resolvedAt: new Date() } },
     );
 
@@ -618,4 +648,26 @@ export async function reconcileRefund(
       ? 'The refund has been completed.'
       : 'The refund is still being processed.',
   };
+}
+
+/** Reconcile the provider state for a return that already has a refund ID. */
+export async function reconcileReturnRefund(
+  returnId: string,
+  correlationId: string,
+): Promise<RefundOutcome> {
+  if (!Types.ObjectId.isValid(returnId)) {
+    throw new NotFoundError('Return request');
+  }
+
+  const doc = await ReturnRequestModel.findById(returnId)
+    .select('refundRef')
+    .lean<{ refundRef?: string } | null>();
+  if (!doc) {
+    throw new NotFoundError('Return request');
+  }
+  if (!doc.refundRef) {
+    throw new ConflictError('There is no provider refund to reconcile for this return.');
+  }
+
+  return reconcileRefund(doc.refundRef, correlationId);
 }

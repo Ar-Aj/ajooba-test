@@ -227,7 +227,8 @@ export async function verifyOAuthState(
 
   return {
     provider: expectedProvider,
-    next: typeof payload.next === 'string' && payload.next.startsWith('/') ? payload.next : '/account',
+    next:
+      typeof payload.next === 'string' && payload.next.startsWith('/') ? payload.next : '/account',
   };
 }
 

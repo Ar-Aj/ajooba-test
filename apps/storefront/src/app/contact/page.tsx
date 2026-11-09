@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ProsePage, ProseSection, ProseList } from '@/components/layout/prose-page';
+import { ProsePage, ProseSection } from '@/components/layout/prose-page';
+import { fetchStoreSettings } from '@/lib/api';
 
 /**
  * Contact page.
@@ -13,8 +14,7 @@ import { ProsePage, ProseSection, ProseList } from '@/components/layout/prose-pa
 
 export const metadata: Metadata = {
   title: 'Contact us',
-  description:
-    'Reach Ajooba Footwear customer care for order help, sizing advice, returns and anything else.',
+  description: 'Find order, return and size-exchange help for Ajooba Footwear.',
   alternates: { canonical: '/contact' },
 };
 
@@ -37,11 +37,20 @@ export default async function ContactPage({
 }) {
   const params = await searchParams;
   const designCode = readDesignCode(params.design);
+  const settings = await fetchStoreSettings();
+  const supportEmail =
+    settings?.supportEmail && settings.supportEmail !== 'support@ajooba.in'
+      ? settings.supportEmail
+      : null;
+  const supportPhone =
+    settings?.supportPhone && settings.supportPhone !== '+919876543210'
+      ? settings.supportPhone
+      : null;
 
   return (
     <ProsePage
       title="Contact us"
-      lede="Customer care is open Monday to Saturday, 10am to 7pm IST. We answer email within one working day."
+      lede="For an existing order, sign in to check its status or request an eligible return or size exchange."
     >
       {designCode ? (
         <section className="rounded-2xl border border-gold-300 bg-gold-50 px-5 py-4">
@@ -49,31 +58,58 @@ export default async function ContactPage({
             Your enquiry is about design {designCode}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-gold-800">
-            Please include <strong>{designCode}</strong> when you write to us — it lets us check the
-            sizes we have made and the stock position for that design straight away.
+            Keep this code handy when asking about this design: <strong>{designCode}</strong>.
           </p>
         </section>
       ) : null}
 
-      <ProseSection heading="Reach us directly">
-        <ProseList
-          items={[
-            'Email: care@ajoobafootwear.com — we reply within one working day.',
-            'Phone: +91 80000 12345 — Monday to Saturday, 10am to 7pm IST.',
-            'WhatsApp: the same number, for order updates and sizing advice.',
-          ]}
-        />
+      <ProseSection heading="Customer care">
+        {supportEmail || supportPhone ? (
+          <ul className="space-y-2 text-ink-700">
+            {supportEmail ? (
+              <li>
+                Email:{' '}
+                <a className="underline underline-offset-4" href={`mailto:${supportEmail}`}>
+                  {supportEmail}
+                </a>
+              </li>
+            ) : null}
+            {supportPhone ? (
+              <li>
+                Phone:{' '}
+                <a className="underline underline-offset-4" href={`tel:${supportPhone}`}>
+                  {supportPhone}
+                </a>
+              </li>
+            ) : null}
+          </ul>
+        ) : (
+          <p>
+            A customer-care email address or phone number has not been configured yet. For an
+            existing order, sign in to view the latest status or open an eligible return or size
+            exchange request.
+          </p>
+        )}
       </ProseSection>
 
-      <ProseSection heading="What to tell us when you write">
+      <ProseSection heading="Order and exchange help">
         <p>
-          If your question is about an order, please include your order reference. It is the long
-          code in your confirmation email, and it lets us find your parcel immediately rather than
-          searching through orders.
+          Order history and request status are available in your account. A size exchange must be
+          for the same design and colour, requested within 10 days of delivery, and approved after
+          the replacement size is checked for stock.
         </p>
         <p>
-          If it is about fit, it helps to know your usual UK size in the shoes you already own, and
-          whether you usually wear a half size up.
+          <Link href="/account/orders" className="font-medium underline underline-offset-4">
+            View your orders
+          </Link>
+          {' · '}
+          <Link href="/account/exchanges" className="font-medium underline underline-offset-4">
+            Size exchanges
+          </Link>
+          {' · '}
+          <Link href="/returns" className="font-medium underline underline-offset-4">
+            Return policy
+          </Link>
         </p>
       </ProseSection>
 
@@ -90,13 +126,13 @@ export default async function ContactPage({
             >
               Shipping
             </Link>{' '}
-            — delivery times, charges and cash on delivery.
+            — current delivery charges and payment availability at checkout.
           </li>
           <li>
             <Link href="/returns" className="font-medium text-ink-900 underline underline-offset-4">
               Returns &amp; exchanges
             </Link>{' '}
-            — the 10-day window, reverse pickup and how refunds work.
+            — the 10-day window, return approval and how size exchanges work.
           </li>
           <li>
             <Link
@@ -120,13 +156,6 @@ export default async function ContactPage({
             — what we collect and what we never do with it.
           </li>
         </ul>
-      </ProseSection>
-
-      <ProseSection heading="Press and partnerships">
-        <p>
-          For wholesale enquiries, press samples or collaboration opportunities, write to the same
-          address with “Enquiry” in the subject line and we will route it to the right person.
-        </p>
       </ProseSection>
     </ProsePage>
   );

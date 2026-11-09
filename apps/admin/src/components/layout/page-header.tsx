@@ -53,7 +53,10 @@ export function PageHeader({
           <div className="min-w-0">
             {eyebrow ? (
               <p className="flex items-center gap-2 text-[0.8125rem] font-medium text-ink-500">
-                <span className="inline-block h-1 w-1 rounded-full bg-rose-500" aria-hidden="true" />
+                <span
+                  className="inline-block h-1 w-1 rounded-full bg-rose-500"
+                  aria-hidden="true"
+                />
                 {eyebrow}
               </p>
             ) : null}
@@ -237,7 +240,9 @@ export function Notice({
         {prefix[tone]}
         {title}
       </p>
-      {children ? <div className="mt-1.5 text-[1rem] leading-relaxed opacity-90">{children}</div> : null}
+      {children ? (
+        <div className="mt-1.5 text-[1rem] leading-relaxed opacity-90">{children}</div>
+      ) : null}
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );

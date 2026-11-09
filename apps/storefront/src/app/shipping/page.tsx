@@ -4,7 +4,7 @@ import { ProsePage, ProseSection, ProseList } from '@/components/layout/prose-pa
 export const metadata: Metadata = {
   title: 'Shipping',
   description:
-    'How Ajooba Footwear orders are dispatched, what delivery costs, and where we ship across India.',
+    'Shipping charges, delivery availability and tracking information for Ajooba Footwear orders.',
   alternates: { canonical: '/shipping' },
 };
 
@@ -12,47 +12,39 @@ export default function ShippingPage() {
   return (
     <ProsePage
       title="Shipping"
-      lede="We dispatch every order by hand from our packing unit in Uttar Pradesh."
+      lede="Your shipping charge is shown in the order total before you pay."
     >
       <ProseSection heading="Delivery times and charges">
         <ProseList
           items={[
-            'Orders placed before 2pm IST on a working day are dispatched the same day.',
-            'Metro cities: 2–4 working days. Rest of India: 4–7 working days.',
-            'Shipping is free on orders above ₹1,499. Below that, a flat ₹99 courier fee applies.',
-            'Express delivery is available for ₹149 and reaches metro cities in 2 working days.',
-            'Cash on delivery is available on orders up to ₹10,000.',
+            'The current shipping charge and order total are confirmed at checkout before payment.',
+            'Courier availability and delivery estimates can vary by destination PIN code.',
+            'Cash on delivery appears at checkout only when the store has enabled it and the order total is within the configured limit.',
           ]}
         />
       </ProseSection>
 
-      <ProseSection heading="What we ship to">
+      <ProseSection heading="Delivery availability">
         <p>
-          We ship to every serviceable PIN code in India. Some remote or tribal-area PIN codes are
-          served by courier at a higher rate, and some are not served at all — if that happens you
-          will be told before your order is dispatched, and you can choose to cancel for a full
-          refund.
+          Courier serviceability depends on the destination PIN code and is checked when your order
+          is processed.
         </p>
-        <p>
-          We do not currently ship internationally. If you are outside India and want to order,
-          write to us and we will tell you honestly what is and is not possible.
-        </p>
+        <p>International delivery is not currently offered.</p>
       </ProseSection>
 
       <ProseSection heading="Tracking">
         <p>
-          You will receive an email with the tracking link as soon as the courier collects your
-          parcel. Tracking can take up to 24 hours to show the first scan, because the parcel is
-          scanned in at the origin hub before it moves.
+          When the carrier provides tracking details, we share them after dispatch. The first scan
+          may take time to appear in the carrier system.
         </p>
-        <p>You can also check the status of any order from your account page.</p>
+        <p>Order and dispatch status are available from your account under Orders.</p>
       </ProseSection>
 
       <ProseSection heading="If something goes wrong">
         <p>
-          If your parcel is delayed beyond the promised window, or arrives damaged, contact us with
-          your order reference and a photograph of the packaging. We will arrange a replacement or a
-          refund — you will not need to chase the courier.
+          If a parcel arrives damaged or with the wrong item, submit a return request from your
+          account within 10 days of delivery with your order reference and a photograph of the
+          packaging, or check the contact page for available support options.
         </p>
       </ProseSection>
     </ProsePage>

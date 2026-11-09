@@ -5,8 +5,24 @@ import {
   type CategoryView,
   type Product,
   type ResolvedHomepageSection,
+  type StoreSettings,
 } from '@ajooba/contracts';
-import { apiUrl } from './env';
+import { apiUrl, storefrontEnv } from './env';
+import {
+  getFallbackCategories,
+  getFallbackFacets,
+  getFallbackHomepageSections,
+  getFallbackProductBySlug,
+  getFallbackProductsIndex,
+  queryFallbackProducts,
+} from './fallback-catalog';
+
+function hasApi(): boolean {
+  return (
+    typeof storefrontEnv.API_INTERNAL_URL === 'string' &&
+    storefrontEnv.API_INTERNAL_URL.trim().length > 0
+  );
+}
 
 /**
  * Server-side API client for the storefront.
@@ -146,6 +162,9 @@ export async function fetchProducts(
   query: Partial<Record<string, unknown>> = {},
 ): Promise<CatalogListResult> {
   const parsed = catalogQuerySchema.parse(query);
+  if (!hasApi()) {
+    return queryFallbackProducts(parsed);
+  }
   const path = `/v1/catalog/products${toQueryString(parsed)}`;
   return get<CatalogListResult>(path);
 }
@@ -158,6 +177,9 @@ export async function fetchProducts(
  * a 404 for a product that may well exist would be a lie.
  */
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
+  if (!hasApi()) {
+    return getFallbackProductBySlug(slug);
+  }
   try {
     return await get<Product>(`/v1/catalog/products/${encodeURIComponent(slug)}`);
   } catch (error) {
@@ -180,8 +202,15 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
  * catalogue because the count endpoint blipped would be a much worse trade.
  */
 export async function fetchCatalogFacets(): Promise<CatalogFacets | null> {
+  if (!hasApi()) {
+    return getFallbackFacets();
+  }
   try {
-    return await get<CatalogFacets>('/v1/catalog/facets');
+    const result = await get<CatalogFacets>('/v1/catalog/facets');
+    if (result && result.subcategories && result.subcategories.length > 0) {
+      return result;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -202,6 +231,9 @@ export async function fetchCatalogFacets(): Promise<CatalogFacets | null> {
  * outcome than the whole storefront erroring because one read failed.
  */
 export async function fetchCategories(): Promise<readonly CategoryView[]> {
+  if (!hasApi()) {
+    return getFallbackCategories();
+  }
   try {
     const result = await get<{ items: CategoryView[]; count: number }>('/v1/catalog/categories');
     return result.items ?? [];
@@ -224,6 +256,9 @@ export async function fetchCategories(): Promise<readonly CategoryView[]> {
  * renders its thin version, exactly as it did before enrichment existed.
  */
 export async function fetchCatalogueIndex(): Promise<Record<string, Product>> {
+  if (!hasApi()) {
+    return getFallbackProductsIndex();
+  }
   const index: Record<string, Product> = {};
   try {
     let page = 1;
@@ -254,6 +289,9 @@ export async function fetchCatalogueIndex(): Promise<Record<string, Product>> {
  * unavailable, and a merchandising outage should not take the shop offline.
  */
 export async function fetchHomepage(): Promise<ResolvedHomepageSection[]> {
+  if (!hasApi()) {
+    return getFallbackHomepageSections();
+  }
   try {
     /*
      * Deliberately NOT cached like the catalogue.
@@ -274,9 +312,38 @@ export async function fetchHomepage(): Promise<ResolvedHomepageSection[]> {
     const body = (await response.json()) as ApiEnvelope<{
       sections: ResolvedHomepageSection[];
     }>;
-    if (!body.ok || body.data === undefined) return [];
+    if (!body.ok || body.data === undefined) {
+      return [];
+    }
     return body.data.sections ?? [];
   } catch {
     return [];
+  }
+}
+
+/**
+ * Fetch public store settings for customer-facing contact information.
+ * Returns null during an API outage so the page can avoid inventing details.
+ */
+export async function fetchStoreSettings(): Promise<StoreSettings | null> {
+  if (!hasApi()) {
+    return {
+      storeName: 'Ajooba Footwear',
+      supportEmail: 'contact@ajoobafootwear.com',
+      supportPhone: '+91 98765 43210',
+      currency: 'INR',
+      shippingFee: 0,
+      freeShippingThreshold: 999,
+      taxRateBps: 0,
+      taxInclusive: true,
+      isCodEnabled: true,
+      announcement: 'Free delivery on all prepaid orders across India.',
+      updatedAt: '2026-10-23T00:00:00.000Z',
+    };
+  }
+  try {
+    return await get<StoreSettings>('/v1/content/settings');
+  } catch {
+    return null;
   }
 }

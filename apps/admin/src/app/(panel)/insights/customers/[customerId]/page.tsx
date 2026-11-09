@@ -474,7 +474,10 @@ export default async function CustomerProfilePage({
                 flush
               >
                 {profile.recent.length === 0 ? (
-                  <EmptyState title="No events" description="Nothing was recorded in this window." />
+                  <EmptyState
+                    title="No events"
+                    description="Nothing was recorded in this window."
+                  />
                 ) : (
                   <ul className="divide-y divide-border">
                     {profile.recent.map((event) => (

@@ -610,18 +610,27 @@ export async function getInteractionInsights(
   const match: Record<string, unknown> = { occurredAt: { $gte: since } };
   if (options.categorySlug) match.categorySlug = options.categorySlug;
 
-  const [totals, funnel, trendRows, surfaces, actions, products, categories, devices, topSearchTerms] =
-    await Promise.all([
-      totalsFor(match),
-      funnelFor(match),
-      trendFor(match),
-      bucketFor(match, 'surface', SURFACE_LABELS, 0),
-      bucketFor(match, 'action', ACTION_LABELS, 0),
-      productRowsFor(match, limit),
-      categoryRowsFor(match, limit),
-      devicesFor(match),
-      topSearchTermsFor(match, 10),
-    ]);
+  const [
+    totals,
+    funnel,
+    trendRows,
+    surfaces,
+    actions,
+    products,
+    categories,
+    devices,
+    topSearchTerms,
+  ] = await Promise.all([
+    totalsFor(match),
+    funnelFor(match),
+    trendFor(match),
+    bucketFor(match, 'surface', SURFACE_LABELS, 0),
+    bucketFor(match, 'action', ACTION_LABELS, 0),
+    productRowsFor(match, limit),
+    categoryRowsFor(match, limit),
+    devicesFor(match),
+    topSearchTermsFor(match, 10),
+  ]);
 
   /*
    * The surface and action shares are resolved here rather than inside their

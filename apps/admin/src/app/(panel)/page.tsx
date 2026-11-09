@@ -1,7 +1,13 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import type { DashboardMetrics } from '@ajooba/contracts';
-import { EmptyState, HeaderFact, PageHeader, Panel, WindowTabs } from '@/components/layout/page-header';
+import {
+  EmptyState,
+  HeaderFact,
+  PageHeader,
+  Panel,
+  WindowTabs,
+} from '@/components/layout/page-header';
 import { BarSeries, ProportionBar, Sparkline } from '@/components/ui/charts';
 import { Figure, Metric } from '@/components/ui/metric';
 import { Status, orderStatusTone } from '@/components/ui/status';
