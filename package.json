@@ -38,7 +38,8 @@
     "mcp:verify": "node scripts/mcp/verify-mcp-connection.mjs",
     "mcp:inspect": "node scripts/mcp/inspect-dev-db.mjs",
     "readiness": "node scripts/readiness-check.mjs",
-    "env:check": "node scripts/env-inventory-check.mjs"
+    "env:check": "node scripts/env-inventory-check.mjs",
+    "db:setup": "node scripts/setup-production-db.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
