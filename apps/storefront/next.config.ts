@@ -116,6 +116,29 @@ const nextConfig: NextConfig = {
       { source: '/shop', destination: '/products', permanent: true },
     ];
   },
+
+  async rewrites() {
+    const apiTarget = (
+      process.env.API_SERVICE_URL ??
+      process.env.API_INTERNAL_URL ??
+      (process.env.NEXT_PUBLIC_API_URL?.startsWith('http')
+        ? process.env.NEXT_PUBLIC_API_URL
+        : undefined)
+    )?.replace(/\/$/, '');
+
+    if (!apiTarget) return [];
+
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${apiTarget}/v1/:path*`,
+      },
+      {
+        source: '/v1/:path*',
+        destination: `${apiTarget}/v1/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

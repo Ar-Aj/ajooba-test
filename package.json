@@ -17,7 +17,14 @@
     "dev:api": "pnpm --filter @ajooba/api dev",
     "build": "pnpm -r --filter \"./apps/*\" build",
     "build:contracts": "pnpm --filter @ajooba/contracts build",
+    "build:storefront": "pnpm --filter @ajooba/contracts build && pnpm --filter @ajooba/storefront build",
+    "build:admin": "pnpm --filter @ajooba/contracts build && pnpm --filter @ajooba/admin build",
+    "build:api": "pnpm --filter @ajooba/contracts build && pnpm --filter @ajooba/api build",
     "start": "pnpm -r --filter \"./apps/*\" start",
+    "start:storefront": "pnpm --filter @ajooba/storefront start",
+    "start:admin": "pnpm --filter @ajooba/admin start",
+    "start:api": "pnpm --filter @ajooba/api start",
+    "db:seed:prod": "node scripts/seed-production.mjs",
     "lint": "pnpm -r lint",
     "lint:fix": "pnpm -r lint:fix",
     "format": "pnpm -r format",
@@ -38,8 +45,7 @@
     "mcp:verify": "node scripts/mcp/verify-mcp-connection.mjs",
     "mcp:inspect": "node scripts/mcp/inspect-dev-db.mjs",
     "readiness": "node scripts/readiness-check.mjs",
-    "env:check": "node scripts/env-inventory-check.mjs",
-    "db:setup": "node scripts/setup-production-db.mjs"
+    "env:check": "node scripts/env-inventory-check.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

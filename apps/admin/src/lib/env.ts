@@ -13,16 +13,21 @@ function readServerEnv(): Record<string, string | undefined> {
     publicApi && (publicApi.startsWith('http://') || publicApi.startsWith('https://'))
       ? publicApi
       : undefined;
+  const isProd = process.env.NODE_ENV === 'production';
 
   return {
     NODE_ENV: process.env.NODE_ENV,
     API_INTERNAL_URL:
       process.env.API_SERVICE_URL ?? process.env.API_INTERNAL_URL ?? explicitPublicOrigin,
     NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL ?? (process.env.VERCEL ? '/api' : undefined),
+      process.env.NEXT_PUBLIC_API_URL ?? (process.env.VERCEL || isProd ? '/api' : undefined),
     NEXT_PUBLIC_SITE_URL:
       process.env.NEXT_PUBLIC_SITE_URL ??
-      (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : undefined),
+      (process.env.VERCEL_URL
+        ? 'https://' + process.env.VERCEL_URL
+        : isProd
+          ? 'https://admin.ajoobafootwear.in'
+          : undefined),
     NEXT_PUBLIC_MEDIA_BASE_URL: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
   };
 }
