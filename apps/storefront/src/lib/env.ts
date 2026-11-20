@@ -15,9 +15,16 @@ import { storefrontEnvSchema, type StorefrontEnv } from '@ajooba/contracts';
  */
 
 function readServerEnv(): Record<string, string | undefined> {
+  const publicApi = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const explicitPublicOrigin =
+    publicApi && (publicApi.startsWith('http://') || publicApi.startsWith('https://'))
+      ? publicApi
+      : undefined;
+
   return {
     NODE_ENV: process.env.NODE_ENV,
-    API_INTERNAL_URL: process.env.API_SERVICE_URL ?? process.env.API_INTERNAL_URL,
+    API_INTERNAL_URL:
+      process.env.API_SERVICE_URL ?? process.env.API_INTERNAL_URL ?? explicitPublicOrigin,
     NEXT_PUBLIC_API_URL:
       process.env.NEXT_PUBLIC_API_URL ?? (process.env.VERCEL ? '/api' : undefined),
     NEXT_PUBLIC_SITE_URL:

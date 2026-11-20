@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { ReturnRequest, ReturnStatus } from '@ajooba/contracts';
+import { adminPath } from '@/lib/public-path';
 
 const ACTIONS: Partial<Record<ReturnStatus, readonly ReturnStatus[]>> = {
   requested: ['approved', 'rejected'],
@@ -40,7 +41,7 @@ export function ReturnReviewActions({
     setError('');
     setFeedback('');
     try {
-      const response = await fetch(path, {
+      const response = await fetch(adminPath(path), {
         method: path.endsWith('/refund') || path.endsWith('/reconcile') ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),

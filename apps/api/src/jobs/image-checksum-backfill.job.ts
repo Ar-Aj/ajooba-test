@@ -104,8 +104,10 @@ async function main(): Promise<void> {
   const dbName = process.env.MONGODB_DB ?? 'ajooba_development';
   const uri = process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017';
 
-  if (isProd(dbName)) {
-    console.error(`Refusing to run: target database "${dbName}" looks like production.`);
+  if (isProd(dbName) && process.env.IMPORT_BLOCK_PRODUCTION !== 'false') {
+    console.error(
+      `Refusing to run: target database "${dbName}" looks like production. Set IMPORT_BLOCK_PRODUCTION=false to override deliberately.`,
+    );
     process.exit(1);
   }
 

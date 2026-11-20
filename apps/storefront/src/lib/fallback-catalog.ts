@@ -1,11 +1,14 @@
-import type {
-  CatalogFacets,
-  CatalogListResult,
-  CatalogQuery,
-  CategoryView,
-  FacetCount,
-  Product,
-  ResolvedHomepageSection,
+import {
+  buildColourTokenMap,
+  resolveImageColour,
+  type CatalogFacets,
+  type CatalogListResult,
+  type CatalogQuery,
+  type CategoryView,
+  type FacetCount,
+  type Product,
+  type ProductImage,
+  type ResolvedHomepageSection,
 } from '@ajooba/contracts';
 import catalogData from '../data/catalog.json';
 import homepageData from '../data/homepage.json';
@@ -58,6 +61,55 @@ function normalizeProducts(): Product[] {
 
   return rawList.map((raw) => {
     const id = raw.id ?? raw.code;
+    const soldColours = raw.colours ?? [];
+    const tokenMap = buildColourTokenMap(raw.variants ?? []);
+    const assignedColours = new Set<string>();
+
+    const images: ProductImage[] = (raw.images ?? []).map((img) => {
+      const resolution = resolveImageColour(img.sourceFile, tokenMap, soldColours);
+      if (resolution.kind === 'assigned') {
+        assignedColours.add(resolution.colour);
+        return {
+          url: img.url,
+          alt: img.alt,
+          position: img.position,
+          sourceFile: img.sourceFile,
+          colour: resolution.colour as ProductImage['colour'],
+          ...(resolution.token ? { colourToken: resolution.token } : {}),
+        };
+      }
+      return {
+        url: img.url,
+        alt: img.alt,
+        position: img.position,
+        sourceFile: img.sourceFile,
+      };
+    });
+
+    const variants = (raw.variants ?? []).map((v) => {
+      const stock = v.stock > 0 ? v.stock : (v.templateStock ?? 0);
+      const hasPhoto = assignedColours.has(v.colour);
+      const photographyStatus =
+        v.photographyStatus ?? (hasPhoto ? ('verified' as const) : ('pending-review' as const));
+      const inStock = Boolean((v.inStock || stock > 0) && photographyStatus === 'verified');
+      return {
+        sku: v.sku,
+        productId: id,
+        size: v.size,
+        colour: v.colour,
+        colourToken: v.colourToken,
+        mrp: v.mrp,
+        sellingPrice: v.sellingPrice,
+        discountPercent: v.discountPercent,
+        stock,
+        inStock,
+        ukIndiaSize: v.ukIndiaSize ?? undefined,
+        euroSize: v.euroSize ?? undefined,
+        ean: v.ean ?? undefined,
+        photographyStatus,
+      };
+    });
+
     return {
       id,
       code: raw.code,
@@ -67,32 +119,12 @@ function normalizeProducts(): Product[] {
       subcategory: raw.subcategory,
       subcategorySlug: raw.subcategorySlug,
       brand: raw.brand || 'Ajooba Footwear',
-      colours: raw.colours ?? [],
-      images: (raw.images ?? []).map((img) => ({
-        url: img.url,
-        alt: img.alt,
-        position: img.position,
-        sourceFile: img.sourceFile,
-      })),
-      variants: (raw.variants ?? []).map((v) => ({
-        sku: v.sku,
-        productId: id,
-        size: v.size,
-        colour: v.colour,
-        colourToken: v.colourToken,
-        mrp: v.mrp,
-        sellingPrice: v.sellingPrice,
-        discountPercent: v.discountPercent,
-        stock: v.stock ?? 0,
-        inStock: v.inStock ?? false,
-        ukIndiaSize: v.ukIndiaSize ?? undefined,
-        euroSize: v.euroSize ?? undefined,
-        ean: v.ean ?? undefined,
-        photographyStatus: v.photographyStatus ?? 'verified',
-      })),
+      colours: soldColours,
+      images,
+      variants,
       mrp: raw.mrp,
       sellingPrice: raw.sellingPrice,
-      inStock: raw.inStock,
+      inStock: Boolean(raw.inStock || variants.some((v) => v.inStock)),
       createdAt: FALLBACK_TIMESTAMP,
       updatedAt: FALLBACK_TIMESTAMP,
     };

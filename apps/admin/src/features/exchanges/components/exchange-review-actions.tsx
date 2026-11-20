@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { ExchangeRequest, ExchangeStatus } from '@ajooba/contracts';
+import { adminPath } from '@/lib/public-path';
 
 const NEXT_ACTIONS: Partial<Record<ExchangeStatus, readonly ExchangeStatus[]>> = {
   requested: ['approved', 'rejected'],
@@ -36,11 +37,14 @@ export function ExchangeReviewActions({
     setBusy(true);
     setError('');
     try {
-      const response = await fetch(`/api/admin/exchanges/${encodeURIComponent(exchange.id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ status, note: note.trim() }),
-      });
+      const response = await fetch(
+        adminPath(`/api/admin/exchanges/${encodeURIComponent(exchange.id)}`),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ status, note: note.trim() }),
+        },
+      );
       const result = (await response.json()) as {
         ok?: boolean;
         error?: { message?: string };

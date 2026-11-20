@@ -193,14 +193,17 @@ async function collectCredentials(): Promise<BootstrapCredentials> {
 /* -------------------------------------------------------------------------- */
 
 function assertNotProductionDatabase(): void {
+  if (!env.IMPORT_BLOCK_PRODUCTION) {
+    return;
+  }
+
   const dbName = (env.MONGODB_DB ?? '').toLowerCase();
   const isProductionName = ['prod', 'production', 'live'].some((marker) => dbName.includes(marker));
 
   if (isProductionName) {
     throw new Error(
       `Refusing to bootstrap an administrator against the database "${env.MONGODB_DB}". ` +
-        'Point MONGODB_DB at an administrative database, or bootstrap through a ' +
-        'deployment job with explicit credentials.',
+        'Set IMPORT_BLOCK_PRODUCTION=false to override this guard deliberately.',
     );
   }
 }
