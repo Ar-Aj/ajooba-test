@@ -155,12 +155,7 @@ export function ShopTile({
           </h3>
 
           <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-600">
-            <span>
-              {product.subcategory} · {product.code}
-            </span>
-            {activeVariant ? (
-              <span className="tnum text-ink-700">SKU: {activeVariant.sku}</span>
-            ) : null}
+            <span>{product.subcategory}</span>
           </div>
 
           <div className="mt-2 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
@@ -235,7 +230,7 @@ export function ShopTile({
         {sizes.length > 0 ? (
           <div>
             <div className="flex items-center justify-between gap-2 text-sm text-ink-700">
-              <span>UK size & SKU</span>
+              <span>UK size</span>
               <span className="tnum">{sizes.filter((v) => v.inStock).length} sizes in stock</span>
             </div>
 
@@ -262,12 +257,12 @@ export function ShopTile({
                       }}
                       aria-label={
                         variant
-                          ? `UK ${ukSize} (${variant.sku}) — ${inStock ? 'In stock' : 'Out of stock'}`
+                          ? `UK ${ukSize} — ${inStock ? 'In stock' : 'Out of stock'}`
                           : `UK ${ukSize} — Not offered`
                       }
                       title={
                         variant
-                          ? `SKU ${variant.sku} · UK ${ukSize} · ${inStock ? 'In stock' : 'Out of stock'}`
+                          ? `UK ${ukSize} · ${inStock ? 'In stock' : 'Out of stock'}`
                           : `UK ${ukSize} · Out of stock`
                       }
                       className={cn(

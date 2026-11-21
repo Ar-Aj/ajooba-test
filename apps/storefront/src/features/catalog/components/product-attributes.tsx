@@ -31,7 +31,6 @@ export function ProductAttributes({ product }: { product: Product }) {
             Specification
           </h2>
           <dl className="mt-5 border-t border-border">
-            <SpecRow label="Design code" value={product.code} />
             <SpecRow label="Brand" value={product.brand} />
             <SpecRow label="Category" value={product.subcategory} />
             <SpecRow

@@ -93,7 +93,7 @@ export function SizeAvailabilitySection({ products }: { products: readonly Produ
       <div className="container-page">
         <SectionHeading
           heading="Shop by your UK size"
-          subheading="Select your foot size to see designs cut in that exact UK last, with live SKU codes, colourways and savings."
+          subheading="Select your foot size to see designs cut in that exact UK last, with colourways and savings."
           href={`/products?size=${activeBucket.size}`}
           linkLabel={`All UK ${activeBucket.size} designs (${activeBucket.items.length})`}
         />

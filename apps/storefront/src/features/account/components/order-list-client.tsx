@@ -220,7 +220,8 @@ export function OrderListClient() {
                   ) : null}
                 </span>
                 <span className="text-xs text-ink-700">
-                  {line.title} · UK {line.size} · ×{line.quantity}
+                  {line.title} · {line.colour} · UK {line.size} · ×{line.quantity}
+                  {line.sku ? <span className="tnum ml-1.5 text-ink-500">({line.sku})</span> : null}
                 </span>
               </li>
             ))}

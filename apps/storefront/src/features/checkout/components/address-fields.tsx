@@ -134,17 +134,26 @@ export function AddressFields({
         hint="Used only for delivery updates"
         error={show('phone')}
       >
-        <Input
-          id="addr-phone"
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          maxLength={10}
-          value={draft.phone}
-          onBlur={() => onBlur('phone')}
-          onChange={(e) => onChange({ phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-          aria-invalid={Boolean(show('phone'))}
-        />
+        <div className="flex items-center">
+          <span
+            aria-hidden="true"
+            className="tnum inline-flex h-10 shrink-0 select-none items-center border-b border-input pr-2.5 text-sm font-medium text-ink-700"
+          >
+            +91
+          </span>
+          <Input
+            id="addr-phone"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel-national"
+            maxLength={10}
+            placeholder="9876543210"
+            value={draft.phone}
+            onBlur={() => onBlur('phone')}
+            onChange={(e) => onChange({ phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+            aria-invalid={Boolean(show('phone'))}
+          />
+        </div>
       </Field>
 
       <div className="sm:col-span-2">

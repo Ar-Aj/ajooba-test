@@ -148,7 +148,7 @@ export function Ajooba3DShowcase({
     if (!selectedVariant) return;
     if (!selectedVariant.inStock) {
       toast({
-        title: `UK ${selectedVariant.size} (${selectedVariant.sku}) is out of stock`,
+        title: `UK ${selectedVariant.size} is out of stock`,
         description: 'Try another size or shade, or save this design to your wishlist.',
         tone: 'warning',
       });
@@ -250,10 +250,7 @@ export function Ajooba3DShowcase({
           </div>
 
           <div className="flex flex-wrap items-center gap-2" data-ui="shade-header-pills">
-            <span className="step-xs mr-1 text-ink-600">
-              Design <strong className="font-semibold text-ink-900">{product.code}</strong> ·{' '}
-              {colourways.length} shades:
-            </span>
+            <span className="step-xs mr-1 text-ink-600">{colourways.length} shades:</span>
             {colourways.map((way, idx) => {
               const active = idx === activeColourIdx;
               return (
@@ -653,9 +650,7 @@ export function Ajooba3DShowcase({
           {/* ================================================================ */}
           <div className="bg-cream-50 p-6 sm:p-8 lg:col-span-5" data-ui="buying-cockpit">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="step-xs font-medium text-ink-500">
-                {product.subcategory} · Design {product.code}
-              </span>
+              <span className="step-xs font-medium text-ink-500">{product.subcategory}</span>
               <span
                 className={cn(
                   'step-xs px-2.5 py-1 font-medium',
@@ -751,15 +746,10 @@ export function Ajooba3DShowcase({
               </div>
             </div>
 
-            {/* ---- UK Size & SKU Matrix (Cut Out-of-Stock Sizes) --------- */}
+            {/* ---- UK Size Matrix (Cut Out-of-Stock Sizes) --------------- */}
             <div className="mt-6">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="step-xs font-medium text-ink-600">UK / India size &amp; SKU</span>
-                {selectedVariant ? (
-                  <span className="tnum step-xs font-medium text-ink-800">
-                    SKU: {selectedVariant.sku}
-                  </span>
-                ) : null}
+                <span className="step-xs font-medium text-ink-600">UK / India size</span>
               </div>
 
               <div className="mt-2.5 grid grid-cols-5 gap-2">
@@ -781,8 +771,8 @@ export function Ajooba3DShowcase({
                       }}
                       title={
                         variant.inStock
-                          ? `UK ${variant.size} · SKU ${variant.sku} · In stock`
-                          : `UK ${variant.size} · SKU ${variant.sku} · Out of stock`
+                          ? `UK ${variant.size} · In stock`
+                          : `UK ${variant.size} · Out of stock`
                       }
                       className={cn(
                         'btn-press tnum relative flex flex-col items-center justify-center py-2.5 transition-colors',
@@ -796,9 +786,6 @@ export function Ajooba3DShowcase({
                       )}
                     >
                       <span className="text-xs font-semibold">UK {variant.size}</span>
-                      <span className="tnum mt-0.5 text-[0.6875rem] opacity-80">
-                        {variant.sku.split('-').slice(-2).join('-')}
-                      </span>
                       {variant.inStock ? null : (
                         <span
                           aria-hidden="true"
@@ -813,7 +800,10 @@ export function Ajooba3DShowcase({
               {selectedVariant ? (
                 <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 bg-field-a px-3.5 py-2 text-xs">
                   <span className="tnum text-ink-800">
-                    Selected SKU: <strong className="text-ink-950">{selectedVariant.sku}</strong>
+                    Selected:{' '}
+                    <strong className="text-ink-950">
+                      UK {selectedVariant.size} · {primaryWay.colour}
+                    </strong>
                   </span>
                   <span
                     className={cn(
@@ -865,7 +855,7 @@ export function Ajooba3DShowcase({
                   href={`/products/${product.slug}`}
                   className="link-underline font-medium text-ink-900 hover:text-ink-950"
                 >
-                  Open full product page &amp; all {product.variants.length} SKUs →
+                  Open full product page →
                 </Link>
                 <Link
                   href={`/contact?design=${encodeURIComponent(product.code)}`}

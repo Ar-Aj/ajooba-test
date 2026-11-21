@@ -64,10 +64,9 @@ export function WishlistClient() {
             ) : null}
           </Link>
           <div className="flex flex-1 flex-col p-4">
-            <p className="text-xs uppercase tracking-wider text-ink-500">{item.productCode}</p>
             <Link
               href={`/products/${item.productSlug}`}
-              className="mt-1 line-clamp-2 font-medium text-ink-900 hover:underline"
+              className="line-clamp-2 font-medium text-ink-900 hover:underline"
             >
               {item.productTitle}
             </Link>

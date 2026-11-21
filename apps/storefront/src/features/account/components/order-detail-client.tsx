@@ -171,6 +171,9 @@ export function OrderDetailClient() {
                 <p className="mt-0.5 text-xs text-ink-500">
                   {line.colour} · UK {line.size} · Qty {line.quantity}
                 </p>
+                {line.sku ? (
+                  <p className="tnum mt-0.5 text-xs text-ink-400">Product code: {line.sku}</p>
+                ) : null}
               </div>
               <p className="text-sm font-medium text-ink-900">{rupees(line.lineTotal)}</p>
             </li>

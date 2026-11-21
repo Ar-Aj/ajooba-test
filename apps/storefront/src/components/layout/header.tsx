@@ -662,10 +662,7 @@ function SearchOverlay({
           />
         </div>
 
-        <p className="step-xs mt-3 text-ink-500">
-          Try a design code (<span className="text-ink-700">A48</span>), a colour, or a category
-          name.
-        </p>
+        <p className="step-xs mt-3 text-ink-500">Try a style name, a colour, or a category name.</p>
 
         {categories.length > 0 ? (
           <div className="mt-6">

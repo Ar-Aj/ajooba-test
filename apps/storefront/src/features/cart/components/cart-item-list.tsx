@@ -108,7 +108,6 @@ export function CartItemList({ lines, compact = false, readOnly = false }: CartI
                 <p className="step-xs mt-1 text-ink-500">
                   {line.colour} · UK {line.size}
                 </p>
-                <p className="step-xs mt-0.5 text-ink-400">{line.variantSku}</p>
               </div>
 
               {!readOnly ? (

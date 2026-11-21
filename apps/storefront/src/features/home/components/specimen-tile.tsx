@@ -109,10 +109,7 @@ export function SpecimenTile({
         <h3 className="step-md line-clamp-2 font-medium text-ink-900 group-hover:text-gold-700">
           {product.title}
         </h3>
-        <p className="mt-1 text-sm text-ink-600">
-          {product.subcategory}
-          {product.code ? ` · ${product.code}` : ''}
-        </p>
+        <p className="mt-1 text-sm text-ink-600">{product.subcategory}</p>
 
         <div className="mt-2 flex flex-wrap items-baseline gap-2">
           <span className="tnum step-md font-semibold text-ink-900">

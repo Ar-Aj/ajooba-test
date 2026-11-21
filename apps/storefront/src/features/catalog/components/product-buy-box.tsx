@@ -271,7 +271,7 @@ export function ProductBuyBox({
       {/* ---- identity ---------------------------------------------------- */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <p className="label-cap text-ink-400">
-          {product.brand} · {product.code}
+          {product.brand} · {product.subcategory}
         </p>
         {!anyInStock ? (
           <span className="label-cap text-claret-700">Sold out</span>
@@ -580,7 +580,7 @@ export function ProductBuyBox({
             <p className="step-sm mt-1.5 max-w-prose text-ink-500">
               Stock is confirmed against our warehouse before a pair is listed as available, so we
               would rather show you an honest sold out than take an order we cannot ship. Save the
-              design, or check the contact page for enquiries about this design code.
+              design, or check the contact page for enquiries about this design.
             </p>
             <div className="mt-3 flex flex-wrap gap-4">
               <Link
