@@ -410,23 +410,36 @@ export async function placeOrder(input: CheckoutInput): Promise<Order> {
     // moment of purchase and never change afterwards.
     const productIds = reserved.map((entry) => entry.variant.productId);
     const productDocs = await ProductModel.find({ _id: { $in: productIds } })
-      .select('title')
-      .lean<Array<{ _id: Types.ObjectId; title: string }>>();
-    const titlesById = new Map(productDocs.map((doc) => [doc._id.toString(), doc.title]));
+      .select('title images')
+      .lean<
+        Array<{
+          _id: Types.ObjectId;
+          title: string;
+          images?: Array<{ url: string; colour?: string }>;
+        }>
+      >();
+    const productsById = new Map(productDocs.map((doc) => [doc._id.toString(), doc]));
 
-    const items: OrderItem[] = reserved.map((entry) => ({
-      productId: entry.variant.productId.toString(),
-      variantId: entry.variant._id.toString(),
-      sku: entry.variant.sku,
-      title: titlesById.get(entry.variant.productId.toString()) ?? entry.variant.sku,
-      imageUrl: entry.variant.imageUrl ?? null,
-      colour: entry.variant.colour,
-      size: entry.variant.size,
-      unitPrice: entry.variant.sellingPrice,
-      mrp: entry.variant.mrp,
-      quantity: entry.quantity,
-      lineTotal: entry.variant.sellingPrice * entry.quantity,
-    }));
+    const items: OrderItem[] = reserved.map((entry) => {
+      const parentProduct = productsById.get(entry.variant.productId.toString());
+      const fallbackImage =
+        parentProduct?.images?.find((img) => img.colour === entry.variant.colour)?.url ??
+        parentProduct?.images?.[0]?.url ??
+        null;
+      return {
+        productId: entry.variant.productId.toString(),
+        variantId: entry.variant._id.toString(),
+        sku: entry.variant.sku,
+        title: parentProduct?.title ?? entry.variant.sku,
+        imageUrl: entry.variant.imageUrl ?? fallbackImage,
+        colour: entry.variant.colour,
+        size: entry.variant.size,
+        unitPrice: entry.variant.sellingPrice,
+        mrp: entry.variant.mrp,
+        quantity: entry.quantity,
+        lineTotal: entry.variant.sellingPrice * entry.quantity,
+      };
+    });
 
     /*
      * Assert the arithmetic before the write. If the pricing engine and

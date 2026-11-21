@@ -11,7 +11,7 @@ import type {
 } from '@ajooba/contracts';
 import { Button } from '@/components/ui/button';
 import { Input, Field } from '@/components/ui/form';
-import { Radio } from '@/components/ui/toggle';
+import { Checkbox, Radio } from '@/components/ui/toggle';
 import { useToast } from '@/components/ui/toast';
 import { useCommerce } from '@/lib/commerce-context';
 import { cartStore } from '@/lib/cart-store';
@@ -74,22 +74,26 @@ function apiBase(): string {
   return (process.env.NEXT_PUBLIC_API_URL ?? '/api').replace(/\/$/, '');
 }
 
-function mapApiCart(cart: ApiCart): CartLine[] {
-  return cart.items.map((item) => ({
-    id: item.variantId,
-    variantId: item.variantId,
-    variantSku: item.sku,
-    productId: item.productId,
-    productSlug: item.slug,
-    productTitle: item.title,
-    colour: item.colour,
-    size: item.size,
-    unitMrp: item.mrp,
-    unitPrice: item.unitPrice,
-    quantity: item.quantity,
-    addedAt: cart.updatedAt,
-    ...(item.imageUrl ? { imageUrl: mediaUrl(item.imageUrl) } : {}),
-  }));
+function mapApiCart(cart: ApiCart, localLines: readonly CartLine[] = []): CartLine[] {
+  return cart.items.map((item) => {
+    const localMatch = localLines.find((l) => l.variantSku === item.sku);
+    const resolvedImg = item.imageUrl ? mediaUrl(item.imageUrl) : localMatch?.imageUrl;
+    return {
+      id: item.variantId,
+      variantId: item.variantId,
+      variantSku: item.sku,
+      productId: item.productId,
+      productSlug: item.slug,
+      productTitle: item.title,
+      colour: item.colour,
+      size: item.size,
+      unitMrp: item.mrp,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+      addedAt: cart.updatedAt,
+      ...(resolvedImg ? { imageUrl: resolvedImg } : {}),
+    };
+  });
 }
 
 async function fetchPublicVariantId(line: CartLine): Promise<string> {
@@ -140,6 +144,9 @@ export function CheckoutClient() {
     setDone((current) => (current.includes(id) ? current : [...current, id]));
 
   const [email, setEmail] = useState(session?.user.email ?? '');
+  const [contactPhone, setContactPhone] = useState('');
+  const [hasWhatsapp, setHasWhatsapp] = useState(true);
+  const [contactPhoneError, setContactPhoneError] = useState<string | undefined>();
 
   const [draft, setDraft] = useState<AddressDraft>(EMPTY_ADDRESS);
   const [addressErrors, setAddressErrors] = useState<Partial<Record<keyof AddressDraft, string>>>(
@@ -149,7 +156,7 @@ export function CheckoutClient() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   const checkoutLines = useMemo(
-    () => (serverCart ? mapApiCart(serverCart) : localCart),
+    () => (serverCart ? mapApiCart(serverCart, localCart) : localCart),
     [localCart, serverCart],
   );
 
@@ -168,7 +175,13 @@ export function CheckoutClient() {
   useEffect(() => {
     const current = customerSession.read();
     setSession(current);
-    if (current) setEmail(current.user.email);
+    if (current) {
+      setEmail(current.user.email);
+      const userDigits = (current.user.phone ?? '').replace(/\D/g, '').slice(-10);
+      if (userDigits.length === 10) {
+        setContactPhone(userDigits);
+      }
+    }
     setAuthChecked(true);
   }, []);
 
@@ -177,11 +190,15 @@ export function CheckoutClient() {
     if (draft.fullName || draft.line1 || draft.postalCode) return;
     const preferred = addresses.find((a) => a.isDefault) ?? addresses[0];
     if (!preferred) return;
+    const preferredDigits = preferred.phone.replace(/\D/g, '').slice(-10);
     setSelectedAddressId(preferred.id);
+    if (preferredDigits.length === 10) {
+      setContactPhone((prev) => (prev.length === 10 ? prev : preferredDigits));
+    }
     setDraft({
       label: preferred.label,
       fullName: preferred.fullName,
-      phone: preferred.phone.replace(/\D/g, '').slice(-10),
+      phone: preferredDigits,
       line1: preferred.line1,
       line2: preferred.line2 ?? '',
       city: preferred.city,
@@ -610,7 +627,9 @@ export function CheckoutClient() {
     {
       id: 'contact',
       title: 'Contact',
-      summary: done.includes('contact') ? email : undefined,
+      summary: done.includes('contact')
+        ? `${email}${contactPhone ? ` · +91 ${contactPhone}${hasWhatsapp ? ' (WhatsApp)' : ''}` : ''}`
+        : undefined,
       content: session ? (
         <div className="space-y-4">
           <Field
@@ -620,11 +639,58 @@ export function CheckoutClient() {
           >
             <Input id="checkout-email" type="email" value={email} readOnly />
           </Field>
+
+          <Field
+            label="Contact number"
+            htmlFor="checkout-phone"
+            hint="10-digit Indian mobile number for order & delivery coordination"
+            error={contactPhoneError}
+          >
+            <Input
+              id="checkout-phone"
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel"
+              maxLength={10}
+              placeholder="9876543210"
+              value={contactPhone}
+              onChange={(event) => {
+                const digits = event.target.value.replace(/\D/g, '').slice(0, 10);
+                setContactPhone(digits);
+                if (contactPhoneError && /^[6-9]\d{9}$/.test(digits)) {
+                  setContactPhoneError(undefined);
+                }
+              }}
+              aria-invalid={Boolean(contactPhoneError)}
+            />
+          </Field>
+
+          <Checkbox
+            name="checkout-whatsapp"
+            checked={hasWhatsapp}
+            onChange={(event) => setHasWhatsapp(event.target.checked)}
+            label="This number is on WhatsApp"
+            description="Send order confirmation, dispatch and delivery updates on WhatsApp"
+          />
+
           <div className="flex justify-end">
             <Button
               intent="primary"
               type="button"
               onClick={() => {
+                const digits = contactPhone.replace(/\D/g, '');
+                if (!/^[6-9]\d{9}$/.test(digits)) {
+                  setContactPhoneError('Enter a valid 10-digit Indian mobile number starting 6–9.');
+                  return;
+                }
+                setContactPhoneError(undefined);
+                const fullNameFromSession =
+                  `${session.user.firstName} ${session.user.lastName}`.trim();
+                setDraft((prev) => ({
+                  ...prev,
+                  phone: prev.phone || digits,
+                  fullName: prev.fullName || fullNameFromSession,
+                }));
                 markDone('contact');
                 setStep('address');
               }}

@@ -99,7 +99,13 @@ export function createApp(): Application {
         },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id'],
+        allowedHeaders: [
+          'Content-Type',
+          'Authorization',
+          'x-request-id',
+          'Idempotency-Key',
+          'idempotency-key',
+        ],
         exposedHeaders: ['x-request-id'],
         maxAge: 600,
       });

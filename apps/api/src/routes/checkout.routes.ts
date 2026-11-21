@@ -213,12 +213,21 @@ checkoutRouter.post(
        * keys differ.
        */
       const idempotencyKey = req.header('idempotency-key')?.trim() ?? body.idempotencyKey ?? '';
+      const resolvedCustomerPhone = customer.phone?.trim() || shippingAddress.phone;
+
+      if (!customer.phone?.trim() && shippingAddress.phone) {
+        await UserModel.updateOne(
+          { _id: principal.id },
+          { $set: { phone: shippingAddress.phone } },
+        ).catch(() => {});
+      }
 
       const order = await placeOrder({
         customerId: principal.id,
-        customerName: `${customer.firstName} ${customer.lastName}`.trim(),
+        customerName:
+          `${customer.firstName} ${customer.lastName}`.trim() || shippingAddress.fullName,
         customerEmail: customer.email,
-        customerPhone: customer.phone,
+        customerPhone: resolvedCustomerPhone,
         shippingAddress,
         billingAddress,
         ...(body.couponCode ? { couponCode: body.couponCode } : {}),

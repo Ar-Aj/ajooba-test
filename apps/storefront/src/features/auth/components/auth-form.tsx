@@ -208,7 +208,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           tone: 'warning',
         });
         window.setTimeout(() => {
-          window.location.href = '/account';
+          window.location.href = next;
         }, 600);
         return;
       }
@@ -320,21 +320,30 @@ export function AuthForm({ mode }: AuthFormProps) {
         {mode === 'login' ? (
           <>
             New to Ajooba?{' '}
-            <Link href="/register" className="font-medium text-ink-900 underline">
+            <Link
+              href={rawNext ? `/register?next=${encodeURIComponent(next)}` : '/register'}
+              className="font-medium text-ink-900 underline"
+            >
               Create an account
             </Link>
           </>
         ) : mode === 'register' ? (
           <>
             Already have an account?{' '}
-            <Link href="/login" className="font-medium text-ink-900 underline">
+            <Link
+              href={rawNext ? `/login?next=${encodeURIComponent(next)}` : '/login'}
+              className="font-medium text-ink-900 underline"
+            >
               Sign in
             </Link>
           </>
         ) : (
           <>
             Remembered it?{' '}
-            <Link href="/login" className="font-medium text-ink-900 underline">
+            <Link
+              href={rawNext ? `/login?next=${encodeURIComponent(next)}` : '/login'}
+              className="font-medium text-ink-900 underline"
+            >
               Back to sign in
             </Link>
           </>

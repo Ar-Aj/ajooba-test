@@ -29,6 +29,7 @@ const MEDIA_BASE_URL = (process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? '/').replace(/
 /** Build a URL for a public asset whose path is root-relative. */
 export function mediaUrl(path: string): string {
   if (!path) return '/';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
   const suffix = path.startsWith('/') ? path : `/${path}`;
   // Same-origin assets — leave the path root-relative.
   if (!suffix.startsWith('/products/')) return suffix;

@@ -67,6 +67,7 @@ interface ProductDoc {
   title: string;
   /** The catalogue code, e.g. `A12`. Used by product-restricted coupons. */
   code: string;
+  images?: Array<{ url: string; colour?: string; position?: number }>;
 }
 
 /**
@@ -286,6 +287,10 @@ export async function buildCart(scope: CartScope): Promise<Cart> {
 
     const availableStock = availableUnits(variant);
     const isAvailable = availableStock >= item.quantity;
+    const colourPhoto =
+      product?.images?.find((img) => img.colour === variant.colour)?.url ??
+      product?.images?.[0]?.url ??
+      null;
 
     items.push({
       variantId: variant._id.toString(),
@@ -295,7 +300,7 @@ export async function buildCart(scope: CartScope): Promise<Cart> {
       title: product?.title ?? variant.sku,
       colour: variant.colour,
       size: variant.size,
-      imageUrl: variant.imageUrl ?? null,
+      imageUrl: variant.imageUrl ?? colourPhoto,
       unitPrice: variant.sellingPrice,
       mrp: variant.mrp,
       quantity: item.quantity,
