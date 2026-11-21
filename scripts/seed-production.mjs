@@ -132,7 +132,7 @@ runStep('Step 2/5: Importing 55 designs & 674 variants (with stock applied)', [
   'tsx',
   'src/jobs/catalog-import.job.ts',
   '--extract',
-  join(repoRoot, 'artifacts', 'catalog-extract.json'),
+  '../../artifacts/catalog-extract.json',
   '--apply-stock',
   '--no-media',
 ]);
