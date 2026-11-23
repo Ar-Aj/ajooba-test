@@ -1,0 +1,46 @@
+# Render Blueprint — Ajooba Footwear Backend API + Admin Panel
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: ajooba-api
+    runtime: node
+    plan: starter
+    region: singapore
+    branch: main
+    buildCommand: pnpm install --frozen-lockfile && pnpm build:api
+    startCommand: pnpm start:api
+    healthCheckPath: /health/live
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: ajooba_footwear
+      - key: API_PUBLIC_URL
+        value: https://ajooba-api.onrender.com
+      - key: STOREFRONT_PUBLIC_URL
+        value: https://ajoobafootwear.in
+      - key: ADMIN_PUBLIC_URL
+        value: https://ajooba-admin.onrender.com
+      - key: CORS_ORIGINS
+        value: https://ajoobafootwear.in,https://www.ajoobafootwear.in,https://ajooba-admin.onrender.com
+      - key: ADMIN_ORIGINS
+        value: https://ajooba-admin.onrender.com,https://ajoobafootwear.in
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ISSUER
+        value: ajooba-api
+      - key: BCRYPT_COST
+        value: 12
+      - key: LOG_LEVEL
+        value: info
+      - key: IMPORT_BLOCK_PRODUCTION
+        value: "true"
+      - key: RAZORPAY_MODE
+        value: test
