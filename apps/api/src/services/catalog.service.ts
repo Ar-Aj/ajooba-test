@@ -1,6 +1,8 @@
 import type { Types } from 'mongoose';
 import {
+  buildColourTokenMap,
   DEFAULT_PAGE_SIZE,
+  resolveImageColour,
   type CatalogFacets,
   type CatalogListResult,
   type CatalogQueryInput,
@@ -146,6 +148,25 @@ function mapVariant(doc: VariantDoc, productId: string): ProductVariant {
 }
 
 function mapProduct(doc: ProductDoc, variants: ProductVariant[]): Product {
+  const soldColours =
+    variants.length > 0 ? [...new Set(variants.map((v) => v.colour))] : doc.colours;
+  const tokenMap = buildColourTokenMap(variants);
+
+  const images: ProductImage[] = doc.images.map((img) => {
+    if (img.colour) {
+      return img;
+    }
+    const resolution = resolveImageColour(img.sourceFile, tokenMap, soldColours);
+    if (resolution.kind === 'assigned') {
+      return {
+        ...img,
+        colour: resolution.colour as ProductImage['colour'],
+        ...(resolution.token ? { colourToken: resolution.token } : {}),
+      };
+    }
+    return img;
+  });
+
   return {
     id: doc._id.toString(),
     code: doc.code,
@@ -156,7 +177,7 @@ function mapProduct(doc: ProductDoc, variants: ProductVariant[]): Product {
     subcategorySlug: doc.subcategorySlug,
     brand: doc.brand,
     colours: doc.colours,
-    images: doc.images,
+    images,
     quarantinedImages: doc.quarantinedImages ?? [],
     variants,
     mrp: doc.mrp,

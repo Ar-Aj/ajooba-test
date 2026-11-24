@@ -1,7 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { Product } from '@ajooba/contracts';
+import {
+  buildColourTokenMap,
+  resolveImageColour,
+  type Product,
+  type ProductImage,
+} from '@ajooba/contracts';
 import { ProductGallery } from './product-gallery';
 import { ProductBuyBox } from './product-buy-box';
 
@@ -16,26 +21,55 @@ import { ProductBuyBox } from './product-buy-box';
  * This component owns the colour selection and hands the same selection to both
  * halves, so the gallery, the sizes, the SKU, the price and the cart line all
  * describe one colour at any moment.
- *
- * Nothing here re-implements the colour rules: `Product.images` already carry a
- * verified `colour` field written by the import, and quarantined images (those
- * without one) are simply absent from it.
  */
 export function ProductGallerySection({ product }: { product: Product }) {
-  const [colour, setColour] = useState<string>(product.colours[0] ?? '');
+  /*
+   * Ensure every image has its verified colour resolved (both from the stored
+   * `image.colour` field and, if unmigrated, via `resolveImageColour` against
+   * the design's variants).
+   */
+  const resolvedProduct = useMemo<Product>(() => {
+    const needsResolution = product.images.some((image) => !image.colour);
+    if (!needsResolution) return product;
+
+    const soldColours =
+      product.variants.length > 0
+        ? [...new Set(product.variants.map((v) => v.colour))]
+        : product.colours;
+    const tokenMap = buildColourTokenMap(product.variants);
+
+    const resolvedImages: ProductImage[] = product.images.map((img) => {
+      if (img.colour) return img;
+      const res = resolveImageColour(img.sourceFile, tokenMap, soldColours);
+      if (res.kind === 'assigned') {
+        return {
+          ...img,
+          colour: res.colour as ProductImage['colour'],
+          ...(res.token ? { colourToken: res.token } : {}),
+        };
+      }
+      return img;
+    });
+
+    return { ...product, images: resolvedImages };
+  }, [product]);
+
+  const initialColour = useMemo(() => {
+    const firstWithImage = resolvedProduct.colours.find((c) =>
+      resolvedProduct.images.some((img) => img.colour === c),
+    );
+    return firstWithImage ?? resolvedProduct.colours[0] ?? '';
+  }, [resolvedProduct]);
+
+  const [colour, setColour] = useState<string>(initialColour);
 
   /*
-   * Images for the selected colour only. An image appears here only if the
-   * import verified its colour, so a quarantined image can never reach the
-   * gallery by falling through to a default.
-   *
-   * When a colour has no verified photography this is deliberately EMPTY. We do
-   * not fall back to another colour's photos: that is the exact defect being
-   * fixed. `ProductGallery` renders an honest "no photo yet" field instead.
+   * Images for the selected colour only. An image appears here only if its
+   * colour is verified, so a quarantined image can never reach the gallery.
    */
   const images = useMemo(
-    () => product.images.filter((image) => image.colour === colour),
-    [product.images, colour],
+    () => resolvedProduct.images.filter((image) => image.colour === colour),
+    [resolvedProduct.images, colour],
   );
 
   return (
@@ -43,13 +77,17 @@ export function ProductGallerySection({ product }: { product: Product }) {
       <div className="lg:col-span-7">
         <ProductGallery
           images={images}
-          title={product.title}
+          title={resolvedProduct.title}
           colour={colour}
-          isPrimaryColour={colour === product.colours[0]}
+          isPrimaryColour={colour === resolvedProduct.colours[0]}
         />
       </div>
       <div className="lg:col-span-5">
-        <ProductBuyBox product={product} selectedColour={colour} onColourChange={setColour} />
+        <ProductBuyBox
+          product={resolvedProduct}
+          selectedColour={colour}
+          onColourChange={setColour}
+        />
       </div>
     </div>
   );
