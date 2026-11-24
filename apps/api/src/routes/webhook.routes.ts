@@ -499,16 +499,36 @@ async function handlePaymentEvent(
 
   /*
    * Resolve the internal order through the payment record, which is the only
-   * link between a provider payment id and our world. Matching on the stored
-   * `providerReference` rather than on the payload's own `order_id` means we
-   * never trust an identifier the event body merely claims.
+   * link between a provider payment id / provider order id and our world.
+   *
+   * When a webhook arrives before (or without) the browser `/verify` callback,
+   * `providerReference` has not been written yet — only `providerOrderId`
+   * (recorded by `createPaymentIntent`) is on the row. We therefore match by
+   * `providerReference` first, and fall back to `providerOrderId` when the
+   * webhook carries `order_id` and the row has no conflicting reference.
    */
-  const payment = await PaymentModel.findOne({ providerReference: providerPaymentId }).lean<{
+  let payment = await PaymentModel.findOne({ providerReference: providerPaymentId }).lean<{
     _id: Types.ObjectId;
     orderId: Types.ObjectId;
     amount: number;
     status: string;
   } | null>();
+
+  if (!payment && eventPayment.orderId) {
+    payment = await PaymentModel.findOne({
+      providerOrderId: eventPayment.orderId,
+      $or: [
+        { providerReference: null },
+        { providerReference: { $exists: false } },
+        { providerReference: providerPaymentId },
+      ],
+    }).lean<{
+      _id: Types.ObjectId;
+      orderId: Types.ObjectId;
+      amount: number;
+      status: string;
+    } | null>();
+  }
 
   if (!payment) {
     /*

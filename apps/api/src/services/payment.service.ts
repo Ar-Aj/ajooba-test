@@ -13,6 +13,7 @@ import { OrderModel } from '../models/order.model.js';
 import { PaymentModel } from '../models/payment.model.js';
 import {
   RazorpayApiError,
+  captureRazorpayPayment,
   createRazorpayOrder,
   fetchRazorpayPayment,
   isRazorpayConfigured,
@@ -320,29 +321,49 @@ export async function verifyAndSettlePayment(input: {
 
   /*
    * Authorized but not captured. This is a legitimate state when the
-   * account has automatic capture disabled. The order stays unpaid and the
-   * stock stays reserved; the webhook settles it once capture completes.
+   * account has automatic capture disabled. When webhooks are not configured
+   * on the deployment (e.g. test/local setup without a public webhook URL),
+   * we capture the authorized payment immediately via the Razorpay Capture API
+   * (`POST /v1/payments/:id/capture`) so the order settles right away. When
+   * webhooks ARE configured, the order stays pending and the webhook settles
+   * it once capture completes.
    */
   if (remote.status === 'authorized' && !remote.captured) {
-    await PaymentModel.updateOne(
-      { _id: payment._id },
-      {
-        $set: {
-          status: 'pending',
-          providerReference: remote.id,
-          method: remote.method ?? null,
+    if (!isRazorpayWebhookConfigured()) {
+      try {
+        const captured = await captureRazorpayPayment(remote.id, amountRupees);
+        if (captured.status === 'captured') {
+          remote = captured;
+        }
+      } catch (captureError) {
+        logger.warn(
+          { orderId: input.orderId, correlationId: input.correlationId, err: captureError },
+          'Automatic capture of authorized Razorpay payment did not complete inline',
+        );
+      }
+    }
+
+    if (remote.status === 'authorized' && !remote.captured) {
+      await PaymentModel.updateOne(
+        { _id: payment._id },
+        {
+          $set: {
+            status: 'pending',
+            providerReference: remote.id,
+            method: remote.method ?? null,
+          },
         },
-      },
-    );
-    return {
-      verified: false,
-      status: 'pending',
-      orderId: input.orderId,
-      orderNumber,
-      paymentId: payment._id.toString(),
-      amountRupees,
-      reason: 'The payment is authorized and will be captured shortly.',
-    };
+      );
+      return {
+        verified: false,
+        status: 'pending',
+        orderId: input.orderId,
+        orderNumber,
+        paymentId: payment._id.toString(),
+        amountRupees,
+        reason: 'The payment is authorized and will be captured shortly.',
+      };
+    }
   }
 
   if (remote.status === 'captured') {
