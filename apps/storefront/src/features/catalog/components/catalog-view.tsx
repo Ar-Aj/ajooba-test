@@ -77,10 +77,10 @@ export async function CatalogView({ searchParams, basePath = '/products' }: Cata
       : undefined;
 
     return (
-      <div className="lg:grid lg:grid-cols-[15rem_1fr] lg:gap-12">
-        {/* Desktop filter rail */}
+      <div className="lg:grid lg:grid-cols-[16.5rem_1fr] lg:items-start lg:gap-12">
+        {/* Desktop filter rail — stationary at the top of the catalogue */}
         <aside className="hidden lg:block" aria-label="Product filters">
-          <div className="sticky top-32 max-h-[calc(100dvh-10rem)] overflow-y-auto pr-2 scrollbar-soft">
+          <div className="border border-border/80 bg-field-e p-5">
             <FilterPanel params={params} basePath={basePath} facets={facets} />
           </div>
         </aside>

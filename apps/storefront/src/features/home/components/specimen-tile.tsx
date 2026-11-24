@@ -105,26 +105,28 @@ export function SpecimenTile({
         ) : null}
       </div>
 
-      <div className="mt-3">
-        <h3 className="step-md line-clamp-2 font-medium text-ink-900 group-hover:text-gold-700">
+      <div className="mt-4">
+        <h3 className="font-sans text-[1.0625rem] leading-snug line-clamp-2 font-semibold tracking-tight text-ink-950 transition-colors group-hover:text-gold-700 lg:text-[1.15rem]">
           {product.title}
         </h3>
-        <p className="mt-1 text-sm text-ink-600">{product.subcategory}</p>
+        <p className="mt-1 text-[0.9375rem] font-medium text-ink-600">{product.subcategory}</p>
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="tnum step-md font-semibold text-ink-900">
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-2.5">
+          <span className="tnum text-xl font-bold text-ink-950 lg:text-[1.35rem]">
             {rupees(product.sellingPrice)}
           </span>
           {discounted ? (
             <>
-              <span className="tnum text-sm text-ink-500 line-through">{rupees(product.mrp)}</span>
+              <span className="tnum text-[0.9375rem] font-medium text-ink-500 line-through">
+                {rupees(product.mrp)}
+              </span>
             </>
           ) : null}
         </div>
         <PriceSavings mrp={product.mrp} sellingPrice={product.sellingPrice} className="mt-1.5" />
 
         {product.verifiedColours.length > 0 ? (
-          <p className="mt-1.5 text-sm text-ink-600">
+          <p className="mt-2 text-sm font-medium text-ink-700">
             Colours: {product.verifiedColours.join(', ')}
           </p>
         ) : null}

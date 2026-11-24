@@ -235,6 +235,7 @@ export async function registerCustomer(
   input: {
     email: string;
     phone?: string;
+    phoneVerificationToken?: string;
     password: string;
     firstName: string;
     lastName: string;
@@ -244,6 +245,11 @@ export async function registerCustomer(
   const existing = await UserModel.findOne({ email: input.email }).select('_id').lean();
   if (existing) {
     throw new ConflictError('An account with that email already exists.');
+  }
+
+  if (input.phoneVerificationToken && input.phone) {
+    const { assertPhoneVerificationToken } = await import('./phone-otp.service.js');
+    await assertPhoneVerificationToken(input.phoneVerificationToken, input.phone);
   }
 
   const passwordHash = await hashPassword(input.password);

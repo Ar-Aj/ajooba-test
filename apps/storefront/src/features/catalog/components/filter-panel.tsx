@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useId, useState, useTransition } from 'react';
+import { useEffect, useId, useState, useTransition } from 'react';
 import { COLOUR_RAW_VALUES, SIZE_VALUES, type CatalogFacets } from '@ajooba/contracts';
 import { Sheet } from '@/components/ui/sheet';
 import {
@@ -13,6 +13,13 @@ import {
 import { rupees } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { trackTap } from '@/lib/track';
+
+const FALLBACK_CATEGORIES = [
+  { slug: 'mojri-jutti', displayName: 'Mojri / Jutti', productCount: undefined },
+  { slug: 'shoe', displayName: 'Shoes & Loafers', productCount: undefined },
+  { slug: 'sandal', displayName: 'Sandals', productCount: undefined },
+  { slug: 'chappal', displayName: 'Chappals', productCount: undefined },
+] as const;
 
 /**
  * The filter rail.
@@ -68,12 +75,13 @@ export function FilterPanel({
     });
 
     startTransition(() => {
-      router.push(buildCatalogHref(params, changes, basePath));
+      router.push(buildCatalogHref(params, changes, basePath), { scroll: false });
       onNavigate?.();
     });
   };
 
-  const categories = facets?.categories ?? [];
+  const categories =
+    facets?.categories && facets.categories.length > 0 ? facets.categories : FALLBACK_CATEGORIES;
   const active = hasActiveFilters(params);
 
   return (
@@ -101,14 +109,18 @@ export function FilterPanel({
       ) : null}
 
       {/* --- category ------------------------------------------------------ */}
-      <fieldset className="mb-9">
-        <legend id={headingId} className="label-cap mb-3 text-ink-400">
+      <fieldset className="mb-8">
+        <legend id={headingId} className="label-cap mb-3 text-ink-500">
           Category
         </legend>
         <div>
           <Option
             label="All footwear"
-            count={facets ? categories.reduce((total, c) => total + c.productCount, 0) : undefined}
+            count={
+              facets?.categories && facets.categories.length > 0
+                ? facets.categories.reduce((total, c) => total + c.productCount, 0)
+                : undefined
+            }
             checked={!params.subcategory}
             onClick={() => push({ subcategory: undefined })}
           />
@@ -129,8 +141,8 @@ export function FilterPanel({
       </fieldset>
 
       {/* --- colour -------------------------------------------------------- */}
-      <fieldset className="mb-9">
-        <legend className="label-cap mb-3 text-ink-400">Colour</legend>
+      <fieldset className="mb-8">
+        <legend className="label-cap mb-3 text-ink-500">Colour</legend>
         <div className="flex flex-wrap gap-1.5">
           {COLOUR_RAW_VALUES.map((colour) => {
             const on = params.colour === colour;
@@ -142,19 +154,24 @@ export function FilterPanel({
                 aria-pressed={on}
                 onClick={() => push({ colour: on ? undefined : colour })}
                 className={cn(
-                  'btn-press step-xs inline-flex items-center gap-1.5 border px-2.5 py-1.5',
+                  'btn-press inline-flex items-center gap-1.5 border px-3 py-1.5 text-sm font-medium',
                   on
                     ? 'border-ink-900 bg-ink-900 text-cream-50'
-                    : 'border-border text-ink-700 hover:border-ink-400 hover:text-ink-900',
+                    : 'border-border bg-cream-50 text-ink-800 hover:border-ink-500 hover:text-ink-950',
                   count === 0 && !on ? 'opacity-45' : undefined,
                 )}
               >
                 <span
                   aria-hidden="true"
-                  className="h-2.5 w-2.5 border border-ink-900/15"
+                  className="h-3 w-3 rounded-full border border-ink-900/20"
                   style={{ backgroundColor: COLOUR_SWATCHES[colour] ?? '#ccc' }}
                 />
                 {colour}
+                {count !== undefined && count > 0 ? (
+                  <span className={cn('tnum text-xs', on ? 'text-gold-300' : 'text-ink-500')}>
+                    ({count})
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -162,9 +179,9 @@ export function FilterPanel({
       </fieldset>
 
       {/* --- size ---------------------------------------------------------- */}
-      <fieldset className="mb-9">
-        <legend className="label-cap mb-3 text-ink-400">UK size</legend>
-        <div className="grid grid-cols-6 gap-1">
+      <fieldset className="mb-8">
+        <legend className="label-cap mb-3 text-ink-500">UK size</legend>
+        <div className="grid grid-cols-5 gap-1.5">
           {SIZE_VALUES.map((size) => {
             const on = params.size === size;
             const count = countFor('sizes', String(size));
@@ -176,10 +193,10 @@ export function FilterPanel({
                 onClick={() => push({ size: on ? undefined : size })}
                 aria-label={`Size ${size}${count !== undefined ? `, ${count} designs` : ''}`}
                 className={cn(
-                  'btn-press tnum step-xs h-9 border',
+                  'btn-press tnum h-10 border text-sm font-semibold',
                   on
                     ? 'border-ink-900 bg-ink-900 text-cream-50'
-                    : 'border-border text-ink-700 hover:border-ink-400 hover:text-ink-900',
+                    : 'border-border bg-cream-50 text-ink-800 hover:border-ink-500 hover:text-ink-950',
                   count === 0 && !on ? 'text-ink-300' : undefined,
                 )}
               >
@@ -191,8 +208,38 @@ export function FilterPanel({
       </fieldset>
 
       {/* --- price --------------------------------------------------------- */}
-      <fieldset className="mb-9">
-        <legend className="label-cap mb-3 text-ink-400">Price</legend>
+      <fieldset className="mb-8">
+        <legend className="label-cap mb-3 text-ink-500">Price</legend>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {[
+            { label: 'Under ₹1,499', max: 1499 },
+            { label: 'Under ₹1,999', max: 1999 },
+            { label: 'Under ₹2,499', max: 2499 },
+          ].map((preset) => {
+            const activePreset = params.minPrice === undefined && params.maxPrice === preset.max;
+            return (
+              <button
+                key={preset.max}
+                type="button"
+                aria-pressed={activePreset}
+                onClick={() =>
+                  push({
+                    minPrice: undefined,
+                    maxPrice: activePreset ? undefined : preset.max,
+                  })
+                }
+                className={cn(
+                  'btn-press tnum border px-2.5 py-1 text-xs font-medium',
+                  activePreset
+                    ? 'border-ink-900 bg-ink-900 text-cream-50'
+                    : 'border-border bg-cream-50 text-ink-800 hover:border-ink-500',
+                )}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
         <PriceRangeInput
           min={params.minPrice}
           max={params.maxPrice}
@@ -202,17 +249,17 @@ export function FilterPanel({
 
       {/* --- availability -------------------------------------------------- */}
       <fieldset>
-        <legend className="label-cap mb-3 text-ink-400">Availability</legend>
-        <label className="step-sm flex cursor-pointer items-center gap-2.5 text-ink-700">
+        <legend className="label-cap mb-3 text-ink-500">Availability</legend>
+        <label className="step-sm flex cursor-pointer items-center gap-2.5 font-medium text-ink-800">
           <input
             type="checkbox"
             checked={params.inStock === true}
             onChange={(event) => push({ inStock: event.target.checked ? true : undefined })}
-            className="h-3.5 w-3.5 accent-ink-900"
+            className="h-4 w-4 accent-ink-900"
           />
           In stock only
         </label>
-        <p className="step-xs mt-1.5 pl-6 text-ink-400">Hides designs with no available size.</p>
+        <p className="step-xs mt-1.5 pl-6 text-ink-500">Hides designs with no available size.</p>
       </fieldset>
     </div>
   );
@@ -270,6 +317,11 @@ function PriceRangeInput({
   const [minValue, setMinValue] = useState(min?.toString() ?? '');
   const [maxValue, setMaxValue] = useState(max?.toString() ?? '');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMinValue(min?.toString() ?? '');
+    setMaxValue(max?.toString() ?? '');
+  }, [min, max]);
 
   return (
     <form

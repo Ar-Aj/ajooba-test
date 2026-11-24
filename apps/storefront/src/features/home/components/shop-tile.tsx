@@ -148,21 +148,25 @@ export function ShopTile({
           )}
         </div>
 
-        <div className="mt-3">
+        <div className="mt-4">
           {/* Heading comes first so no small text sits directly above h3 */}
-          <h3 className="step-md line-clamp-2 font-medium text-ink-900 group-hover:text-gold-700">
+          <h3 className="font-sans text-[1.0625rem] leading-snug line-clamp-2 font-semibold tracking-tight text-ink-950 transition-colors group-hover:text-gold-700 lg:text-[1.15rem]">
             {product.title}
           </h3>
 
-          <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-600">
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[0.9375rem] font-medium text-ink-600">
             <span>{product.subcategory}</span>
           </div>
 
-          <div className="mt-2 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-            <span className="tnum step-md font-semibold text-ink-900">{rupees(price)}</span>
+          <div className="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="tnum text-xl font-bold text-ink-950 lg:text-[1.35rem]">
+              {rupees(price)}
+            </span>
             {discounted ? (
               <>
-                <span className="tnum text-sm text-ink-500 line-through">MRP {rupees(mrp)}</span>
+                <span className="tnum text-[0.9375rem] font-medium text-ink-500 line-through">
+                  MRP {rupees(mrp)}
+                </span>
               </>
             ) : null}
           </div>
@@ -171,14 +175,14 @@ export function ShopTile({
       </TapLink>
 
       {/* ---- Interactive Colourways & UK Sizes / SKUs --------------------- */}
-      <div className="mt-3 space-y-2.5 bg-field-a p-3">
+      <div className="mt-3.5 space-y-3 border border-border/80 bg-field-a p-3.5">
         {colourways.length > 0 ? (
           <div>
-            <div className="flex items-center justify-between gap-2 text-sm text-ink-700">
+            <div className="flex items-center justify-between gap-2 text-[0.9375rem] text-ink-800">
               <span>
-                Shade: <strong className="font-medium text-ink-900">{way?.colour}</strong>
+                Shade: <strong className="font-semibold text-ink-950">{way?.colour}</strong>
               </span>
-              <span className="tnum">
+              <span className="tnum font-medium text-ink-600">
                 {colourways.length} {colourways.length === 1 ? 'colour' : 'colours'}
               </span>
             </div>
@@ -186,7 +190,7 @@ export function ShopTile({
             <div
               role="group"
               aria-label={`${product.title}: colourways`}
-              className="scrollbar-none mt-1.5 flex flex-nowrap items-center gap-1.5 overflow-x-auto touch-pan-y sm:flex-wrap sm:overflow-visible"
+              className="scrollbar-none mt-2 flex flex-nowrap items-center gap-1.5 overflow-x-auto touch-pan-y sm:flex-wrap sm:overflow-visible"
             >
               {colourways.map((colourway, position) => {
                 const selected = position === activeColourIdx;
@@ -208,15 +212,15 @@ export function ShopTile({
                       });
                     }}
                     className={cn(
-                      'btn-press inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-sm transition-colors',
+                      'btn-press inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors',
                       selected
-                        ? 'bg-ink-900 font-medium text-cream-50'
-                        : 'bg-cream-50 text-ink-800 hover:bg-cream-200',
+                        ? 'bg-ink-900 font-semibold text-cream-50'
+                        : 'bg-cream-50 text-ink-900 hover:bg-cream-200',
                     )}
                   >
                     <span
                       aria-hidden="true"
-                      className="block h-3 w-3 shrink-0 rounded-full"
+                      className="block h-3.5 w-3.5 shrink-0 rounded-full border border-ink-900/20"
                       style={{ backgroundColor: colourway.hex }}
                     />
                     <span>{colourway.colour}</span>
@@ -229,13 +233,15 @@ export function ShopTile({
 
         {sizes.length > 0 ? (
           <div>
-            <div className="flex items-center justify-between gap-2 text-sm text-ink-700">
-              <span>UK size</span>
-              <span className="tnum">{sizes.filter((v) => v.inStock).length} sizes in stock</span>
+            <div className="flex items-center justify-between gap-2 text-[0.9375rem] text-ink-800">
+              <span className="font-medium">UK size</span>
+              <span className="tnum font-medium text-ink-600">
+                {sizes.filter((v) => v.inStock).length} sizes in stock
+              </span>
             </div>
 
             <ul
-              className="scrollbar-none mt-1.5 flex flex-nowrap items-center gap-1.5 overflow-x-auto touch-pan-y sm:flex-wrap sm:overflow-visible"
+              className="scrollbar-none mt-2 flex flex-nowrap items-center gap-1.5 overflow-x-auto touch-pan-y sm:flex-wrap sm:overflow-visible"
               aria-label={`Available UK sizes in ${way?.colour}`}
             >
               {CARD_UK_SIZES.map((ukSize) => {
@@ -266,11 +272,11 @@ export function ShopTile({
                           : `UK ${ukSize} · Out of stock`
                       }
                       className={cn(
-                        'tnum relative inline-flex h-7 min-w-8 items-center justify-center px-2 text-sm font-medium transition-colors',
+                        'tnum relative inline-flex h-8 min-w-9 items-center justify-center px-2.5 text-sm font-semibold transition-colors',
                         inStock
                           ? isSelectedSize
                             ? 'bg-ink-900 text-cream-50'
-                            : 'bg-cream-50 text-ink-900 hover:bg-cream-200'
+                            : 'bg-cream-50 text-ink-950 hover:bg-cream-200'
                           : isSelectedSize
                             ? 'bg-cream-200 text-ink-700 line-through'
                             : 'bg-cream-50/75 text-ink-500 line-through hover:bg-cream-200',

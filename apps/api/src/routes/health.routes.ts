@@ -101,6 +101,8 @@ healthRouter.get('/', (req, res) => {
         coupons: ['POST /v1/coupons/validate'],
         analytics: ['POST /v1/analytics/events', 'POST /v1/analytics/events/batch'],
         auth: [
+          'POST /v1/auth/otp/send',
+          'POST /v1/auth/otp/verify',
           'POST /v1/auth/register',
           'POST /v1/auth/login',
           'POST /v1/auth/refresh',

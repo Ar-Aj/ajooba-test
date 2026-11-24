@@ -412,6 +412,39 @@ export async function acceptOAuthSession(hash: string): Promise<{
   return { next, user: body.data };
 }
 
+/** Send a 6-digit verification OTP to an Indian mobile number during sign-up. */
+export async function sendPhoneOtp(phone: string): Promise<{
+  sent: boolean;
+  phone: string;
+  expiresInSeconds: number;
+  devOtp?: string;
+}> {
+  return post<{
+    sent: boolean;
+    phone: string;
+    expiresInSeconds: number;
+    devOtp?: string;
+  }>('/v1/auth/otp/send', { phone });
+}
+
+/** Verify a 6-digit OTP and receive a signed phone verification token. */
+export async function verifyPhoneOtp(
+  phone: string,
+  code: string,
+): Promise<{
+  verified: boolean;
+  phone: string;
+  verificationToken: string;
+  expiresInSeconds: number;
+}> {
+  return post<{
+    verified: boolean;
+    phone: string;
+    verificationToken: string;
+    expiresInSeconds: number;
+  }>('/v1/auth/otp/verify', { phone, code });
+}
+
 /** Register, which signs the customer in on the same response. */
 export async function signUp(input: {
   email: string;
@@ -422,6 +455,7 @@ export async function signUp(input: {
    * hole. Sending `''` is not — an empty string fails the phone-shape check.
    */
   phone?: string;
+  phoneVerificationToken?: string;
   firstName: string;
   lastName: string;
 }): Promise<CustomerSession['user']> {

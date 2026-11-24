@@ -210,31 +210,31 @@ export function getFallbackCategories(): readonly CategoryView[] {
     description: string;
     sourceSubcategory: string;
   }> = [
-    {
-      slug: 'mojri-jutti',
-      displayName: 'Mojri / Jutti',
-      description: 'Handcrafted traditional mojris and juttis for celebratory occasions.',
-      sourceSubcategory: 'Mojri / Jutti',
-    },
-    {
-      slug: 'shoe',
-      displayName: 'Shoes & Loafers',
-      description: 'Casual slip-ons, formal loafers and comfortable everyday shoes.',
-      sourceSubcategory: 'shoe',
-    },
-    {
-      slug: 'sandal',
-      displayName: 'Sandals',
-      description: 'Lightweight, breathable sandals built for all-day comfort.',
-      sourceSubcategory: 'sandal',
-    },
-    {
-      slug: 'chappal',
-      displayName: 'Chappals',
-      description: 'Classic open-toe daily wear chappals with resilient outsoles.',
-      sourceSubcategory: 'Chappal',
-    },
-  ];
+      {
+        slug: 'mojri-jutti',
+        displayName: 'Mojri / Jutti',
+        description: 'Handcrafted traditional mojris and juttis for celebratory occasions.',
+        sourceSubcategory: 'Mojri / Jutti',
+      },
+      {
+        slug: 'shoe',
+        displayName: 'Shoes & Loafers',
+        description: 'Casual slip-ons, formal loafers and comfortable everyday shoes.',
+        sourceSubcategory: 'shoe',
+      },
+      {
+        slug: 'sandal',
+        displayName: 'Sandals',
+        description: 'Lightweight, breathable sandals built for all-day comfort.',
+        sourceSubcategory: 'sandal',
+      },
+      {
+        slug: 'chappal',
+        displayName: 'Chappals',
+        description: 'Classic open-toe daily wear chappals with resilient outsoles.',
+        sourceSubcategory: 'Chappal',
+      },
+    ];
 
   return categoryConfigs.map((cfg, index) => ({
     slug: cfg.slug,
@@ -272,8 +272,8 @@ export function getFallbackFacets(): CatalogFacets {
       colourCounts[c] = (colourCounts[c] ?? 0) + 1;
     }
 
-    for (const v of p.variants) {
-      const s = String(v.size);
+    const distinctSizes = new Set(p.variants.map((v) => String(v.size)));
+    for (const s of distinctSizes) {
       sizeCounts[s] = (sizeCounts[s] ?? 0) + 1;
     }
   }
@@ -299,36 +299,66 @@ export function queryFallbackProducts(query: Partial<CatalogQuery> = {}): Catalo
   const all = getFallbackProducts();
   let filtered = [...all];
 
+  if (query.search) {
+    const q = query.search.trim().toLowerCase();
+    filtered = filtered.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.subcategory.toLowerCase().includes(q) ||
+        p.colours.some((c) => c.toLowerCase().includes(q)),
+    );
+  }
+
   if (query.subcategory) {
     filtered = filtered.filter((p) => p.subcategorySlug === query.subcategory);
   }
 
-  if (query.colour) {
-    const needle = query.colour.toLowerCase();
-    filtered = filtered.filter((p) => p.colours.some((c) => c.toLowerCase() === needle));
-  }
+  const hasVariantCriterion =
+    query.colour !== undefined ||
+    (query.size !== undefined && query.size !== null) ||
+    (query.minPrice !== undefined && query.minPrice !== null) ||
+    (query.maxPrice !== undefined && query.maxPrice !== null) ||
+    query.inStock !== undefined;
 
-  if (query.size !== undefined && query.size !== null) {
-    const targetSize = Number(query.size);
-    filtered = filtered.filter((p) => p.variants.some((v) => v.size === targetSize));
-  }
+  if (hasVariantCriterion) {
+    const colourNeedle = query.colour?.toLowerCase();
+    const targetSize = query.size !== undefined && query.size !== null ? Number(query.size) : null;
+    const minP =
+      query.minPrice !== undefined && query.minPrice !== null ? Number(query.minPrice) : null;
+    const maxP =
+      query.maxPrice !== undefined && query.maxPrice !== null ? Number(query.maxPrice) : null;
 
-  if (query.minPrice !== undefined && query.minPrice !== null) {
-    filtered = filtered.filter((p) => p.sellingPrice >= Number(query.minPrice));
-  }
+    filtered = filtered.filter((p) => {
+      if (p.variants.length === 0) {
+        if (colourNeedle && !p.colours.some((c) => c.toLowerCase() === colourNeedle)) return false;
+        if (targetSize !== null) return false;
+        if (minP !== null && p.sellingPrice < minP) return false;
+        if (maxP !== null && p.sellingPrice > maxP) return false;
+        if (query.inStock !== undefined && p.inStock !== query.inStock) return false;
+        return true;
+      }
 
-  if (query.maxPrice !== undefined && query.maxPrice !== null) {
-    filtered = filtered.filter((p) => p.sellingPrice <= Number(query.maxPrice));
-  }
-
-  if (query.inStock === true) {
-    filtered = filtered.filter((p) => p.inStock);
+      return p.variants.some((v) => {
+        if (colourNeedle && v.colour.toLowerCase() !== colourNeedle) return false;
+        if (targetSize !== null && v.size !== targetSize) return false;
+        if (minP !== null && v.sellingPrice < minP) return false;
+        if (maxP !== null && v.sellingPrice > maxP) return false;
+        if (query.inStock === true && !v.inStock) return false;
+        if (query.inStock === false && v.inStock) return false;
+        return true;
+      });
+    });
   }
 
   if (query.sort === 'price-asc') {
     filtered.sort((a, b) => a.sellingPrice - b.sellingPrice);
   } else if (query.sort === 'price-desc') {
     filtered.sort((a, b) => b.sellingPrice - a.sellingPrice);
+  } else if (query.sort === 'title-asc') {
+    filtered.sort((a, b) => a.title.localeCompare(b.title));
+  } else if (query.sort === 'title-desc') {
+    filtered.sort((a, b) => b.title.localeCompare(a.title));
   } else if (query.sort === 'newest') {
     filtered.sort((a, b) => b.code.localeCompare(a.code));
   }

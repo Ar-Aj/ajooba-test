@@ -17,7 +17,7 @@ export function PriceSavings({
   const percent = discountPercent(mrp, sellingPrice);
 
   return (
-    <p className={cn('tnum step-xs font-medium text-gold-800', className)}>
+    <p className={cn('tnum text-sm font-semibold text-gold-800', className)}>
       Save {rupees(amount)} <span aria-hidden="true">·</span> {percent}% off
     </p>
   );

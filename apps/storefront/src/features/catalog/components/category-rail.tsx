@@ -3,6 +3,7 @@
 import type { CategoryView } from '@ajooba/contracts';
 import { TapLink } from '@/components/track/tap-link';
 import { cn } from '@/lib/cn';
+import { buildCatalogHref, type CatalogParams } from '../lib/catalog-params';
 
 /**
  * The horizontal category rail on the listing page.
@@ -22,18 +23,29 @@ import { cn } from '@/lib/cn';
 export function CategoryRail({
   categories,
   active,
+  params,
+  basePath = '/products',
 }: {
   categories: readonly CategoryView[];
   /** The selected slug, or undefined for "All". */
   active: string | undefined;
+  params?: CatalogParams;
+  basePath?: string;
 }) {
   if (categories.length === 0) return null;
 
   const linkClass = (selected: boolean): string =>
     cn(
       'step-sm link-underline',
-      selected ? 'font-medium text-ink-950' : 'text-ink-500 hover:text-ink-900',
+      selected ? 'font-semibold text-ink-950' : 'text-ink-600 hover:text-ink-950',
     );
+
+  const hrefFor = (slug: string | undefined): string => {
+    if (params) {
+      return buildCatalogHref(params, { subcategory: slug }, basePath);
+    }
+    return slug ? `${basePath}?subcategory=${encodeURIComponent(slug)}` : basePath;
+  };
 
   return (
     <nav
@@ -43,7 +55,7 @@ export function CategoryRail({
       <ul className="flex items-baseline gap-6 whitespace-nowrap">
         <li>
           <TapLink
-            href="/products"
+            href={hrefFor(undefined)}
             action="category-open"
             surface="catalog-toolbar"
             className={linkClass(!active)}
@@ -55,7 +67,7 @@ export function CategoryRail({
         {categories.map((category) => (
           <li key={category.slug}>
             <TapLink
-              href={`/products?subcategory=${encodeURIComponent(category.slug)}`}
+              href={hrefFor(category.slug)}
               action="category-open"
               surface="catalog-toolbar"
               detail={{ categorySlug: category.slug, categoryName: category.displayName }}
@@ -63,7 +75,7 @@ export function CategoryRail({
               aria-current={active === category.slug ? 'page' : undefined}
             >
               {category.displayName}
-              <span className="tnum step-xs ml-1.5 text-ink-400">{category.productCount}</span>
+              <span className="tnum step-xs ml-1.5 text-ink-500">{category.productCount}</span>
             </TapLink>
           </li>
         ))}

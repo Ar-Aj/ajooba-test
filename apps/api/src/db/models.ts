@@ -45,6 +45,7 @@ import '../models/shipment.model.js';
 import '../models/user.model.js';
 import '../models/admin-user.model.js';
 import '../models/refresh-token.model.js';
+import '../models/phone-otp.model.js';
 
 /* Platform plumbing. */
 import '../models/webhook-event.model.js';

@@ -70,7 +70,7 @@ export default async function ProductsPage({
         scrolls; on a laptop it sits on one line. Either way the shopper can see
         the whole taxonomy at once and jump between departments in one tap.
       */}
-      <CategoryRail categories={categories} active={active} />
+      <CategoryRail categories={categories} active={active} params={params} basePath="/products" />
 
       <Suspense fallback={<ProductGridSkeleton />}>
         <CatalogView searchParams={raw} basePath="/products" />

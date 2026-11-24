@@ -5,6 +5,7 @@ import { mediaUrl } from '@/lib/media';
 import { hasDiscount, rupees } from '@/lib/format';
 import { PriceSavings } from '@/components/ui/price-savings';
 import { fieldForIndex } from '@/lib/specimen';
+import { swatchHex } from '@/lib/colour-swatch';
 import { TapLink } from '@/components/track/tap-link';
 
 /**
@@ -103,6 +104,9 @@ export function SpecimenCard({
     (image) => image.url !== primary?.url && image.colour === primary?.colour,
   );
   const discounted = hasDiscount(product.mrp, product.sellingPrice);
+  const inStockSizes = [
+    ...new Set(product.variants.filter((v) => v.inStock).map((v) => v.size)),
+  ].sort((a, b) => a - b);
 
   return (
     <TapLink
@@ -114,7 +118,7 @@ export function SpecimenCard({
         categorySlug: product.subcategorySlug,
         categoryName: product.subcategory,
       }}
-      className={cn('group block', className)}
+      className={cn('group flex flex-col', className)}
       data-testid="specimen-card"
     >
       <div className={cn('specimen aspect-4/5', fieldForIndex(index))}>
@@ -164,27 +168,56 @@ export function SpecimenCard({
           </span>
         )}
 
-        {product.inStock ? null : (
-          <span className="label-cap absolute left-0 top-0 bg-ink-900 px-2 py-1 text-cream-50">
+        {product.inStock ? (
+          <span className="absolute left-2 top-2 bg-ink-900 px-2.5 py-1 text-xs font-medium text-cream-50">
+            In stock
+          </span>
+        ) : (
+          <span className="label-cap absolute left-0 top-0 bg-claret-700 px-2.5 py-1 text-cream-50">
             Sold out
           </span>
         )}
       </div>
 
-      <div className="mt-3">
-        <p className="step-xs text-ink-400">{product.subcategory}</p>
-        <p className="step-sm mt-1 line-clamp-2 font-medium text-ink-800 group-hover:text-ink-950">
+      <div className="mt-3.5">
+        <p className="text-sm font-medium text-ink-600">{product.subcategory}</p>
+        <p className="mt-1 line-clamp-2 text-[1.0625rem] leading-snug font-semibold tracking-tight text-ink-950 transition-colors group-hover:text-gold-700 lg:text-[1.15rem]">
           {product.title}
         </p>
-        <p className="step-sm mt-1.5 text-ink-900">
-          {rupees(product.sellingPrice)}
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+          <span className="tnum text-xl font-bold text-ink-950 lg:text-[1.35rem]">
+            {rupees(product.sellingPrice)}
+          </span>
           {discounted ? (
-            <span className="step-xs ml-2 text-ink-400 line-through">{rupees(product.mrp)}</span>
+            <span className="tnum text-[0.9375rem] font-medium text-ink-500 line-through">
+              {rupees(product.mrp)}
+            </span>
           ) : null}
-        </p>
+        </div>
         <PriceSavings mrp={product.mrp} sellingPrice={product.sellingPrice} className="mt-1" />
-        {product.colours.length > 1 ? (
-          <p className="step-xs mt-1 text-ink-500">{product.colours.length} colourways</p>
+
+        {product.colours.length > 0 ? (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {product.colours.map((colour) => (
+              <span
+                key={colour}
+                className="inline-flex items-center gap-1.5 bg-field-a px-2 py-0.5 text-xs font-medium text-ink-800"
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink-900/20"
+                  style={{ backgroundColor: swatchHex(colour) }}
+                />
+                {colour}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        {inStockSizes.length > 0 ? (
+          <p className="tnum mt-2 text-xs font-medium text-ink-600">
+            UK sizes: <span className="font-semibold text-ink-900">{inStockSizes.join(', ')}</span>
+          </p>
         ) : null}
       </div>
     </TapLink>

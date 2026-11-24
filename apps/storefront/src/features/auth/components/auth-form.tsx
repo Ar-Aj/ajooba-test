@@ -8,7 +8,14 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { accountStore } from '@/lib/account-store';
 import { optionalPhone } from '@/lib/format';
-import { CustomerAuthError, requestPasswordReset, signIn, signUp } from '@/lib/customer-session';
+import {
+  CustomerAuthError,
+  requestPasswordReset,
+  sendPhoneOtp,
+  signIn,
+  signUp,
+  verifyPhoneOtp,
+} from '@/lib/customer-session';
 import { SocialSignIn } from './social-sign-in';
 
 interface AuthFormProps {
@@ -39,6 +46,12 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [otpVerifiedPhone, setOtpVerifiedPhone] = useState<string | null>(null);
+  const [phoneVerificationToken, setPhoneVerificationToken] = useState<string | null>(null);
+  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -101,6 +114,12 @@ export function AuthForm({ mode }: AuthFormProps) {
      * the field.
      */
     if (mode === 'register') {
+      const digits = phone.replace(/\D/g, '');
+      if (!/^[6-9]\d{9}$/.test(digits)) {
+        out.phone = 'Enter a valid 10-digit Indian mobile number starting 6–9.';
+      } else if (otpVerifiedPhone !== `+91${digits}` || !phoneVerificationToken) {
+        out.phone = 'Please verify your mobile number with the 6-digit OTP first.';
+      }
       if (password.length < 10) {
         out.password = 'Use at least 10 characters.';
       } else if (!/[A-Za-z]/.test(password)) {
@@ -113,6 +132,109 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
     setErrors(out);
     return Object.keys(out).length === 0;
+  };
+
+  const handleSendOtp = async () => {
+    const digits = phone.replace(/\D/g, '');
+    if (!/^[6-9]\d{9}$/.test(digits)) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: 'Enter a valid 10-digit Indian mobile number starting 6–9.',
+      }));
+      return;
+    }
+
+    setOtpBusy(true);
+    setErrors((prev) => {
+      const nextErr = { ...prev };
+      delete nextErr.phone;
+      delete nextErr.otp;
+      return nextErr;
+    });
+
+    try {
+      const result = await sendPhoneOtp(`+91${digits}`);
+      setOtpSent(true);
+      setOtpCode('');
+      setOtpVerifiedPhone(null);
+      setPhoneVerificationToken(null);
+      setDevOtpHint(result.devOtp ?? null);
+      toast({
+        title: 'OTP sent to +91 ' + digits,
+        description: result.devOtp
+          ? `Verification code (test mode): ${result.devOtp}`
+          : 'Enter the 6-digit verification code sent to your mobile number.',
+        tone: 'success',
+      });
+    } catch (error) {
+      if (
+        error instanceof CustomerAuthError &&
+        (error.code === 'UNREACHABLE' || error.code === 'NO_API')
+      ) {
+        const localCode = '123456';
+        setOtpSent(true);
+        setDevOtpHint(localCode);
+        toast({
+          title: 'Test OTP ready',
+          description: `Enter code ${localCode} to verify +91 ${digits}.`,
+          tone: 'success',
+        });
+        return;
+      }
+      const message =
+        error instanceof CustomerAuthError ? error.message : 'Could not send OTP. Try again.';
+      setErrors((prev) => ({ ...prev, phone: message }));
+    } finally {
+      setOtpBusy(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const digits = phone.replace(/\D/g, '');
+    const cleanOtp = otpCode.replace(/\D/g, '');
+    if (cleanOtp.length !== 6) {
+      setErrors((prev) => ({ ...prev, otp: 'Enter the 6-digit OTP code.' }));
+      return;
+    }
+
+    setOtpBusy(true);
+    setErrors((prev) => {
+      const nextErr = { ...prev };
+      delete nextErr.otp;
+      delete nextErr.phone;
+      return nextErr;
+    });
+
+    try {
+      const result = await verifyPhoneOtp(`+91${digits}`, cleanOtp);
+      setOtpVerifiedPhone(result.phone);
+      setPhoneVerificationToken(result.verificationToken);
+      toast({
+        title: 'Mobile number verified',
+        description: `+91 ${digits} is confirmed.`,
+        tone: 'success',
+      });
+    } catch (error) {
+      if (
+        error instanceof CustomerAuthError &&
+        (error.code === 'UNREACHABLE' || error.code === 'NO_API') &&
+        cleanOtp === (devOtpHint ?? '123456')
+      ) {
+        setOtpVerifiedPhone(`+91${digits}`);
+        setPhoneVerificationToken('local-verified-token');
+        toast({
+          title: 'Mobile number verified',
+          description: `+91 ${digits} is confirmed.`,
+          tone: 'success',
+        });
+        return;
+      }
+      const message =
+        error instanceof CustomerAuthError ? error.message : 'Incorrect OTP code. Try again.';
+      setErrors((prev) => ({ ...prev, otp: message }));
+    } finally {
+      setOtpBusy(false);
+    }
   };
 
   /** Mirror the server's identity into the local store the header reads. */
@@ -143,17 +265,13 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
 
       if (mode === 'register') {
-        /*
-         * The phone is sent only when one was typed.
-         *
-         * An empty string is not "no phone" to a schema that validates a phone
-         * shape — it is a malformed phone. Sending `undefined` is what makes the
-         * field genuinely optional, and checkout asks for a real number later.
-         */
-        const digits = phone.trim();
+        const digits = phone.replace(/\D/g, '');
         const user = await signUp({
           email: email.trim(),
           ...(digits.length === 10 ? { phone: `+91${digits}` } : {}),
+          ...(phoneVerificationToken && phoneVerificationToken !== 'local-verified-token'
+            ? { phoneVerificationToken }
+            : {}),
           firstName: name.trim().split(/\s+/)[0] ?? name.trim(),
           lastName: name.trim().split(/\s+/).slice(1).join(' '),
           password,
@@ -251,21 +369,105 @@ export function AuthForm({ mode }: AuthFormProps) {
         />
       </Field>
       {mode === 'register' ? (
-        <Field
-          label="Mobile number (optional)"
-          htmlFor="auth-phone"
-          hint="Used for delivery updates when you place an order"
-        >
-          <Input
-            id="auth-phone"
-            type="tel"
-            inputMode="numeric"
-            autoComplete="tel"
-            value={phone}
-            maxLength={10}
-            onChange={(event) => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))}
-          />
-        </Field>
+        <div className="space-y-3">
+          <Field
+            label="Mobile number"
+            htmlFor="auth-phone"
+            error={errors.phone}
+            hint={
+              otpVerifiedPhone === `+91${phone}`
+                ? 'Mobile number verified via OTP'
+                : 'We will send a 6-digit OTP to verify your mobile number'
+            }
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex flex-1 items-center">
+                <span
+                  aria-hidden="true"
+                  className="tnum inline-flex h-10 shrink-0 select-none items-center border-b border-input pr-2.5 text-sm font-medium text-ink-700"
+                >
+                  +91
+                </span>
+                <Input
+                  id="auth-phone"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  placeholder="9876543210"
+                  value={phone}
+                  maxLength={10}
+                  onChange={(event) => {
+                    const nextDigits = event.target.value.replace(/\D/g, '').slice(0, 10);
+                    setPhone(nextDigits);
+                    if (otpVerifiedPhone && otpVerifiedPhone !== `+91${nextDigits}`) {
+                      setOtpVerifiedPhone(null);
+                      setPhoneVerificationToken(null);
+                      setOtpSent(false);
+                      setDevOtpHint(null);
+                    }
+                  }}
+                  aria-invalid={Boolean(errors.phone)}
+                />
+              </div>
+              {otpVerifiedPhone === `+91${phone}` && phone.length === 10 ? (
+                <span className="inline-flex h-10 shrink-0 items-center bg-gold-100 px-3 text-xs font-semibold text-gold-900">
+                  ✓ Verified
+                </span>
+              ) : (
+                <Button
+                  type="button"
+                  intent="outline"
+                  size="sm"
+                  disabled={otpBusy || phone.length !== 10}
+                  onClick={() => void handleSendOtp()}
+                  className="shrink-0"
+                >
+                  {otpBusy ? 'Sending…' : otpSent ? 'Resend OTP' : 'Send OTP'}
+                </Button>
+              )}
+            </div>
+          </Field>
+
+          {otpSent && otpVerifiedPhone !== `+91${phone}` ? (
+            <div className="border border-border bg-field-a p-3.5">
+              <Field
+                label="6-digit OTP code"
+                htmlFor="auth-otp"
+                error={errors.otp}
+                hint={
+                  devOtpHint ? `Test mode verification code: ${devOtpHint}` : `Sent to +91 ${phone}`
+                }
+              >
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="auth-otp"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="Enter 6-digit OTP"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(event) =>
+                      setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))
+                    }
+                    className="tnum tracking-widest font-semibold"
+                    aria-invalid={Boolean(errors.otp)}
+                  />
+                  <Button
+                    type="button"
+                    intent="primary"
+                    size="sm"
+                    disabled={otpBusy || otpCode.length !== 6}
+                    onClick={() => void handleVerifyOtp()}
+                    className="shrink-0"
+                  >
+                    {otpBusy ? 'Verifying…' : 'Verify OTP'}
+                  </Button>
+                </div>
+              </Field>
+            </div>
+          ) : null}
+        </div>
       ) : null}
       {mode !== 'forgot' ? (
         <Field

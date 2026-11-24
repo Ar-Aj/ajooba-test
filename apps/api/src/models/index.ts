@@ -11,6 +11,7 @@ export { VariantModel } from './variant.model.js';
 export { UserModel } from './user.model.js';
 export { AdminUserModel } from './admin-user.model.js';
 export { RefreshTokenModel } from './refresh-token.model.js';
+export { PhoneOtpModel } from './phone-otp.model.js';
 export { CartModel } from './cart.model.js';
 export { OrderModel } from './order.model.js';
 export { ReturnRequestModel } from './return-request.model.js';

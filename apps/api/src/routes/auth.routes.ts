@@ -7,7 +7,9 @@ import {
   refreshTokenRequestSchema,
   registerRequestSchema,
   resetPasswordRequestSchema,
+  sendPhoneOtpRequestSchema,
   updateProfileRequestSchema,
+  verifyPhoneOtpRequestSchema,
   verifyResetTokenRequestSchema,
   type AdminSession,
   type AuthSession,
@@ -19,7 +21,9 @@ import {
   type RefreshTokenRequest,
   type RegisterRequest,
   type ResetPasswordRequest,
+  type SendPhoneOtpRequest,
   type UpdateProfileRequest,
+  type VerifyPhoneOtpRequest,
   type VerifyResetTokenRequest,
 } from '@ajooba/contracts';
 import { env } from '../config/env.js';
@@ -62,6 +66,7 @@ import {
   resetPasswordWithGrant,
   verifyResetToken,
 } from '../services/password-reset.service.js';
+import { sendPhoneOtp, verifyPhoneOtp } from '../services/phone-otp.service.js';
 
 /**
  * Authentication routes.
@@ -229,6 +234,42 @@ authRouter.get('/oauth/:provider/callback', authLimiter, async (req, res, _next)
 /* -------------------------------------------------------------------------- */
 /* Customer                                                                   */
 /* -------------------------------------------------------------------------- */
+
+authRouter.post(
+  '/otp/send',
+  authLimiter,
+  validateBody(sendPhoneOtpRequestSchema),
+  async (req, res, next) => {
+    try {
+      const body = validatedBody<SendPhoneOtpRequest>(req);
+      const result = await sendPhoneOtp({
+        phone: body.phone,
+        ip: req.ip ?? '',
+      });
+      sendSuccess(res, result, getRequestId(req));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+authRouter.post(
+  '/otp/verify',
+  authLimiter,
+  validateBody(verifyPhoneOtpRequestSchema),
+  async (req, res, next) => {
+    try {
+      const body = validatedBody<VerifyPhoneOtpRequest>(req);
+      const result = await verifyPhoneOtp({
+        phone: body.phone,
+        code: body.code,
+      });
+      sendSuccess(res, result, getRequestId(req));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 authRouter.post(
   '/register',

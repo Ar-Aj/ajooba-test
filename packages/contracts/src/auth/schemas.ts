@@ -46,6 +46,37 @@ export const adminRoleSchema = z.enum(ADMIN_ROLES);
 export const adminPermissionSchema = z.enum(ADMIN_PERMISSIONS);
 
 /* -------------------------------------------------------------------------- */
+/* Phone OTP Verification                                                     */
+/* -------------------------------------------------------------------------- */
+
+export const indianMobileSchema = z
+  .string()
+  .trim()
+  .transform((value) => {
+    const digits = value.replace(/\D/g, '').slice(-10);
+    return digits.length === 10 ? `+91${digits}` : value;
+  })
+  .refine((value) => /^\+91[6-9]\d{9}$/.test(value), {
+    message: 'Enter a valid 10-digit Indian mobile number starting 6–9',
+  });
+
+export const sendPhoneOtpRequestSchema = z.object({
+  phone: indianMobileSchema,
+});
+
+export type SendPhoneOtpRequest = z.infer<typeof sendPhoneOtpRequestSchema>;
+
+export const verifyPhoneOtpRequestSchema = z.object({
+  phone: indianMobileSchema,
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Enter the 6-digit verification code'),
+});
+
+export type VerifyPhoneOtpRequest = z.infer<typeof verifyPhoneOtpRequestSchema>;
+
+/* -------------------------------------------------------------------------- */
 /* Registration                                                               */
 /* -------------------------------------------------------------------------- */
 
@@ -62,6 +93,8 @@ export const registerRequestSchema = z.object({
    * into a field that fulfilment code assumes is a number.
    */
   phone: phoneSchema.optional(),
+  /** Signed verification token returned by `/v1/auth/otp/verify` when phone OTP was completed. */
+  phoneVerificationToken: z.string().trim().min(10).max(2048).optional(),
   password: passwordSchema,
   firstName: z.string().trim().min(1).max(80),
   /*

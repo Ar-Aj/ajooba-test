@@ -72,10 +72,12 @@ export function CatalogToolbar({
                   ...(params.subcategory ? { categorySlug: params.subcategory } : {}),
                 });
                 startTransition(() => {
-                  router.push(buildCatalogHref(params, { sort, page: 1 }, basePath));
+                  router.push(buildCatalogHref(params, { sort, page: 1 }, basePath), {
+                    scroll: false,
+                  });
                 });
               }}
-              className="step-sm h-10 appearance-none border border-border bg-transparent py-0 pl-3 pr-9 text-ink-800 hover:border-ink-400 focus:border-ink-900 focus:outline-none"
+              className="step-sm h-10 appearance-none border border-border bg-cream-50 py-0 pl-3 pr-9 font-medium text-ink-900 hover:border-ink-500 focus:border-ink-900 focus:outline-none"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -95,7 +97,7 @@ export function CatalogToolbar({
 
       {chips.length > 0 ? (
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="step-xs mr-1 text-ink-400">Filtering by</span>
+          <span className="step-xs mr-1 text-ink-500">Filtering by</span>
           {chips.map((chip) => (
             <button
               key={String(chip.key)}
@@ -105,16 +107,18 @@ export function CatalogToolbar({
                   ...(params.subcategory ? { categorySlug: params.subcategory } : {}),
                 });
                 startTransition(() => {
-                  router.push(buildCatalogHref(params, { [chip.key]: undefined }, basePath));
+                  router.push(buildCatalogHref(params, { [chip.key]: undefined }, basePath), {
+                    scroll: false,
+                  });
                 });
               }}
               className={cn(
-                'btn-press step-xs inline-flex items-center gap-2 border border-border bg-cream-100 px-2.5 py-1.5 text-ink-700',
-                'hover:border-ink-500 hover:text-ink-900',
+                'btn-press step-xs inline-flex items-center gap-2 border border-border bg-cream-100 px-3 py-1.5 font-medium text-ink-800',
+                'hover:border-ink-500 hover:text-ink-950',
               )}
             >
               {formatChip(chip.key, chip.value, facets)}
-              <span aria-hidden="true" className="text-ink-400">
+              <span aria-hidden="true" className="text-ink-500">
                 ×
               </span>
               <span className="sr-only">Remove this filter</span>
@@ -124,7 +128,7 @@ export function CatalogToolbar({
             type="button"
             onClick={() =>
               startTransition(() => {
-                router.push(basePath);
+                router.push(basePath, { scroll: false });
               })
             }
             className="step-xs ml-1 px-2 py-1.5 text-ink-500 underline underline-offset-4 hover:text-claret-700"

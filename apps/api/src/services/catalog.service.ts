@@ -185,39 +185,67 @@ function buildFilter(query: CatalogQueryInput): Record<string, unknown> {
     filter.subcategorySlug = query.subcategory;
   }
 
-  /*
-   * Colour lives on the variant (one design can be made in several colours),
-   * but the product document denormalises the distinct colour list into
-   * `colours`. Filtering on that array is therefore equivalent to "has at
-   * least one variant in this colour" and avoids a second query.
-   */
-  if (query.colour) {
-    filter.colours = query.colour;
-  }
-
   if (query.inStock !== undefined) {
     filter.inStock = query.inStock;
-  }
-
-  if (query.minPrice !== undefined || query.maxPrice !== undefined) {
-    const priceRange: { $gte?: number; $lte?: number } = {};
-    if (query.minPrice !== undefined) priceRange.$gte = query.minPrice;
-    if (query.maxPrice !== undefined) priceRange.$lte = query.maxPrice;
-    filter.sellingPrice = priceRange;
   }
 
   return filter;
 }
 
 /**
- * Resolve the set of product ids that have a variant in the requested size.
+ * Resolve the set of product ids that have at least one variant matching the
+ * requested variant-level filters (colour, size, price range, and availability).
  *
- * Size is a variant-level attribute only — the product document does not
- * denormalise the size scale — so a size filter has to be resolved through
- * the variants collection before the product query can run.
+ * Checking variants directly guarantees that:
+ *  - filtering by `colour=Black&size=8&inStock=true` only returns designs where
+ *    Black in UK 8 is actually in stock (rather than a design that has Black
+ *    sold out and Tan UK 8 in stock);
+ *  - filtering by `colour` works even when a product document's denormalised
+ *    `colours` array differs in casing or was edited at the variant level;
+ *  - filtering by `minPrice` / `maxPrice` matches designs that have a variant
+ *    in that price range.
  */
-async function resolveProductIdsForSize(size: number): Promise<Types.ObjectId[]> {
-  const variantDocs = await VariantModel.find({ size })
+async function resolveProductIdsForVariantCriteria(
+  query: CatalogQueryInput,
+): Promise<Types.ObjectId[] | null> {
+  const hasVariantCriterion =
+    query.size !== undefined ||
+    query.colour !== undefined ||
+    query.minPrice !== undefined ||
+    query.maxPrice !== undefined ||
+    query.inStock !== undefined;
+
+  if (!hasVariantCriterion) {
+    return null;
+  }
+
+  const variantFilter: Record<string, unknown> = {};
+
+  if (query.size !== undefined) {
+    variantFilter.size = query.size;
+  }
+
+  if (query.colour) {
+    const escapedColour = query.colour.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    variantFilter.colour = { $regex: `^${escapedColour}$`, $options: 'i' };
+  }
+
+  if (query.minPrice !== undefined || query.maxPrice !== undefined) {
+    const priceRange: { $gte?: number; $lte?: number } = {};
+    if (query.minPrice !== undefined) priceRange.$gte = query.minPrice;
+    if (query.maxPrice !== undefined) priceRange.$lte = query.maxPrice;
+    variantFilter.sellingPrice = priceRange;
+  }
+
+  if (query.inStock === true) {
+    variantFilter.inStock = true;
+    variantFilter.stock = { $gt: 0 };
+    variantFilter.photographyStatus = { $ne: 'pending-review' };
+  } else if (query.inStock === false) {
+    variantFilter.$or = [{ inStock: false }, { stock: { $lte: 0 } }];
+  }
+
+  const variantDocs = await VariantModel.find(variantFilter)
     .select('productId')
     .lean<Array<{ productId: Types.ObjectId }>>();
 
@@ -258,17 +286,16 @@ export async function listProducts(query: CatalogQueryInput): Promise<CatalogLis
   const sort = buildSort(query.sort);
 
   /*
-   * A size filter narrows the result set to designs that are actually
-   * manufactured in that size. When no design matches, the product query is
-   * short-circuited to an empty set rather than running against an
-   * unfiltered collection.
+   * Variant-level criteria (size, colour, price range, availability) narrow the
+   * result set to designs that have at least one variant matching all active
+   * variant filters simultaneously.
    */
-  if (query.size !== undefined) {
-    const productIds = await resolveProductIdsForSize(query.size);
-    if (productIds.length === 0) {
+  const matchingProductIds = await resolveProductIdsForVariantCriteria(query);
+  if (matchingProductIds !== null) {
+    if (matchingProductIds.length === 0) {
       return { items: [], totalItems: 0, page, pageSize, totalPages: 0 };
     }
-    filter._id = { $in: productIds };
+    filter._id = { $in: matchingProductIds };
   }
 
   const [docs, totalItems] = await Promise.all([
@@ -349,15 +376,17 @@ export async function getCatalogFacets(): Promise<CatalogFacets> {
       { $sort: { count: -1 } },
     ]),
     VariantModel.aggregate<{ _id: string; count: number }>([
-      // Colour lives on the variant, so the gate is applied by pre-resolving
-      // the published product ids rather than by a join.
+      // Count distinct published designs per colour (not total size-variant rows).
       { $match: await publishedProductIdClause() },
-      { $group: { _id: '$colour', count: { $sum: 1 } } },
+      { $group: { _id: { colour: '$colour', productId: '$productId' } } },
+      { $group: { _id: '$_id.colour', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
     ]),
     VariantModel.aggregate<{ _id: number; count: number }>([
+      // Count distinct published designs per UK size.
       { $match: await publishedProductIdClause() },
-      { $group: { _id: '$size', count: { $sum: 1 } } },
+      { $group: { _id: { size: '$size', productId: '$productId' } } },
+      { $group: { _id: '$_id.size', count: { $sum: 1 } } },
       { $sort: { _id: 1 } },
     ]),
     ProductModel.aggregate<{ min: number; max: number }>([
