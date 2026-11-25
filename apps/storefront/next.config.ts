@@ -45,6 +45,7 @@ function resolveDistDir(): string {
 }
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   poweredByHeader: false,
   distDir: resolveDistDir(),

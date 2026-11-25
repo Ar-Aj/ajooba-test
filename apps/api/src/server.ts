@@ -15,6 +15,16 @@ import { reconcileCategoryTaxonomyAtBoot } from './services/category-bootstrap.s
 async function main(): Promise<void> {
   logger.info(describeEnv(), 'Starting @ajooba/api');
 
+  const app = createApp();
+  const server = createServer(app);
+
+  // Bind socket immediately so managed Node.js platforms (e.g. Hostinger's 3s
+  // listen() watchdog) register the server port right away while MongoDB
+  // finishes connecting.
+  server.listen(env.PORT, () => {
+    logger.info({ port: env.PORT, apiPublicUrl: env.API_PUBLIC_URL }, 'API listening');
+  });
+
   try {
     await connectToDatabase();
   } catch (error) {
@@ -25,29 +35,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const app = createApp();
-  const server = createServer(app);
-
   /*
-   * Reconcile the category taxonomy against the catalogue before accepting
-   * traffic.
-   *
-   * This is a repair, not a feature. The `categories` collection is the
-   * authority for the storefront navigation, the admin category screen and
-   * every write that assigns a design to a category — and it was never
-   * populated by the importer. Reconciling at boot is what makes an existing
-   * store usable again after that defect, and keeps it correct as new slugs
-   * arrive through an import. It is idempotent and additive: no existing
-   * category is ever changed.
-   *
-   * Deliberately awaited so the first request cannot race it, but
-   * deliberately non-fatal — see the function's own note.
+   * Reconcile the category taxonomy against the catalogue.
    */
   await reconcileCategoryTaxonomyAtBoot();
-
-  server.listen(env.PORT, () => {
-    logger.info({ port: env.PORT, apiPublicUrl: env.API_PUBLIC_URL }, 'API listening');
-  });
 
   const shutdown = (signal: string): void => {
     logger.info({ signal }, 'Shutting down');
