@@ -24,7 +24,11 @@
  * tree from `MEDIA_STATIC_DIR/public/products`, so `product` paths hit the
  * API; the storefront's own `/banner`, `/images`, `/icons` are its own.
  */
-const MEDIA_BASE_URL = (process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? '/').replace(/\/$/, '');
+const RAW_MEDIA_BASE_URL = (process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? '/').replace(/\/$/, '');
+const MEDIA_BASE_URL =
+  process.env.NODE_ENV === 'production' && RAW_MEDIA_BASE_URL.includes('localhost')
+    ? ''
+    : RAW_MEDIA_BASE_URL;
 
 /** Build a URL for a public asset whose path is root-relative. */
 export function mediaUrl(path: string): string {
