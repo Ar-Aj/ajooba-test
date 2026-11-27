@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ResolvedHomepageSection } from '@ajooba/contracts';
-import { HeroBanner } from '@/features/home/components/hero-banner';
+import { FootwearShowroom } from '@/features/home/components/footwear-showroom';
+import { selectShowroomProducts } from '@/features/home/data/showroom-products';
 import { StoryCallout } from '@/features/home/components/story-callout';
 import { TrustBand } from '@/features/home/components/trust-band';
 import { HomepageSectionRenderer } from '@/features/home/components/homepage-section';
@@ -62,7 +63,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroBanner />
+      <FootwearShowroom products={selectShowroomProducts(allProducts)} />
 
       {marqueeMessages(merchandising).length > 0 ? (
         <Marquee items={marqueeMessages(merchandising)} />

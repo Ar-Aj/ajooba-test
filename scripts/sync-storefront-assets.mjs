@@ -26,7 +26,7 @@ if (fs.existsSync(dest)) {
   } catch {
     try {
       fs.rmSync(dest, { force: true, recursive: true });
-    } catch {}
+    } catch { }
   }
 }
 
