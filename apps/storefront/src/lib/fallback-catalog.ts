@@ -210,31 +210,31 @@ export function getFallbackCategories(): readonly CategoryView[] {
     description: string;
     sourceSubcategory: string;
   }> = [
-      {
-        slug: 'mojri-jutti',
-        displayName: 'Mojri / Jutti',
-        description: 'Handcrafted traditional mojris and juttis for celebratory occasions.',
-        sourceSubcategory: 'Mojri / Jutti',
-      },
-      {
-        slug: 'shoe',
-        displayName: 'Shoes & Loafers',
-        description: 'Casual slip-ons, formal loafers and comfortable everyday shoes.',
-        sourceSubcategory: 'shoe',
-      },
-      {
-        slug: 'sandal',
-        displayName: 'Sandals',
-        description: 'Lightweight, breathable sandals built for all-day comfort.',
-        sourceSubcategory: 'sandal',
-      },
-      {
-        slug: 'chappal',
-        displayName: 'Chappals',
-        description: 'Classic open-toe daily wear chappals with resilient outsoles.',
-        sourceSubcategory: 'Chappal',
-      },
-    ];
+    {
+      slug: 'mojri-jutti',
+      displayName: 'Mojri / Jutti',
+      description: 'Handcrafted traditional mojris and juttis for celebratory occasions.',
+      sourceSubcategory: 'Mojri / Jutti',
+    },
+    {
+      slug: 'shoe',
+      displayName: 'Shoes & Loafers',
+      description: 'Casual slip-ons, formal loafers and comfortable everyday shoes.',
+      sourceSubcategory: 'shoe',
+    },
+    {
+      slug: 'sandal',
+      displayName: 'Sandals',
+      description: 'Lightweight, breathable sandals built for all-day comfort.',
+      sourceSubcategory: 'sandal',
+    },
+    {
+      slug: 'chappal',
+      displayName: 'Chappals',
+      description: 'Classic open-toe daily wear chappals with resilient outsoles.',
+      sourceSubcategory: 'Chappal',
+    },
+  ];
 
   return categoryConfigs.map((cfg, index) => ({
     slug: cfg.slug,

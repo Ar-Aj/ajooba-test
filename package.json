@@ -10,7 +10,7 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "pnpm --parallel --stream --filter \"./apps/*\" --filter \"@ajooba/contracts\" dev",
+    "dev": "node scripts/free-dev-ports.mjs && pnpm --parallel --stream --filter \"./apps/*\" --filter \"@ajooba/contracts\" dev",
     "dev:contracts": "pnpm --filter @ajooba/contracts dev",
     "dev:storefront": "pnpm --filter @ajooba/storefront dev",
     "dev:admin": "pnpm --filter @ajooba/admin dev",

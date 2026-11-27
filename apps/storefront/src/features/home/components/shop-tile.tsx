@@ -100,7 +100,7 @@ export function ShopTile({
       >
         <div
           className={cn(
-            'specimen aspect-4/5',
+            'specimen aspect-[4/4.2] sm:aspect-4/5',
             fieldForIndex(index),
             anyInStock ? undefined : 'opacity-95',
           )}
@@ -138,33 +138,33 @@ export function ShopTile({
           ) : null}
 
           {anyInStock ? (
-            <span className="absolute left-2 top-2 bg-ink-900 px-2.5 py-1 text-sm font-medium text-cream-50">
+            <span className="absolute left-2 top-2 bg-ink-900 px-2 py-0.5 text-xs font-medium text-cream-50 sm:px-2.5 sm:py-1 sm:text-sm">
               In stock
             </span>
           ) : (
-            <span className="absolute left-2 top-2 bg-claret-700 px-2.5 py-1 text-sm font-medium text-cream-50">
+            <span className="absolute left-2 top-2 bg-claret-700 px-2 py-0.5 text-xs font-medium text-cream-50 sm:px-2.5 sm:py-1 sm:text-sm">
               Sold out
             </span>
           )}
         </div>
 
-        <div className="mt-4">
+        <div className="mt-2.5 sm:mt-4">
           {/* Heading comes first so no small text sits directly above h3 */}
-          <h3 className="font-sans text-[1.0625rem] leading-snug line-clamp-2 font-semibold tracking-tight text-ink-950 transition-colors group-hover:text-gold-700 lg:text-[1.15rem]">
+          <h3 className="font-sans text-[0.95rem] leading-snug line-clamp-2 font-semibold tracking-tight text-ink-950 transition-colors group-hover:text-gold-700 sm:text-[1.0625rem] lg:text-[1.15rem]">
             {product.title}
           </h3>
 
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[0.9375rem] font-medium text-ink-600">
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[0.85rem] font-medium text-ink-600 sm:text-[0.9375rem]">
             <span>{product.subcategory}</span>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="tnum text-xl font-bold text-ink-950 lg:text-[1.35rem]">
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sm:mt-2.5 sm:gap-x-3">
+            <span className="tnum text-lg font-bold text-ink-950 sm:text-xl lg:text-[1.35rem]">
               {rupees(price)}
             </span>
             {discounted ? (
               <>
-                <span className="tnum text-[0.9375rem] font-medium text-ink-500 line-through">
+                <span className="tnum text-[0.85rem] font-medium text-ink-500 line-through sm:text-[0.9375rem]">
                   MRP {rupees(mrp)}
                 </span>
               </>
@@ -175,10 +175,10 @@ export function ShopTile({
       </TapLink>
 
       {/* ---- Interactive Colourways & UK Sizes / SKUs --------------------- */}
-      <div className="mt-3.5 space-y-3 border border-border/80 bg-field-a p-3.5">
+      <div className="mt-2.5 space-y-2.5 border border-border/80 bg-field-a p-2.5 sm:mt-3.5 sm:space-y-3 sm:p-3.5">
         {colourways.length > 0 ? (
           <div>
-            <div className="flex items-center justify-between gap-2 text-[0.9375rem] text-ink-800">
+            <div className="flex items-center justify-between gap-2 text-xs text-ink-800 sm:text-[0.9375rem]">
               <span>
                 Shade: <strong className="font-semibold text-ink-950">{way?.colour}</strong>
               </span>
@@ -190,7 +190,7 @@ export function ShopTile({
             <div
               role="group"
               aria-label={`${product.title}: colourways`}
-              className="scrollbar-none mt-2 flex flex-nowrap items-center gap-1.5 overflow-x-auto touch-pan-y sm:flex-wrap sm:overflow-visible"
+              className="scrollbar-none mt-1.5 flex flex-nowrap items-center gap-1.5 overflow-x-auto sm:mt-2 sm:flex-wrap sm:overflow-visible"
             >
               {colourways.map((colourway, position) => {
                 const selected = position === activeColourIdx;
@@ -212,7 +212,7 @@ export function ShopTile({
                       });
                     }}
                     className={cn(
-                      'btn-press inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors',
+                      'btn-press inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-xs font-medium transition-colors sm:px-3 sm:py-1.5 sm:text-sm',
                       selected
                         ? 'bg-ink-900 font-semibold text-cream-50'
                         : 'bg-cream-50 text-ink-900 hover:bg-cream-200',
@@ -220,7 +220,7 @@ export function ShopTile({
                   >
                     <span
                       aria-hidden="true"
-                      className="block h-3.5 w-3.5 shrink-0 rounded-full border border-ink-900/20"
+                      className="block h-3 w-3 shrink-0 rounded-full border border-ink-900/20 sm:h-3.5 sm:w-3.5"
                       style={{ backgroundColor: colourway.hex }}
                     />
                     <span>{colourway.colour}</span>
@@ -233,7 +233,7 @@ export function ShopTile({
 
         {sizes.length > 0 ? (
           <div>
-            <div className="flex items-center justify-between gap-2 text-[0.9375rem] text-ink-800">
+            <div className="flex items-center justify-between gap-2 text-xs text-ink-800 sm:text-[0.9375rem]">
               <span className="font-medium">UK size</span>
               <span className="tnum font-medium text-ink-600">
                 {sizes.filter((v) => v.inStock).length} sizes in stock
@@ -241,7 +241,7 @@ export function ShopTile({
             </div>
 
             <ul
-              className="scrollbar-none mt-2 flex flex-nowrap items-center gap-1.5 overflow-x-auto touch-pan-y sm:flex-wrap sm:overflow-visible"
+              className="scrollbar-none mt-1.5 flex flex-nowrap items-center gap-1.5 overflow-x-auto sm:mt-2 sm:flex-wrap sm:overflow-visible"
               aria-label={`Available UK sizes in ${way?.colour}`}
             >
               {CARD_UK_SIZES.map((ukSize) => {
@@ -272,7 +272,7 @@ export function ShopTile({
                           : `UK ${ukSize} · Out of stock`
                       }
                       className={cn(
-                        'tnum relative inline-flex h-8 min-w-9 items-center justify-center px-2.5 text-sm font-semibold transition-colors',
+                        'tnum relative inline-flex h-7 min-w-8 items-center justify-center px-2 text-xs font-semibold transition-colors sm:h-8 sm:min-w-9 sm:px-2.5 sm:text-sm',
                         inStock
                           ? isSelectedSize
                             ? 'bg-ink-900 text-cream-50'

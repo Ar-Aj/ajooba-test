@@ -132,7 +132,7 @@ function RailScroller({ children, label }: { children: ReactNode; label: string 
           type="button"
           onClick={() => nudge(-1)}
           aria-label={`Scroll ${label} backwards`}
-          className="hidden h-9 w-9 items-center justify-center border border-border text-ink-600 transition-colors hover:border-ink-400 hover:text-ink-900 disabled:cursor-default disabled:border-transparent disabled:opacity-30 sm:inline-flex"
+          className="inline-flex h-8 w-8 items-center justify-center border border-border text-ink-600 transition-colors hover:border-ink-400 hover:text-ink-900 disabled:cursor-default disabled:border-transparent disabled:opacity-30 sm:h-9 sm:w-9"
         >
           <span aria-hidden="true">←</span>
         </button>
@@ -141,7 +141,7 @@ function RailScroller({ children, label }: { children: ReactNode; label: string 
           type="button"
           onClick={() => nudge(1)}
           aria-label={`Scroll ${label} forwards`}
-          className="hidden h-9 w-9 items-center justify-center border border-border text-ink-600 transition-colors hover:border-ink-400 hover:text-ink-900 disabled:cursor-default disabled:border-transparent disabled:opacity-30 sm:inline-flex"
+          className="inline-flex h-8 w-8 items-center justify-center border border-border text-ink-600 transition-colors hover:border-ink-400 hover:text-ink-900 disabled:cursor-default disabled:border-transparent disabled:opacity-30 sm:h-9 sm:w-9"
         >
           <span aria-hidden="true">→</span>
         </button>
@@ -150,7 +150,7 @@ function RailScroller({ children, label }: { children: ReactNode; label: string 
       <ul
         ref={scrollerRef}
         aria-label={label}
-        className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 touch-pan-y"
+        className="scrollbar-soft flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain pb-3 sm:gap-4"
       >
         {children}
         {/* A trailing spacer so the last card can snap clear of the right edge. */}

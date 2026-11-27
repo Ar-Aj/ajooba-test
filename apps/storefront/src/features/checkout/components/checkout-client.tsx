@@ -162,12 +162,12 @@ export function CheckoutClient() {
 
   const liveTotals = serverCart
     ? {
-      subtotal: serverCart.subtotal,
-      discount: serverCart.discountAmount,
-      shipping: serverCart.shippingFee,
-      tax: serverCart.taxAmount,
-      total: serverCart.totalAmount,
-    }
+        subtotal: serverCart.subtotal,
+        discount: serverCart.discountAmount,
+        shipping: serverCart.shippingFee,
+        tax: serverCart.taxAmount,
+        total: serverCart.totalAmount,
+      }
     : null;
 
   const codDisabledByCeiling = Boolean(liveTotals && liveTotals.total > COD_MAX_AMOUNT);
@@ -487,7 +487,7 @@ export function CheckoutClient() {
             setPendingOrder(order);
             setPaymentError(
               verification.reason ??
-              'Payment is not confirmed yet. Retry payment or check your order status.',
+                'Payment is not confirmed yet. Retry payment or check your order status.',
             );
             return;
           }
@@ -577,19 +577,19 @@ export function CheckoutClient() {
           ...(shippingAddressId
             ? { shippingAddressId }
             : {
-              shippingAddress: {
-                label: currentAddressValue.label,
-                fullName: currentAddressValue.fullName,
-                phone: `+91${currentAddressValue.phone}`,
-                line1: currentAddressValue.line1,
-                line2: currentAddressValue.line2 ?? '',
-                city: currentAddressValue.city,
-                state: currentAddressValue.state,
-                postalCode: currentAddressValue.postalCode,
-                country: 'India',
-                isDefault: false,
-              },
-            }),
+                shippingAddress: {
+                  label: currentAddressValue.label,
+                  fullName: currentAddressValue.fullName,
+                  phone: `+91${currentAddressValue.phone}`,
+                  line1: currentAddressValue.line1,
+                  line2: currentAddressValue.line2 ?? '',
+                  city: currentAddressValue.city,
+                  state: currentAddressValue.state,
+                  postalCode: currentAddressValue.postalCode,
+                  country: 'India',
+                  isDefault: false,
+                },
+              }),
           idempotencyKey: idempotencyKey.current.value,
         }),
       });
@@ -779,8 +779,9 @@ export function CheckoutClient() {
               if (Object.keys(errors).length > 0) {
                 toast({
                   title: 'Check the delivery address',
-                  description: `${Object.keys(errors).length} field${Object.keys(errors).length === 1 ? '' : 's'
-                    } need attention.`,
+                  description: `${Object.keys(errors).length} field${
+                    Object.keys(errors).length === 1 ? '' : 's'
+                  } need attention.`,
                   tone: 'warning',
                 });
                 return;
@@ -876,7 +877,7 @@ export function CheckoutClient() {
             </p>
           ) : null}
           {!paymentConfiguration?.configured &&
-            (!storeSettings?.isCodEnabled || codDisabledByCeiling) ? (
+          (!storeSettings?.isCodEnabled || codDisabledByCeiling) ? (
             <p className="step-sm text-claret-700" role="alert">
               {codDisabledByCeiling && storeSettings?.isCodEnabled
                 ? 'Orders above ₹10,000 require online payment, which is not configured on this shop yet.'

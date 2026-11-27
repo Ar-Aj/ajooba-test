@@ -45,11 +45,11 @@ export function ProductRecommendations({
       {similarProducts.length > 0 ? (
         <RecommendationCarouselSection
           id="pdp-similar-products"
-          eyebrow="Similar Products · Closest Price & Style"
-          title="Similar styles in this price range"
-          subtitle={`Matched to ${product.title} around ${rupees(product.sellingPrice)} by silhouette, category, and finish.`}
+          badge="Hot Picks"
+          title="Similar Styles"
+          highlightWord="Close Price"
           viewAllHref={`/products?subcategory=${encodeURIComponent(product.subcategorySlug)}`}
-          viewAllLabel={`View all ${product.subcategory}`}
+          viewAllLabel="See all"
           items={similarProducts}
           indexOffset={0}
         />
@@ -58,11 +58,11 @@ export function ProductRecommendations({
       {complementaryProducts.length > 0 ? (
         <RecommendationCarouselSection
           id="pdp-complementary-products"
-          eyebrow="Curated For Your Wardrobe · More To Explore"
-          title="You may also like"
-          subtitle="Complementary pairs matched by colourway, occasion versatility, and value."
+          badge="Trending Deals"
+          title="More Pairs"
+          highlightWord="You'll Love"
           viewAllHref="/products"
-          viewAllLabel="Explore full collection"
+          viewAllLabel="See all"
           items={complementaryProducts}
           indexOffset={3}
         />
@@ -73,18 +73,18 @@ export function ProductRecommendations({
 
 function RecommendationCarouselSection({
   id,
-  eyebrow,
+  badge,
   title,
-  subtitle,
+  highlightWord,
   viewAllHref,
   viewAllLabel,
   items,
   indexOffset,
 }: {
   id: string;
-  eyebrow: string;
+  badge: string;
   title: string;
-  subtitle: string;
+  highlightWord: string;
   viewAllHref: string;
   viewAllLabel: string;
   items: readonly RecommendedProductItem[];
@@ -95,7 +95,7 @@ function RecommendationCarouselSection({
   function scrollByDirection(direction: 'prev' | 'next') {
     const node = scrollerRef.current;
     if (!node) return;
-    const distance = Math.max(300, Math.round(node.clientWidth * 0.72));
+    const distance = Math.max(260, Math.round(node.clientWidth * 0.72));
     node.scrollBy({
       left: direction === 'next' ? distance : -distance,
       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
@@ -104,16 +104,18 @@ function RecommendationCarouselSection({
 
   return (
     <section aria-labelledby={`${id}-heading`} data-testid={id}>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="label-cap text-gold-700">{eyebrow}</p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 bg-ink-900 px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-gold-300">
+            <FlameIcon />
+            {badge}
+          </span>
           <h2
             id={`${id}-heading`}
-            className="mt-1 font-sans text-lg font-semibold tracking-tight text-ink-950 sm:text-xl"
+            className="font-hot text-2xl font-extrabold uppercase leading-none tracking-tight text-ink-950 sm:text-3xl lg:text-[2.15rem]"
           >
-            {title}
+            {title} <span className="text-hot-fire">· {highlightWord}</span>
           </h2>
-          <p className="mt-1 text-xs text-ink-500 sm:text-sm">{subtitle}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -135,22 +137,35 @@ function RecommendationCarouselSection({
           </button>
           <Link
             href={viewAllHref}
-            className="ml-2 text-xs font-semibold text-ink-800 underline underline-offset-4 hover:text-ink-950 sm:text-sm"
+            className="ml-2 text-xs font-semibold uppercase tracking-wider text-ink-800 underline underline-offset-4 hover:text-ink-950 sm:text-sm"
           >
-            {viewAllLabel}
+            {viewAllLabel} →
           </Link>
         </div>
       </div>
 
       <div
         ref={scrollerRef}
-        className="scrollbar-soft mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 pt-1"
+        className="scrollbar-soft mt-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain pb-4 pt-1 sm:gap-4"
       >
         {items.map((item, idx) => (
           <RecommendationCard key={item.product.id} item={item} index={idx + indexOffset} />
         ))}
       </div>
     </section>
+  );
+}
+
+function FlameIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      className="h-3.5 w-3.5 text-gold-400"
+    >
+      <path d="M8.7 1.3c.3 1.7-.4 2.8-1.3 3.8-.8.9-1.6 1.8-1.6 3.2 0 1.4 1.1 2.5 2.5 2.5s2.4-1.1 2.4-2.5c0-.7-.3-1.4-.7-2 .9.4 2.2 1.6 2.2 3.5 0 2.7-2.1 4.9-4.7 4.9S2.8 12.6 2.8 9.8c0-2.4 1.5-4.1 2.9-5.6C6.9 3 8 1.9 8.7 1.3Z" />
+    </svg>
   );
 }
 
@@ -194,7 +209,7 @@ function RecommendationCard({ item, index }: { item: RecommendedProductItem; ind
   const inStockSizes = (way?.sizes ?? []).filter((v) => v.inStock).map((v) => v.size);
 
   return (
-    <article className="group/rec flex w-[15.25rem] shrink-0 snap-start flex-col border border-border/80 bg-cream-50/70 transition-colors hover:border-ink-400 sm:w-[16.75rem]">
+    <article className="group/rec flex w-[13.75rem] shrink-0 snap-start flex-col border border-border/80 bg-cream-50/70 transition-colors hover:border-ink-400 sm:w-[16rem]">
       <TapLink
         href={`/products/${product.slug}`}
         action="product-open"
@@ -206,7 +221,7 @@ function RecommendationCard({ item, index }: { item: RecommendedProductItem; ind
         }}
         className="block"
       >
-        <div className={cn('specimen aspect-4/5', fieldForIndex(index))}>
+        <div className={cn('specimen aspect-[4/4.2] sm:aspect-4/5', fieldForIndex(index))}>
           {primary ? (
             <>
               <img
@@ -249,15 +264,12 @@ function RecommendationCard({ item, index }: { item: RecommendedProductItem; ind
           ) : null}
         </div>
 
-        <div className="p-3.5 pb-2">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-wider text-ink-500">
-            {product.brand} · {product.subcategory}
-          </p>
-          <h3 className="mt-1 line-clamp-2 font-sans text-[0.9375rem] font-semibold leading-snug text-ink-950 transition-colors group-hover/rec:text-gold-700">
+        <div className="p-3 pb-2">
+          <h3 className="line-clamp-2 font-sans text-[0.925rem] font-semibold leading-snug text-ink-950 transition-colors group-hover/rec:text-gold-700">
             {product.title}
           </h3>
 
-          <div className="mt-2 flex flex-wrap items-baseline gap-2">
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
             <span className="tnum text-base font-bold text-ink-950">{rupees(price)}</span>
             {discounted ? (
               <span className="tnum text-xs font-medium text-ink-400 line-through">
@@ -269,43 +281,39 @@ function RecommendationCard({ item, index }: { item: RecommendedProductItem; ind
         </div>
       </TapLink>
 
-      <div className="mt-auto border-t border-border/70 bg-field-a/60 px-3.5 py-2.5">
+      <div className="mt-auto border-t border-border/70 bg-field-a/60 px-3 py-2">
         {colourways.length > 0 ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-1">
-              {colourways.map((c, idx) => {
-                const active = idx === activeColourIdx;
-                return (
-                  <button
-                    key={c.colour}
-                    type="button"
-                    onClick={() => setActiveColourIdx(idx)}
-                    aria-label={`Preview ${c.colour}`}
-                    title={c.colour}
-                    className={cn(
-                      'inline-flex items-center gap-1 border px-1.5 py-0.5 text-[0.7rem] font-medium transition-colors',
-                      active
-                        ? 'border-ink-900 bg-ink-900 text-cream-50'
-                        : 'border-border bg-cream-50 text-ink-700 hover:border-ink-500',
-                    )}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="h-2.5 w-2.5 rounded-full border border-ink-900/20"
-                      style={{ backgroundColor: c.hex }}
-                    />
-                    <span>{c.colour}</span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="flex flex-wrap items-center gap-1">
+            {colourways.map((c, idx) => {
+              const active = idx === activeColourIdx;
+              return (
+                <button
+                  key={c.colour}
+                  type="button"
+                  onClick={() => setActiveColourIdx(idx)}
+                  aria-label={`Preview ${c.colour}`}
+                  title={c.colour}
+                  className={cn(
+                    'inline-flex items-center gap-1 border px-1.5 py-0.5 text-[0.68rem] font-medium transition-colors',
+                    active
+                      ? 'border-ink-900 bg-ink-900 text-cream-50'
+                      : 'border-border bg-cream-50 text-ink-700 hover:border-ink-500',
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-2.5 w-2.5 rounded-full border border-ink-900/20"
+                    style={{ backgroundColor: c.hex }}
+                  />
+                  <span>{c.colour}</span>
+                </button>
+              );
+            })}
           </div>
         ) : null}
 
-        <p className="mt-1.5 truncate text-[0.72rem] text-ink-600">
-          {inStockSizes.length > 0
-            ? `UK Sizes: ${inStockSizes.join(', ')}`
-            : 'Currently out of stock'}
+        <p className="mt-1 truncate text-[0.7rem] text-ink-600">
+          {inStockSizes.length > 0 ? `UK: ${inStockSizes.join(', ')}` : 'Out of stock'}
         </p>
       </div>
     </article>

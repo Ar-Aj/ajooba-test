@@ -610,7 +610,7 @@ export function Ajooba3DShowcase({
                   {ANGLE_LABELS[safeAngleIdx] ?? 'Studio View'}
                 </span>
               </div>
-              <div className="scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 touch-pan-y sm:grid sm:grid-cols-7 sm:overflow-visible sm:pb-0">
+              <div className="scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1 sm:grid sm:grid-cols-7 sm:overflow-visible sm:pb-0">
                 {images.map((img, idx) => {
                   const active = idx === safeAngleIdx;
                   return (

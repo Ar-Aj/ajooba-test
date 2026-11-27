@@ -141,6 +141,7 @@ export function AddressFields({
           >
             +91
           </span>
+          s
           <Input
             id="addr-phone"
             type="tel"

@@ -50,7 +50,7 @@ export function SpecimenTile({
     >
       <div
         className={cn(
-          'specimen aspect-4/5',
+          'specimen aspect-[4/4.2] sm:aspect-4/5',
           fieldForIndex(index),
           soldOut ? 'opacity-90' : undefined,
         )}
@@ -99,25 +99,27 @@ export function SpecimenTile({
         )}
 
         {soldOut ? (
-          <span className="absolute left-2 top-2 bg-claret-700 px-2.5 py-1 text-sm font-medium text-cream-50">
+          <span className="absolute left-2 top-2 bg-claret-700 px-2 py-0.5 text-xs font-medium text-cream-50 sm:px-2.5 sm:py-1 sm:text-sm">
             Sold out
           </span>
         ) : null}
       </div>
 
-      <div className="mt-4">
-        <h3 className="font-sans text-[1.0625rem] leading-snug line-clamp-2 font-semibold tracking-tight text-ink-950 transition-colors group-hover:text-gold-700 lg:text-[1.15rem]">
+      <div className="mt-2.5 sm:mt-4">
+        <h3 className="font-sans text-[0.95rem] leading-snug line-clamp-2 font-semibold tracking-tight text-ink-950 transition-colors group-hover:text-gold-700 sm:text-[1.0625rem] lg:text-[1.15rem]">
           {product.title}
         </h3>
-        <p className="mt-1 text-[0.9375rem] font-medium text-ink-600">{product.subcategory}</p>
+        <p className="mt-1 text-[0.85rem] font-medium text-ink-600 sm:text-[0.9375rem]">
+          {product.subcategory}
+        </p>
 
-        <div className="mt-2.5 flex flex-wrap items-baseline gap-2.5">
-          <span className="tnum text-xl font-bold text-ink-950 lg:text-[1.35rem]">
+        <div className="mt-2 flex flex-wrap items-baseline gap-2 sm:mt-2.5 sm:gap-2.5">
+          <span className="tnum text-lg font-bold text-ink-950 sm:text-xl lg:text-[1.35rem]">
             {rupees(product.sellingPrice)}
           </span>
           {discounted ? (
             <>
-              <span className="tnum text-[0.9375rem] font-medium text-ink-500 line-through">
+              <span className="tnum text-[0.85rem] font-medium text-ink-500 line-through sm:text-[0.9375rem]">
                 {rupees(product.mrp)}
               </span>
             </>
@@ -126,7 +128,7 @@ export function SpecimenTile({
         <PriceSavings mrp={product.mrp} sellingPrice={product.sellingPrice} className="mt-1.5" />
 
         {product.verifiedColours.length > 0 ? (
-          <p className="mt-2 text-sm font-medium text-ink-700">
+          <p className="mt-2 text-xs font-medium text-ink-700 sm:text-sm">
             Colours: {product.verifiedColours.join(', ')}
           </p>
         ) : null}

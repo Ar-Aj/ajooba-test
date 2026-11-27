@@ -101,7 +101,7 @@ export function SizeAvailabilitySection({ products }: { products: readonly Produ
         <div
           role="tablist"
           aria-label="Filter designs by UK size"
-          className="scrollbar-none -mx-4 mt-8 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 touch-pan-y sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+          className="scrollbar-none -mx-4 mt-8 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
           data-ui="size-tabs"
         >
           {sizeBuckets.map((bucket, idx) => {
@@ -129,11 +129,11 @@ export function SizeAvailabilitySection({ products }: { products: readonly Produ
           })}
         </div>
 
-        <ul className="scrollbar-none -mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 touch-pan-y sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+        <ul className="scrollbar-soft -mx-4 mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-3 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
           {displayed.map((product, index) => (
             <li
               key={product.id}
-              className="w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
+              className="w-[62vw] max-w-[15.25rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
             >
               <ShopTile
                 card={toCard(product)}
@@ -226,7 +226,7 @@ export function SavingsAvailabilitySection({ products }: { products: readonly Pr
           <div
             role="tablist"
             aria-label="Filter by price and savings"
-            className="scrollbar-none -mx-4 flex w-[calc(100%+2rem)] flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 touch-pan-y sm:mx-0 sm:w-auto sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+            className="scrollbar-none -mx-4 flex w-[calc(100%+2rem)] flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 sm:mx-0 sm:w-auto sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
           >
             {shelves.map((shelf, idx) => {
               const active = idx === activeShelfIdx;
@@ -261,11 +261,11 @@ export function SavingsAvailabilitySection({ products }: { products: readonly Pr
           </Link>
         </div>
 
-        <ul className="scrollbar-none -mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 touch-pan-y sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+        <ul className="scrollbar-soft -mx-4 mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-3 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
           {displayed.map((product, index) => (
             <li
               key={product.id}
-              className="w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
+              className="w-[62vw] max-w-[15.25rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
             >
               <ShopTile
                 card={toCard(product)}

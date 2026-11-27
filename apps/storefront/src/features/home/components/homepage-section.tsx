@@ -174,12 +174,12 @@ export function HomepageSectionRenderer({
           </Reveal>
 
           {rail ? (
-            <Reveal className="mt-10">
+            <Reveal className="mt-6 sm:mt-10">
               <Rail label={section.heading || 'New arrivals'}>
                 {section.products.map((product, index) => (
                   <li
                     key={product.id}
-                    className="w-[78vw] max-w-[20.5rem] shrink-0 snap-start sm:w-[20.5rem]"
+                    className="w-[62vw] max-w-[15.25rem] shrink-0 snap-start sm:w-[18.5rem] sm:max-w-none"
                   >
                     <CardTile card={product} full={productById?.[product.id]} index={index} />
                   </li>
@@ -187,11 +187,11 @@ export function HomepageSectionRenderer({
               </Rail>
             </Reveal>
           ) : (
-            <ul className="scrollbar-none -mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 touch-pan-y sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+            <ul className="scrollbar-soft -mx-4 mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-3 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
               {section.products.map((product, index) => (
                 <li
                   key={product.id}
-                  className="w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                  className="w-[62vw] max-w-[15.25rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
                 >
                   <Reveal delay={Math.min(index * 50, 200)}>
                     <CardTile card={product} full={productById?.[product.id]} index={index} />
@@ -265,11 +265,11 @@ export function HomepageSectionRenderer({
                 subheading={section.subheading || undefined}
               />
             </Reveal>
-            <ul className="scrollbar-none -mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 touch-pan-y sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+            <ul className="scrollbar-soft -mx-4 mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-3 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
               {section.products.map((product, index) => (
                 <li
                   key={product.id}
-                  className="w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                  className="w-[62vw] max-w-[15.25rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
                 >
                   <Reveal delay={Math.min(index * 50, 200)}>
                     <CardTile card={product} full={productById?.[product.id]} index={index} />
@@ -304,11 +304,11 @@ export function HomepageSectionRenderer({
             />
           </Reveal>
 
-          <ul className="scrollbar-none -mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 touch-pan-y sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+          <ul className="scrollbar-soft -mx-4 mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-3 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
             {section.products.slice(0, 4).map((product, index) => (
               <li
                 key={product.id}
-                className="w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                className="w-[62vw] max-w-[15.25rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
               >
                 <Reveal delay={Math.min(index * 50, 200)}>
                   <CardTile card={product} full={productById?.[product.id]} index={index} />
@@ -345,7 +345,7 @@ export function HomepageSectionRenderer({
               </div>
             </Reveal>
 
-            <ul className="scrollbar-none -mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 touch-pan-y sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+            <ul className="scrollbar-soft -mx-4 mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-3 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
               {section.products.map((product, index) => {
                 const deal = section.deals.find((entry) => entry.productId === product.id);
                 if (!deal) return null;
@@ -355,7 +355,7 @@ export function HomepageSectionRenderer({
                 return (
                   <li
                     key={product.id}
-                    className="w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                    className="w-[62vw] max-w-[15.25rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
                   >
                     <Reveal delay={Math.min(index * 50, 200)}>
                       <DealTile
@@ -454,11 +454,11 @@ export function HomepageSectionRenderer({
               />
             </Reveal>
 
-            <ul className="scrollbar-none -mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 touch-pan-y sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+            <ul className="scrollbar-soft -mx-4 mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-3 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
               {section.products.slice(0, 4).map((product, index) => (
                 <li
                   key={product.id}
-                  className="w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                  className="w-[62vw] max-w-[15.25rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
                 >
                   <Reveal delay={Math.min(index * 50, 200)}>
                     <CardTile card={product} full={productById?.[product.id]} index={index} />
