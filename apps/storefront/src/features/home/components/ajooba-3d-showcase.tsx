@@ -665,10 +665,12 @@ export function Ajooba3DShowcase({
 
             {/* ---- Price + Explicit Discount Amount ----------------------- */}
             <div className="mt-4 bg-field-e p-4">
-              <div className="flex flex-wrap items-baseline gap-3">
-                <span className="tnum step-xl text-ink-900">{rupees(displayPrice)}</span>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="tnum font-sans text-xl font-bold text-ink-950 sm:text-2xl">
+                  {rupees(displayPrice)}
+                </span>
                 {discounted ? (
-                  <span className="tnum step-md text-ink-400 line-through">
+                  <span className="tnum font-sans text-[0.9375rem] font-medium text-ink-500 line-through">
                     MRP {rupees(displayMrp)}
                   </span>
                 ) : null}
