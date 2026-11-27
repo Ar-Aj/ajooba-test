@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ApiRequestError, fetchCategories, fetchProductBySlug } from '@/lib/api';
+import {
+  ApiRequestError,
+  fetchCatalogueIndex,
+  fetchCategories,
+  fetchProductBySlug,
+} from '@/lib/api';
 import { storefrontEnv } from '@/lib/env';
 import { mediaUrl } from '@/lib/media';
 import { ProductGallerySection } from '@/features/catalog/components/product-gallery-section';
-import { ProductAttributes } from '@/features/catalog/components/product-attributes';
+import { ProductRecommendations } from '@/features/catalog/components/product-recommendations';
 import { PageViewTracker } from '@/components/track/page-view-tracker';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { ServiceUnavailable } from '@/components/ui/empty-states';
@@ -73,8 +78,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   let product = null;
   let categories: Awaited<ReturnType<typeof fetchCategories>> = [];
+  let catalogueIndex: Awaited<ReturnType<typeof fetchCatalogueIndex>> = {};
   try {
-    [product, categories] = await Promise.all([fetchProductBySlug(slug), fetchCategories()]);
+    [product, categories, catalogueIndex] = await Promise.all([
+      fetchProductBySlug(slug),
+      fetchCategories(),
+      fetchCatalogueIndex(),
+    ]);
   } catch (error) {
     if (error instanceof ApiRequestError && error.isUnavailable) {
       return (
@@ -207,7 +217,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <ProductGallerySection product={product} />
 
-      <ProductAttributes product={product} />
+      <ProductRecommendations product={product} catalogueProducts={Object.values(catalogueIndex)} />
 
       {primary ? <p className="sr-only">Reference image {primary.sourceFile}</p> : null}
     </div>
