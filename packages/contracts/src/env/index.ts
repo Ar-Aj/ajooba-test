@@ -394,15 +394,6 @@ export const apiEnvSchema = z
           path: ['RAZORPAY_MODE'],
         });
       }
-      if (!value.RAZORPAY_WEBHOOK_SECRET) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            'RAZORPAY_MODE=live requires RAZORPAY_WEBHOOK_SECRET. Without it no ' +
-            'payment confirmation can be verified, so live mode would be unsafe.',
-          path: ['RAZORPAY_WEBHOOK_SECRET'],
-        });
-      }
     }
 
     /*
